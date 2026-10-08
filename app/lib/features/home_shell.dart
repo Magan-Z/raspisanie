@@ -1,9 +1,12 @@
 // Нижняя панель: «Сегодня» · «Неделя» · «ДЗ» · «Поиск» · «Настройки».
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_state.dart';
+import '../domain/notification_plan.dart';
 import '../widget_bridge/deep_links.dart';
 import 'homework/add_homework_sheet.dart';
 import 'homework/homework_screen.dart';
@@ -29,9 +32,11 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
     // Расписание уже показано из кэша — обновления проверяем фоном и молча
     WidgetsBinding.instance.addPostFrameCallback((_) => syncSchedule(ref));
 
-    // Виджеты: после любого изменения (расписание, ДЗ, профиль, неделя) пересобираем снимок
-    ref.listenManual(myScheduleProvider, (_, _) => _pushWidgets(), fireImmediately: true);
-    ref.listenManual(homeworkProvider, (_, _) => _pushWidgets());
+    // Виджеты и уведомления: после любого изменения (расписание, ДЗ, правки, профиль, настройки) пересобираем
+    ref.listenManual(myScheduleProvider, (_, _) => _scheduleRefresh(), fireImmediately: true);
+    ref.listenManual(homeworkProvider, (_, _) => _scheduleRefresh());
+    ref.listenManual(settingsProvider, (_, _) => _scheduleRefresh());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _askNotificationPermissionOnce());
 
     // Ссылки с виджета («+ ДЗ»)
     final links = ref.read(linkChannelProvider);
@@ -46,6 +51,20 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
     showAddHomework(context, subject: action.subject);
   }
 
+  Timer? _debounce;
+
+  /// Изменения часто приходят пачкой (расписание, ДЗ, настройки) — пересобираем один раз.
+  void _scheduleRefresh() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), _refreshOutputs);
+  }
+
+  Future<void> _refreshOutputs() async {
+    if (!mounted) return;
+    await _pushWidgets();
+    await _replanNotifications();
+  }
+
   /// Отдаёт виджетам свежий снимок расписания на 7 дней.
   Future<void> _pushWidgets() async {
     final my = ref.read(myScheduleProvider).value;
@@ -57,12 +76,50 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
           schedule: my.schedule,
           profile: my.profile,
           homework: homework,
+          overrides: my.overrides,
           forcedWeek: my.forcedWeek,
         );
   }
 
+  /// Заново ставит уведомления на 7 дней вперёд (перед парой и вечернее напоминание о ДЗ).
+  Future<void> _replanNotifications() async {
+    final my = ref.read(myScheduleProvider).value;
+    if (my == null) return;
+    final settings = ref.read(settingsProvider);
+    final plan = planNotifications(
+      now: ref.read(clockProvider).now(),
+      index: my.index,
+      schedule: my.schedule,
+      profile: my.profile,
+      homework: ref.read(homeworkProvider).value ?? const [],
+      notifyBeforeMin: settings.notifyBeforeMin,
+      eveningReminder: settings.eveningHomeworkReminder,
+      overrides: my.overrides,
+      forcedWeek: my.forcedWeek,
+    );
+    try {
+      await ref.read(notificationGatewayProvider).replaceAll(plan);
+    } catch (_) {
+      // Уведомления — удобство: если система отказала, приложение работает как обычно
+    }
+  }
+
+  /// Один раз спрашиваем разрешение на уведомления (Android 13+), когда они включены по умолчанию.
+  Future<void> _askNotificationPermissionOnce() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (prefs.getBool('notificationPermissionAsked') ?? false) return;
+    await prefs.setBool('notificationPermissionAsked', true);
+    try {
+      final gateway = ref.read(notificationGatewayProvider);
+      await gateway.init();
+      await gateway.requestPermission();
+    } catch (_) {}
+    _scheduleRefresh();
+  }
+
   @override
   void dispose() {
+    _debounce?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -71,7 +128,7 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       syncSchedule(ref);
-      _pushWidgets(); // наступил новый день — снимок «7 дней вперёд» сдвигается
+      _scheduleRefresh(); // наступил новый день — снимок и уведомления «7 дней вперёд» сдвигаются
     }
   }
 

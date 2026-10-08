@@ -244,6 +244,7 @@ enum OverrideType { cancel, replace, add }
 /// Личная правка на конкретную дату: «пару отменили», «перенесли в другую аудиторию», «добавили пару».
 class Override {
   const Override({
+    this.id,
     required this.date,
     required this.pair,
     required this.type,
@@ -253,6 +254,7 @@ class Override {
     this.note,
   });
 
+  final int? id; // null — ещё не сохранено в базу
   final DateTime date; // «только день», UTC
   final int pair;
   final OverrideType type;

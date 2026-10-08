@@ -15,10 +15,12 @@ import 'core/week.dart';
 import 'data/local/database.dart';
 import 'data/remote/schedule_api.dart';
 import 'data/repositories/homework_repository.dart';
+import 'data/repositories/overrides_repository.dart';
 import 'data/repositories/schedule_repository.dart';
 import 'domain/diff_summary.dart';
 import 'domain/homework.dart';
 import 'domain/models.dart';
+import 'notifications/notification_gateway.dart';
 import 'widget_bridge/deep_links.dart';
 import 'widget_bridge/widget_sync.dart';
 
@@ -131,11 +133,18 @@ final groupScheduleProvider = FutureProvider.family<GroupSchedule, String>(
 
 /// Всё, что нужно экранам для «моего» расписания.
 class MySchedule {
-  const MySchedule({required this.index, required this.schedule, required this.profile, this.forcedWeek});
+  const MySchedule({
+    required this.index,
+    required this.schedule,
+    required this.profile,
+    this.forcedWeek,
+    this.overrides = const [],
+  });
   final ScheduleIndex index;
   final GroupSchedule schedule;
   final UserProfile profile;
   final int? forcedWeek;
+  final List<Override> overrides; // личные правки
 
   /// Номер недели для даты (с учётом ручного переключателя).
   int weekFor(DateTime day) => forcedWeek ?? weekNumber(day, index.weekAnchor);
@@ -147,7 +156,8 @@ final myScheduleProvider = FutureProvider<MySchedule?>((ref) async {
   if (profile == null) return null;
   final index = await ref.watch(indexProvider.future);
   final schedule = await ref.watch(groupScheduleProvider(profile.groupId).future);
-  return MySchedule(index: index, schedule: schedule, profile: profile, forcedWeek: settings.forcedWeek);
+  final overrides = await ref.watch(overridesProvider.future);
+  return MySchedule(index: index, schedule: schedule, profile: profile, forcedWeek: settings.forcedWeek, overrides: overrides);
 });
 
 // ---------- «сейчас» ----------
@@ -187,7 +197,17 @@ Future<SyncResult> syncSchedule(WidgetRef ref) async {
   final profile = ref.read(settingsProvider).profile;
   if (result.groupChanged && result.diffJson != null && profile != null) {
     final items = summarizeDiff(result.diffJson!, profile);
-    if (items.isNotEmpty) ref.read(updateBannerProvider.notifier).show(items);
+    if (items.isNotEmpty) {
+      ref.read(updateBannerProvider.notifier).show(items);
+      // То же — уведомлением (если приложение свёрнуто). Ошибка уведомления не должна ломать синхронизацию
+      try {
+        await ref.read(notificationGatewayProvider).showNow(
+              id: 1,
+              title: diffHeadline(items.length),
+              body: items.take(3).join('\n'),
+            );
+      } catch (_) {}
+    }
   }
   ref.invalidate(lastFetchedProvider);
   return result;
@@ -234,3 +254,14 @@ final updateBannerProvider = NotifierProvider<UpdateBannerNotifier, List<String>
 
 final widgetBridgeProvider = Provider<WidgetBridge>((ref) => const WidgetBridge());
 final linkChannelProvider = Provider<LinkChannel>((ref) => LinkChannel());
+
+// ---------- личные правки ----------
+
+final overridesRepositoryProvider = Provider<OverridesRepository>((ref) => OverridesRepository(ref.watch(databaseProvider)));
+
+/// Все личные правки. После изменения вызываем ref.invalidate(overridesProvider).
+final overridesProvider = FutureProvider<List<Override>>((ref) => ref.watch(overridesRepositoryProvider).all());
+
+// ---------- уведомления ----------
+
+final notificationGatewayProvider = Provider<NotificationGateway>((ref) => LocalNotificationGateway());

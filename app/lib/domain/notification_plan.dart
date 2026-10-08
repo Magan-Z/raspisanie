@@ -8,13 +8,20 @@ import 'models.dart';
 import 'schedule_resolver.dart';
 
 class PlannedNotification {
-  const PlannedNotification({required this.id, required this.fireAt, required this.title, required this.body});
+  const PlannedNotification({
+    required this.id,
+    required this.fireAt,
+    required this.title,
+    required this.body,
+    this.homework = false,
+  });
 
   /// Стабильный номер: одно и то же уведомление при перепланировании заменяется, а не дублируется.
   final int id;
   final DateTime fireAt; // момент показа (UTC)
   final String title;
   final String body;
+  final bool homework; // вечернее напоминание о ДЗ (другой канал уведомлений)
 }
 
 const planDays = 7;
@@ -63,6 +70,7 @@ List<PlannedNotification> planNotifications({
           fireAt: fireAt,
           title: 'На завтра ${due.length} ДЗ',
           body: subjects.join(', '),
+          homework: true,
         ));
       }
     }

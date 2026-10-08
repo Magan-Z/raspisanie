@@ -13,6 +13,8 @@ import 'package:raspisanie/app_state.dart';
 import 'package:raspisanie/core/clock.dart';
 import 'package:raspisanie/data/local/database.dart';
 import 'package:raspisanie/data/repositories/schedule_repository.dart';
+import 'package:raspisanie/domain/notification_plan.dart';
+import 'package:raspisanie/notifications/notification_gateway.dart';
 import 'package:raspisanie/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -32,7 +34,32 @@ class _DiskAssets extends AssetBundle {
       parser(await loadString(key));
 }
 
-Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, DateTime? now}) async {
+/// Вместо настоящих уведомлений — запись того, что приложение собиралось показать.
+class FakeGateway implements NotificationGateway {
+  final plans = <List<PlannedNotification>>[];
+  final shown = <String>[];
+  int permissionRequests = 0;
+
+  List<PlannedNotification> get lastPlan => plans.isEmpty ? const [] : plans.last;
+
+  @override
+  Future<void> init() async {}
+  @override
+  Future<bool> requestPermission() async {
+    permissionRequests++;
+    return true;
+  }
+
+  @override
+  Future<bool> areEnabled() async => true;
+  @override
+  Future<void> replaceAll(List<PlannedNotification> plan) async => plans.add(plan);
+  @override
+  Future<void> showNow({required int id, required String title, required String body, NotificationChannel channel = NotificationChannel.updates}) async =>
+      shown.add(title);
+}
+
+Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, DateTime? now, FakeGateway? gateway}) async {
   // Высокий «экран», чтобы весь список строился сразу (ListView строит только видимое)
   tester.view.physicalSize = const Size(900, 2600);
   tester.view.devicePixelRatio = 1;
@@ -50,6 +77,7 @@ Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, 
       sharedPreferencesProvider.overrideWithValue(sp),
       databaseProvider.overrideWithValue(db),
       repositoryProvider.overrideWithValue(ScheduleRepository(db: db, assets: _DiskAssets())),
+      notificationGatewayProvider.overrideWithValue(gateway ?? FakeGateway()),
       clockProvider.overrideWithValue(FixedClock(now ?? DateTime.utc(2026, 10, 7, 10, 30))), // 13:30 по Москве
     ],
     child: const RaspisanieApp(),
@@ -126,7 +154,9 @@ void main() {
   testWidgets('ДЗ: долгое нажатие на пару → срок сам = следующее занятие → появляется в списке ДЗ', (tester) async {
     await _start(tester, prefs: profile);
 
-    await tester.longPress(find.text('ЧТК и этика'));
+    await tester.longPress(find.text('ЧТК и этика').last);
+    await _settle(tester);
+    await tester.tap(find.text('Добавить ДЗ'));
     await _settle(tester);
     expect(find.text('Новое ДЗ'), findsOneWidget);
     // ЧТК в среду есть каждую неделю (1 нед — лекция, 2 нед — практика) → следующее занятие 14 октября
@@ -190,5 +220,88 @@ void main() {
       final problem = tester.takeException();
       if (problem != null) fail('вкладка «$tab» ломается при крупном шрифте: $problem');
     }
+  });
+
+  testWidgets('Уведомления: план строится из расписания, разрешение спрашивается один раз', (tester) async {
+    final gateway = FakeGateway();
+    await _start(tester, prefs: profile, gateway: gateway); // среда 07.10.2026 13:30 МСК
+    await _settle(tester);
+
+    expect(gateway.permissionRequests, 1);
+    expect(gateway.plans, isNotEmpty);
+    final titles = gateway.lastPlan.map((n) => n.title).toList();
+    expect(titles.first, 'ЧТК и этика → 2-15'); // пара в 14:40, напоминание в 14:30
+    expect(titles, isNot(contains('Технологическое предпринимательство → 2-05'))); // уже идёт
+  });
+
+  testWidgets('Личные правки: отмена пары убирает её с экрана и из уведомлений, «Мои правки» возвращает', (tester) async {
+    final gateway = FakeGateway();
+    await _start(tester, prefs: profile, gateway: gateway);
+    expect(find.text('ЧТК и этика'), findsWidgets);
+
+    // Долгое нажатие на строку пары → «Отменить пару»
+    await tester.longPress(find.text('ЧТК и этика').last);
+    await _settle(tester);
+    expect(find.text('Отменить пару'), findsOneWidget);
+    await tester.tap(find.text('Отменить пару'));
+    await _settle(tester);
+
+    expect(find.text('ЧТК и этика'), findsNothing);
+    expect(gateway.lastPlan.map((n) => n.title), isNot(contains('ЧТК и этика → 2-15')));
+    expect(find.text('Мои правки (1)'), findsOneWidget);
+
+    // Открываем список правок и убираем отмену
+    await tester.tap(find.text('Мои правки (1)'));
+    await _settle(tester);
+    expect(find.text('Отменена: 4 пара'), findsOneWidget);
+    await tester.tap(find.byTooltip('Убрать правку'));
+    await _settle(tester);
+    await tester.tapAt(const Offset(10, 10)); // закрыть окно
+    await _settle(tester);
+
+    expect(find.text('ЧТК и этика'), findsWidgets);
+    expect(gateway.lastPlan.map((n) => n.title), contains('ЧТК и этика → 2-15'));
+  });
+
+  testWidgets('Личные правки: изменение аудитории показывается на экране и помечается', (tester) async {
+    await _start(tester, prefs: profile);
+    await tester.longPress(find.text('ЧТК и этика').last);
+    await _settle(tester);
+    await tester.tap(find.text('Изменить на этот день'));
+    await _settle(tester);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Аудитория'), '3-01');
+    await tester.tap(find.text('Сохранить'));
+    await _settle(tester);
+
+    expect(find.text('3-01'), findsWidgets);
+    expect(find.text('2-15'), findsNothing);
+    expect(find.text('изменено вами'), findsOneWidget);
+  });
+
+  testWidgets('Личные правки: своя пара на свободный день', (tester) async {
+    // Пятница 09.10 у юношей пуста (физ-ра только у девушек). Приложение сразу открывает субботу — листаем назад
+    await _start(tester, prefs: profile, now: DateTime.utc(2026, 10, 9, 8, 0)); // пт 09.10, 11:00 МСК
+    await tester.fling(find.byType(PageView), const Offset(600, 0), 2000);
+    await _settle(tester);
+    await tester.pumpAndSettle(); // дать странице докатиться до конца
+    await _settle(tester);
+    expect(find.textContaining('пятница, 9 октября'), findsOneWidget);
+    expect(find.text('Пар нет'), findsOneWidget);
+
+    await tester.tap(find.text('Мои правки').hitTestable());
+    await _settle(tester);
+    await tester.tap(find.text('Добавить свою пару'));
+    await _settle(tester);
+    await tester.enterText(find.widgetWithText(TextField, 'Название'), 'Консультация');
+    await tester.enterText(find.widgetWithText(TextField, 'Аудитория'), '2-10');
+    await tester.pump();
+    await tester.tap(find.text('Добавить'));
+    await _settle(tester);
+    await tester.tapAt(const Offset(10, 10));
+    await _settle(tester);
+
+    expect(find.text('Консультация'), findsWidgets);
+    expect(find.text('2-10'), findsWidgets);
   });
 }

@@ -12,7 +12,7 @@ import '../../domain/schedule_resolver.dart';
 import '../../domain/diff_summary.dart';
 import '../../domain/homework.dart';
 import '../common/lesson_widgets.dart';
-import '../homework/add_homework_sheet.dart';
+import '../overrides/day_edits.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -48,12 +48,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
         // Первый показ: если сегодня пар уже нет или их не было — открываем ближайший учебный день
         if (_baseDay == null) {
-          final todayLessons = resolve(today, data.index, data.schedule, data.profile, forcedWeek: data.forcedWeek);
+          final todayLessons = resolve(today, data.index, data.schedule, data.profile, overrides: data.overrides, forcedWeek: data.forcedWeek);
           final over = todayLessons.isEmpty || todayLessons.every((l) => !l.endAt.isAfter(now));
           _baseDay = today;
           if (over) {
             final next = nextStudyDay(today.add(const Duration(days: 1)), data.index, data.schedule, data.profile,
-                forcedWeek: data.forcedWeek);
+                overrides: data.overrides, forcedWeek: data.forcedWeek);
             if (next != null && todayLessons.isEmpty) {
               _page = _firstPage + next.difference(today).inDays;
               WidgetsBinding.instance.addPostFrameCallback((_) => _controller.jumpToPage(_page));
@@ -124,7 +124,7 @@ class _DayPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final homeworkDue = dueOn(ref.watch(homeworkProvider).value ?? const [], day);
-    final lessons = resolve(day, data.index, data.schedule, data.profile, forcedWeek: data.forcedWeek);
+    final lessons = resolve(day, data.index, data.schedule, data.profile, overrides: data.overrides, forcedWeek: data.forcedWeek);
     final theme = Theme.of(context);
 
     if (lessons.isEmpty) {
@@ -134,6 +134,8 @@ class _DayPage extends ConsumerWidget {
           const Text('🎉', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 8),
           Text(holiday ? 'Праздничный день' : 'Пар нет', style: theme.textTheme.titleLarge),
+          const SizedBox(height: 16),
+          _EditsButton(day: day, count: data.overrides.where((o) => o.date == day).length),
         ]),
       );
     }
@@ -164,9 +166,7 @@ class _DayPage extends ConsumerWidget {
       if (i > 0) {
         final gap = l.startAt.difference(lessons[i - 1].endAt);
         if (lessons[i - 1].pair == 2 && l.pair == 3) {
-          children.add(_GapLabel(gap > const Duration(minutes: 60) && lessons.any((x) => x.pair == 3)
-              ? 'большая перемена'
-              : 'большая перемена'));
+          children.add(const _GapLabel('большая перемена'));
         } else if (l.pair - lessons[i - 1].pair > 1) {
           children.add(_GapLabel('окно ${durationText(gap)}'));
         }
@@ -183,15 +183,30 @@ class _DayPage extends ConsumerWidget {
           room: l.room,
           highlighted: l == current,
           dimmed: finished,
-          note: l.note,
+          note: l.note ?? (l.isPersonal ? 'изменено вами' : null),
           hasHomework: homeworkDue.any((h) => h.subject == l.subject),
-          onLongPress: () => showAddHomework(context, subject: l.subject),
+          onLongPress: () => showLessonActions(context, l),
         ),
       ));
     }
 
+    children.add(Center(child: _EditsButton(day: day, count: data.overrides.where((o) => o.date == day).length)));
     return ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 16), children: children);
   }
+}
+
+/// «Мои правки (N)» — список правок дня и добавление своей пары.
+class _EditsButton extends StatelessWidget {
+  const _EditsButton({required this.day, required this.count});
+  final DateTime day;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => TextButton.icon(
+        onPressed: () => showDayEdits(context, day),
+        icon: const Icon(Icons.edit_calendar_outlined),
+        label: Text(count == 0 ? 'Мои правки' : 'Мои правки ($count)'),
+      );
 }
 
 class _GapLabel extends StatelessWidget {

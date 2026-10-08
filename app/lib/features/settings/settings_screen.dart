@@ -75,6 +75,50 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: (v) => v == null ? null : notifier.setThemeMode(v),
           ),
         ),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.notifications_outlined),
+          title: const Text('Напоминание перед парой'),
+          subtitle: DropdownButton<int>(
+            isExpanded: true,
+            value: const [0, 5, 10, 15, 30].contains(settings.notifyBeforeMin) ? settings.notifyBeforeMin : 10,
+            underline: const SizedBox(),
+            items: const [
+              DropdownMenuItem(value: 0, child: Text('Выключено')),
+              DropdownMenuItem(value: 5, child: Text('За 5 минут')),
+              DropdownMenuItem(value: 10, child: Text('За 10 минут')),
+              DropdownMenuItem(value: 15, child: Text('За 15 минут')),
+              DropdownMenuItem(value: 30, child: Text('За 30 минут')),
+            ],
+            onChanged: (v) => v == null ? null : notifier.setNotifyBeforeMin(v),
+          ),
+        ),
+        SwitchListTile(
+          secondary: const Icon(Icons.assignment_late_outlined),
+          title: const Text('Вечером напоминать о ДЗ'),
+          subtitle: const Text('В 19:00, если на завтра есть невыполненные задания'),
+          value: settings.eveningHomeworkReminder,
+          onChanged: notifier.setEveningHomeworkReminder,
+        ),
+        Consumer(builder: (context, ref, _) {
+          return ListTile(
+            leading: const Icon(Icons.notifications_active_outlined),
+            title: const Text('Разрешить уведомления'),
+            subtitle: const Text('Если уведомления не приходят — нажмите, чтобы разрешить их в системе'),
+            onTap: () async {
+              var allowed = false;
+              try {
+                final gateway = ref.read(notificationGatewayProvider);
+                await gateway.init();
+                allowed = await gateway.requestPermission() || await gateway.areEnabled();
+              } catch (_) {}
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(allowed ? 'Уведомления разрешены' : 'Уведомления запрещены. Включите их в настройках телефона: Приложения → Расписание → Уведомления'),
+              ));
+            },
+          );
+        }),
         ListTile(
           leading: const Icon(Icons.swap_horiz),
           title: const Text('Номер недели'),
