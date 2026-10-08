@@ -19,6 +19,8 @@ import 'data/repositories/schedule_repository.dart';
 import 'domain/diff_summary.dart';
 import 'domain/homework.dart';
 import 'domain/models.dart';
+import 'widget_bridge/deep_links.dart';
+import 'widget_bridge/widget_sync.dart';
 
 // ---------- базовые зависимости (в тестах подменяются) ----------
 
@@ -227,3 +229,8 @@ class UpdateBannerNotifier extends Notifier<List<String>> {
 }
 
 final updateBannerProvider = NotifierProvider<UpdateBannerNotifier, List<String>>(UpdateBannerNotifier.new);
+
+// ---------- мост с Android (виджеты, ссылки) ----------
+
+final widgetBridgeProvider = Provider<WidgetBridge>((ref) => const WidgetBridge());
+final linkChannelProvider = Provider<LinkChannel>((ref) => LinkChannel());

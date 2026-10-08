@@ -63,6 +63,12 @@ kotlin {
     }
 }
 
+dependencies {
+    // Тесты логики виджетов (app/src/test): обычные JVM-тесты, без телефона
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
+}
+
 flutter {
     source = "../.."
 }

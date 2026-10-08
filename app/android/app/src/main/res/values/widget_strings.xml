@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_now_next_name">Сейчас / Далее</string>
+    <string name="widget_now_next_description">Текущая или следующая пара и аудитория</string>
+    <string name="widget_today_name">Сегодня</string>
+    <string name="widget_today_description">Все пары дня</string>
+    <string name="widget_add_homework">+ ДЗ</string>
+</resources>

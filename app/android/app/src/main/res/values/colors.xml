@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Цвета виджетов (светлая тема). Тёмные — в values-night/colors.xml -->
+<resources>
+    <color name="widget_bg">#FFF6F5F2</color>
+    <color name="widget_text">#FF1C1D20</color>
+    <color name="widget_text_secondary">#FF64666D</color>
+    <color name="widget_accent">#FF2F5BD3</color>
+    <color name="widget_highlight">#FFDCE5FA</color>
+    <color name="widget_badge_bg">#FFE4EBFB</color>
+</resources>
