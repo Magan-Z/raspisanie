@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Доступ в интернет нужен, чтобы подтягивать обновления расписания с сайта -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="raspisanie"
+        android:label="Расписание"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

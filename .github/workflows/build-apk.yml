@@ -1,0 +1,83 @@
+# Сборка APK. Запускается, когда в репозитории создают тег вида v1.0.0 (или вручную).
+# Готовый APK появляется в разделе Releases репозитория.
+name: Сборка APK
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # нужно, чтобы создать Release
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # Встроенная копия расписания: если на сайте ещё ничего нет, приложение сразу покажет данные.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Свежая копия расписания в приложение
+        run: |
+          pip install -r ../data/requirements.txt
+          (cd ../data && python -m schedule_parser --out public --previous "")
+          bash ../scripts/sync_app_assets.sh
+
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter test
+
+      # Ключ подписи (по желанию): если в Settings → Secrets заданы все четыре секрета, APK подписывается ими.
+      - name: Ключ подписи
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/release.jks
+            printf 'storeFile=../release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+              "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/key.properties
+            echo "APK будет подписан вашим ключом"
+          else
+            echo "Секретов подписи нет — APK подпишется отладочным ключом"
+          fi
+
+      - name: Сборка
+        run: |
+          flutter build apk --release \
+            --dart-define=SCHEDULE_BASE_URL=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+
+      - name: Переименовать
+        run: cp build/app/outputs/flutter-apk/app-release.apk raspisanie.apk
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/raspisanie.apk
+          generate_release_notes: true
+
+      - name: APK как файл задачи (для ручного запуска)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: raspisanie-apk
+          path: app/raspisanie.apk

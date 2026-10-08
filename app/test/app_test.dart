@@ -122,4 +122,25 @@ void main() {
     await _start(tester, prefs: profile, now: DateTime.utc(2026, 10, 11, 9, 0));
     expect(find.textContaining('понедельник, 12 октября'), findsOneWidget);
   });
+
+  testWidgets('ДЗ: долгое нажатие на пару → срок сам = следующее занятие → появляется в списке ДЗ', (tester) async {
+    await _start(tester, prefs: profile);
+
+    await tester.longPress(find.text('ЧТК и этика'));
+    await _settle(tester);
+    expect(find.text('Новое ДЗ'), findsOneWidget);
+    // ЧТК в среду есть каждую неделю (1 нед — лекция, 2 нед — практика) → следующее занятие 14 октября
+    expect(find.textContaining('Срок: среда, 14 октября'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).last, 'Прочитать главу 3');
+    await tester.pump();
+    await tester.tap(find.text('Добавить'));
+    await _settle(tester);
+    expect(find.text('Новое ДЗ'), findsNothing);
+
+    await tester.tap(find.text('ДЗ').last);
+    await _settle(tester);
+    expect(find.text('Прочитать главу 3'), findsOneWidget);
+    expect(find.text('Позже'), findsOneWidget); // 14 октября — уже следующая неделя
+  });
 }

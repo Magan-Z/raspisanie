@@ -23,3 +23,12 @@ Map<int, List<Lesson>> weekTemplate(GroupSchedule schedule, UserProfile profile,
   }
   return result;
 }
+
+/// Названия предметов группы (для выбора при добавлении ДЗ), по алфавиту. Без кураторского часа и физ-ры.
+List<String> subjectsOf(GroupSchedule schedule, UserProfile profile) {
+  final names = {
+    for (final l in schedule.lessons)
+      if (lessonFitsProfile(l, profile) && l.kind != LessonKind.curator && l.kind != LessonKind.pe) l.subject,
+  };
+  return names.toList()..sort();
+}

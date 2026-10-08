@@ -9,7 +9,9 @@ import '../../core/bells.dart';
 import '../../core/formatting.dart';
 import '../../domain/models.dart';
 import '../../domain/schedule_resolver.dart';
+import '../../domain/homework.dart';
 import '../common/lesson_widgets.dart';
+import '../homework/add_homework_sheet.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -110,7 +112,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _DayPage extends StatelessWidget {
+class _DayPage extends ConsumerWidget {
   const _DayPage({required this.day, required this.today, required this.now, required this.data});
   final DateTime day;
   final DateTime today;
@@ -118,7 +120,8 @@ class _DayPage extends StatelessWidget {
   final MySchedule data;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final homeworkDue = dueOn(ref.watch(homeworkProvider).value ?? const [], day);
     final lessons = resolve(day, data.index, data.schedule, data.profile, forcedWeek: data.forcedWeek);
     final theme = Theme.of(context);
 
@@ -179,6 +182,8 @@ class _DayPage extends StatelessWidget {
           highlighted: l == current,
           dimmed: finished,
           note: l.note,
+          hasHomework: homeworkDue.any((h) => h.subject == l.subject),
+          onLongPress: () => showAddHomework(context, subject: l.subject),
         ),
       ));
     }

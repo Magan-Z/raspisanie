@@ -48,6 +48,8 @@ class LessonTile extends StatelessWidget {
     this.highlighted = false,
     this.dimmed = false,
     this.note,
+    this.hasHomework = false,
+    this.onLongPress,
   });
 
   final String start;
@@ -59,6 +61,8 @@ class LessonTile extends StatelessWidget {
   final bool highlighted;
   final bool dimmed;
   final String? note;
+  final bool hasHomework; // есть невыполненное ДЗ на этот день
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +88,14 @@ class LessonTile extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(subject, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              Text.rich(TextSpan(children: [
+                TextSpan(text: subject),
+                if (hasHomework)
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.middle,
+                    child: Padding(padding: const EdgeInsets.only(left: 6), child: Icon(Icons.assignment_late_outlined, size: 18, color: theme.colorScheme.error)),
+                  ),
+              ]), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
               Wrap(spacing: 8, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
                 KindBadge(kind),
@@ -102,8 +113,13 @@ class LessonTile extends StatelessWidget {
       ),
     );
     return Semantics(
-      label: '$start–$end, $subject, ${kind.title}${room != null ? ', аудитория $room' : ''}${teacher != null ? ', $teacher' : ''}',
-      child: ExcludeSemantics(child: Opacity(opacity: dimmed ? 0.55 : 1, child: tile)),
+      label: '${hasHomework ? 'Есть домашнее задание. ' : ''}$start–$end, $subject, ${kind.title}${room != null ? ', аудитория $room' : ''}${teacher != null ? ', $teacher' : ''}',
+      child: ExcludeSemantics(
+        child: Opacity(
+          opacity: dimmed ? 0.55 : 1,
+          child: onLongPress == null ? tile : GestureDetector(behavior: HitTestBehavior.opaque, onLongPress: onLongPress, child: tile),
+        ),
+      ),
     );
   }
 }

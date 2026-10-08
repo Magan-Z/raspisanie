@@ -2,10 +2,12 @@
 // (Уведомления, короткие названия и экспорт ДЗ добавятся на этапах 4–5.)
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_state.dart';
 import '../../core/formatting.dart';
+import '../../domain/homework.dart';
 import '../../domain/models.dart';
 import '../onboarding/onboarding_screen.dart';
 
@@ -103,6 +105,36 @@ class SettingsScreen extends ConsumerWidget {
             },
           );
         }),
+        ListTile(
+          leading: const Icon(Icons.upload_outlined),
+          title: const Text('Экспорт ДЗ'),
+          subtitle: const Text('Скопировать все ДЗ в буфер обмена — например, чтобы сохранить в заметках или отправить себе'),
+          onTap: () async {
+            final items = await ref.read(homeworkRepositoryProvider).all();
+            await Clipboard.setData(ClipboardData(text: exportHomework(items)));
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Скопировано ДЗ: ${items.length}')));
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.download_outlined),
+          title: const Text('Импорт ДЗ'),
+          subtitle: const Text('Вставить ДЗ, скопированные раньше (на новом телефоне)'),
+          onTap: () async {
+            final clip = await Clipboard.getData(Clipboard.kTextPlain);
+            String message;
+            try {
+              final added = await ref.read(homeworkRepositoryProvider).importItems(importHomework(clip?.text ?? ''));
+              ref.invalidate(homeworkProvider);
+              message = 'Добавлено ДЗ: $added';
+            } on FormatException catch (e) {
+              message = '${e.message}. Сначала скопируйте текст экспорта.';
+            }
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+          },
+        ),
+        const Divider(),
         ListTile(
           leading: const Icon(Icons.info_outline),
           title: const Text('О приложении'),

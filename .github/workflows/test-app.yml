@@ -1,0 +1,25 @@
+# Проверка приложения при любом изменении в папке app/: анализ кода и тесты.
+name: Проверка приложения
+
+on:
+  push:
+    paths: ["app/**", ".github/workflows/test-app.yml"]
+  pull_request:
+    paths: ["app/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: dart analyze lib test
+      - run: flutter test

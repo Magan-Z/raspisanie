@@ -8,6 +8,7 @@ import '../../core/bells.dart';
 import '../../core/formatting.dart';
 import '../../domain/week_view.dart';
 import '../common/lesson_widgets.dart';
+import '../homework/add_homework_sheet.dart';
 
 class WeekScreen extends ConsumerStatefulWidget {
   const WeekScreen({super.key});
@@ -65,6 +66,7 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
                       kind: l.kind,
                       teacher: l.teacher,
                       room: l.room,
+                      onLongPress: () => showAddHomework(context, subject: l.subject),
                       highlighted: week == currentWeek && weekday == today.weekday && _isNow(ref, l.pair, bells),
                     ),
                   ),

@@ -14,7 +14,9 @@ import 'core/clock.dart';
 import 'core/week.dart';
 import 'data/local/database.dart';
 import 'data/remote/schedule_api.dart';
+import 'data/repositories/homework_repository.dart';
 import 'data/repositories/schedule_repository.dart';
+import 'domain/homework.dart';
 import 'domain/models.dart';
 
 // ---------- базовые зависимости (в тестах подменяются) ----------
@@ -182,3 +184,10 @@ Future<SyncResult> syncSchedule(WidgetRef ref) async {
   ref.invalidate(lastFetchedProvider);
   return result;
 }
+
+// ---------- домашние задания ----------
+
+final homeworkRepositoryProvider = Provider<HomeworkRepository>((ref) => HomeworkRepository(ref.watch(databaseProvider)));
+
+/// Все ДЗ. После любого изменения вызываем ref.invalidate(homeworkProvider).
+final homeworkProvider = FutureProvider<List<HomeworkItem>>((ref) => ref.watch(homeworkRepositoryProvider).all());
