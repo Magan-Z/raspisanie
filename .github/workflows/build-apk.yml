@@ -62,7 +62,7 @@ jobs:
 
       - name: Сборка
         run: |
-          flutter build apk --release \
+          flutter build apk --release --target-platform android-arm64 \
             --dart-define=SCHEDULE_BASE_URL=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
 
       - name: Переименовать

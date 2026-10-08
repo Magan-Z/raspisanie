@@ -25,3 +25,4 @@ app/android/key.properties
 
 # Исходный файл из WhatsApp (рабочая копия лежит в data/sources/raspisanie.xlsx)
 /мое расписание.xlsx
+*.apk
