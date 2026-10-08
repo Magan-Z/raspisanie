@@ -4,44 +4,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/native.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:raspisanie/data/local/database.dart';
 import 'package:raspisanie/data/remote/schedule_api.dart';
 import 'package:raspisanie/data/repositories/schedule_repository.dart';
 
-class _DiskAssets extends AssetBundle {
-  @override
-  Future<ByteData> load(String key) async => ByteData.sublistView(File(key).readAsBytesSync());
-
-  @override
-  Future<String> loadString(String key, {bool cache = true}) async => utf8.decode(File(key).readAsBytesSync());
-
-  @override
-  Future<T> loadStructuredData<T>(String key, Future<T> Function(String value) parser) async => parser(await loadString(key));
-}
-
-/// Сервер, который отдаёт файлы из папки и считает запросы.
-class _FakeSite {
-  _FakeSite(this.files);
-  Map<String, String> files; // путь → содержимое
-  final requests = <String>[];
-  bool offline = false;
-  int get groupRequests => requests.where((r) => r.startsWith('groups/')).length;
-
-  late final client = MockClient((request) async {
-    if (offline) throw const SocketException('нет сети');
-    final path = request.url.path.replaceFirst('/site/', '');
-    requests.add(path);
-    final body = files[path];
-    if (body == null) return http.Response('not found', 404);
-    final etag = '"${body.hashCode}"';
-    if (request.headers['If-None-Match'] == etag) return http.Response('', 304);
-    return http.Response.bytes(utf8.encode(body), 200, headers: {'etag': etag});
-  });
-}
+import 'support/fakes.dart';
 
 void main() {
   late AppDatabase db;
@@ -72,9 +40,9 @@ void main() {
     return files;
   }
 
-  ScheduleRepository repo(_FakeSite? site) => ScheduleRepository(
+  ScheduleRepository repo(FakeSite? site) => ScheduleRepository(
         db: db,
-        assets: _DiskAssets(),
+        assets: DiskAssets(),
         api: site == null ? null : ScheduleApi('https://example.test/site/', client: site.client),
       );
 
@@ -88,7 +56,7 @@ void main() {
   });
 
   test('синхронизация подтягивает новую версию, и она показывается вместо встроенной', () async {
-    final site = _FakeSite(siteFiles());
+    final site = FakeSite(siteFiles());
     final r = repo(site);
 
     final result = await r.sync(groupId: 'ofo-1-bi-25');
@@ -102,7 +70,7 @@ void main() {
   });
 
   test('если расписание группы изменилось — вместе с ним приходит diff для баннера', () async {
-    final site = _FakeSite(siteFiles());
+    final site = FakeSite(siteFiles());
     final r = repo(site);
     await r.sync(groupId: 'ofo-1-bi-25'); // первая загрузка: «изменением» не считается
     site.files = siteFiles(version: '2099-03-03T00:00:00Z-n2')..['groups/ofo-1-bi-25.json'] = jsonEncode({
@@ -123,7 +91,7 @@ void main() {
   });
 
   test('повторная синхронизация: ETag → 304, группы заново не скачиваются', () async {
-    final site = _FakeSite(siteFiles());
+    final site = FakeSite(siteFiles());
     final r = repo(site);
     await r.sync(groupId: 'ofo-1-bi-25');
     final groupRequestsAfterFirst = site.groupRequests;
@@ -138,7 +106,7 @@ void main() {
   });
 
   test('меняется только одна группа → скачивается только она', () async {
-    final site = _FakeSite(siteFiles());
+    final site = FakeSite(siteFiles());
     final r = repo(site);
     await r.sync(groupId: 'ofo-1-bi-25');
 
@@ -160,7 +128,7 @@ void main() {
   });
 
   test('сервер недоступен: ошибка не бросается, кэш остаётся', () async {
-    final site = _FakeSite(siteFiles());
+    final site = FakeSite(siteFiles());
     final r = repo(site);
     await r.sync(groupId: 'ofo-1-bi-25');
 
@@ -171,7 +139,7 @@ void main() {
   });
 
   test('битый ответ сервера не портит кэш', () async {
-    final site = _FakeSite({'index.json': '{это не json'});
+    final site = FakeSite({'index.json': '{это не json'});
     final r = repo(site);
     final result = await r.sync();
     expect(result.error, isNotNull);
@@ -179,7 +147,7 @@ void main() {
   });
 
   test('новый семестр сбрасывает кэш групп', () async {
-    final site = _FakeSite(siteFiles());
+    final site = FakeSite(siteFiles());
     final r = repo(site);
     await r.sync(groupId: 'ofo-1-bi-25');
 

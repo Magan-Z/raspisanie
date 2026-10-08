@@ -1,9 +1,6 @@
 // Проверка приложения целиком (без телефона): первый запуск, экран «Сегодня», «Неделя».
 // Расписание берётся из встроенной копии assets/schedule, база — в памяти.
 
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -13,51 +10,10 @@ import 'package:raspisanie/app_state.dart';
 import 'package:raspisanie/core/clock.dart';
 import 'package:raspisanie/data/local/database.dart';
 import 'package:raspisanie/data/repositories/schedule_repository.dart';
-import 'package:raspisanie/domain/notification_plan.dart';
-import 'package:raspisanie/notifications/notification_gateway.dart';
 import 'package:raspisanie/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Ассеты читаются прямо с диска и без ожидания — в тестах так надёжнее, чем настоящий rootBundle.
-class _DiskAssets extends AssetBundle {
-  @override
-  Future<ByteData> load(String key) async {
-    final bytes = File(key).readAsBytesSync();
-    return ByteData.sublistView(Uint8List.fromList(bytes));
-  }
-
-  @override
-  Future<String> loadString(String key, {bool cache = true}) async => utf8.decode(File(key).readAsBytesSync());
-
-  @override
-  Future<T> loadStructuredData<T>(String key, Future<T> Function(String value) parser) async =>
-      parser(await loadString(key));
-}
-
-/// Вместо настоящих уведомлений — запись того, что приложение собиралось показать.
-class FakeGateway implements NotificationGateway {
-  final plans = <List<PlannedNotification>>[];
-  final shown = <String>[];
-  int permissionRequests = 0;
-
-  List<PlannedNotification> get lastPlan => plans.isEmpty ? const [] : plans.last;
-
-  @override
-  Future<void> init() async {}
-  @override
-  Future<bool> requestPermission() async {
-    permissionRequests++;
-    return true;
-  }
-
-  @override
-  Future<bool> areEnabled() async => true;
-  @override
-  Future<void> replaceAll(List<PlannedNotification> plan) async => plans.add(plan);
-  @override
-  Future<void> showNow({required int id, required String title, required String body, NotificationChannel channel = NotificationChannel.updates}) async =>
-      shown.add(title);
-}
+import 'support/fakes.dart';
 
 Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, DateTime? now, FakeGateway? gateway}) async {
   // Высокий «экран», чтобы весь список строился сразу (ListView строит только видимое)
@@ -76,7 +32,7 @@ Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, 
     overrides: [
       sharedPreferencesProvider.overrideWithValue(sp),
       databaseProvider.overrideWithValue(db),
-      repositoryProvider.overrideWithValue(ScheduleRepository(db: db, assets: _DiskAssets())),
+      repositoryProvider.overrideWithValue(ScheduleRepository(db: db, assets: DiskAssets())),
       notificationGatewayProvider.overrideWithValue(gateway ?? FakeGateway()),
       clockProvider.overrideWithValue(FixedClock(now ?? DateTime.utc(2026, 10, 7, 10, 30))), // 13:30 по Москве
     ],

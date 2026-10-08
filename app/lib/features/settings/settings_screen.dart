@@ -148,7 +148,7 @@ class SettingsScreen extends ConsumerWidget {
             title: const Text('Обновить расписание'),
             subtitle: Text(fetched == null ? 'Сейчас используется встроенная копия' : 'Обновлено ${agoText(fetched, now)}'),
             onTap: () async {
-              final result = await syncSchedule(ref);
+              final result = await syncSchedule(ProviderScope.containerOf(context));
               if (!context.mounted) return;
               final text = result.error != null ? 'Нет связи с сервером — работаем с сохранённым расписанием' : 'Расписание актуально';
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));

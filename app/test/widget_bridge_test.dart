@@ -37,15 +37,15 @@ void main() {
     final index = ScheduleIndex.fromJson(_fixture('index.json'));
     final schedule = GroupSchedule.fromJson(_fixture('ofo-1-bi-25.json'));
     const profile = UserProfile(formCode: 'ofo', groupId: 'ofo-1-bi-25', subgroup: 1, pe: PeChoice.male);
-    const channel = MethodChannel('raspisanie/widget');
+    const channel = MethodChannel('home_widget');
 
     tearDown(() => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
 
-    test('снимок уходит в нативную часть одной строкой JSON', () async {
-      MethodCall? received;
+    test('снимок уходит в нативную часть одной строкой JSON, затем оба виджета обновляются', () async {
+      final calls = <MethodCall>[];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
-        received = call;
-        return null;
+        calls.add(call);
+        return true;
       });
 
       await const WidgetBridge().push(
@@ -56,8 +56,11 @@ void main() {
         homework: const [],
       );
 
-      expect(received?.method, 'saveSnapshot');
-      final snapshot = jsonDecode(received!.arguments as String) as Map<String, dynamic>;
+      expect(calls.map((c) => c.method), ['saveWidgetData', 'updateWidget', 'updateWidget']);
+      expect(calls.first.arguments['id'], 'snapshot');
+      expect((calls[1].arguments as Map)['qualifiedAndroidName'], 'ru.raspisanie.raspisanie.widget.NowNextWidget');
+      expect((calls[2].arguments as Map)['qualifiedAndroidName'], 'ru.raspisanie.raspisanie.widget.TodayWidget');
+      final snapshot = jsonDecode(calls.first.arguments['data'] as String) as Map<String, dynamic>;
       expect(snapshot['weekLabel'], '2 неделя');
       expect((snapshot['days'] as List), hasLength(7));
       final first = ((snapshot['days'] as List).first as Map)['lessons'] as List;

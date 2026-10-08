@@ -187,7 +187,7 @@ final todayProvider = Provider<DateTime>((ref) {
 final lastFetchedProvider = FutureProvider<DateTime?>((ref) => ref.watch(repositoryProvider).lastFetchedAt());
 
 /// Проверить обновления на сайте и, если что-то изменилось, перечитать расписание.
-Future<SyncResult> syncSchedule(WidgetRef ref) async {
+Future<SyncResult> syncSchedule(ProviderContainer ref) async {
   final repo = ref.read(repositoryProvider);
   final groupId = ref.read(settingsProvider).profile?.groupId;
   final result = await repo.sync(groupId: groupId);

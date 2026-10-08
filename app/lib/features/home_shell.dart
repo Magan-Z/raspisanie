@@ -5,8 +5,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app_outputs.dart';
 import '../app_state.dart';
-import '../domain/notification_plan.dart';
 import '../widget_bridge/deep_links.dart';
 import 'homework/add_homework_sheet.dart';
 import 'homework/homework_screen.dart';
@@ -30,7 +30,7 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Расписание уже показано из кэша — обновления проверяем фоном и молча
-    WidgetsBinding.instance.addPostFrameCallback((_) => syncSchedule(ref));
+    WidgetsBinding.instance.addPostFrameCallback((_) => syncSchedule(ProviderScope.containerOf(context)));
 
     // Виджеты и уведомления: после любого изменения (расписание, ДЗ, правки, профиль, настройки) пересобираем
     ref.listenManual(myScheduleProvider, (_, _) => _scheduleRefresh(), fireImmediately: true);
@@ -61,46 +61,10 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
 
   Future<void> _refreshOutputs() async {
     if (!mounted) return;
-    await _pushWidgets();
-    await _replanNotifications();
-  }
-
-  /// Отдаёт виджетам свежий снимок расписания на 7 дней.
-  Future<void> _pushWidgets() async {
-    final my = ref.read(myScheduleProvider).value;
-    if (my == null) return;
-    final homework = ref.read(homeworkProvider).value ?? const [];
-    await ref.read(widgetBridgeProvider).push(
-          now: ref.read(clockProvider).now(),
-          index: my.index,
-          schedule: my.schedule,
-          profile: my.profile,
-          homework: homework,
-          overrides: my.overrides,
-          forcedWeek: my.forcedWeek,
-        );
-  }
-
-  /// Заново ставит уведомления на 7 дней вперёд (перед парой и вечернее напоминание о ДЗ).
-  Future<void> _replanNotifications() async {
-    final my = ref.read(myScheduleProvider).value;
-    if (my == null) return;
-    final settings = ref.read(settingsProvider);
-    final plan = planNotifications(
-      now: ref.read(clockProvider).now(),
-      index: my.index,
-      schedule: my.schedule,
-      profile: my.profile,
-      homework: ref.read(homeworkProvider).value ?? const [],
-      notifyBeforeMin: settings.notifyBeforeMin,
-      eveningReminder: settings.eveningHomeworkReminder,
-      overrides: my.overrides,
-      forcedWeek: my.forcedWeek,
-    );
     try {
-      await ref.read(notificationGatewayProvider).replaceAll(plan);
+      await refreshOutputs(ProviderScope.containerOf(context));
     } catch (_) {
-      // Уведомления — удобство: если система отказала, приложение работает как обычно
+      // Виджеты и уведомления — удобство: сбой не должен мешать приложению
     }
   }
 
@@ -127,7 +91,7 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      syncSchedule(ref);
+      syncSchedule(ProviderScope.containerOf(context));
       _scheduleRefresh(); // наступил новый день — снимок и уведомления «7 дней вперёд» сдвигаются
     }
   }
