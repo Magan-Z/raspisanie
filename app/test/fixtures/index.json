@@ -1,0 +1,818 @@
+{
+ "schemaVersion": 1,
+ "version": "2026-10-08T14:33:47Z-2c6c2fc8",
+ "semester": {
+  "id": "2026-autumn",
+  "start": "2026-09-01",
+  "end": "2026-12-26"
+ },
+ "weekAnchor": "2026-08-31",
+ "timezone": "Europe/Moscow",
+ "bells": [
+  [
+   "09:00",
+   "10:30"
+  ],
+  [
+   "10:40",
+   "12:10"
+  ],
+  [
+   "13:00",
+   "14:30"
+  ],
+  [
+   "14:40",
+   "16:10"
+  ],
+  [
+   "16:20",
+   "17:50"
+  ]
+ ],
+ "holidays": [
+  "2026-11-04"
+ ],
+ "forms": [
+  {
+   "code": "ofo",
+   "title": "Очная",
+   "groups": [
+    {
+     "id": "ofo-1-bi-26",
+     "title": "1 БИ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "БИ-26-1"
+      },
+      {
+       "n": 2,
+       "label": "БИ-26-2"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "3a1f17271ba1f462"
+    },
+    {
+     "id": "ofo-2-bi-26",
+     "title": "2 БИ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "БИ-26-3"
+      },
+      {
+       "n": 2,
+       "label": "БИ-26-4"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "46fe97d1df0a0aed"
+    },
+    {
+     "id": "ofo-ib-26",
+     "title": "ИБ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "d7f6e55fdb77d324"
+    },
+    {
+     "id": "ofo-1-pi-26",
+     "title": "1 ПИ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-26-1"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-26-2"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "a77dfd82394763cd"
+    },
+    {
+     "id": "ofo-2-pi-26",
+     "title": "2 ПИ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-26-3"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-26-4"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "a7aebdb26d490d05"
+    },
+    {
+     "id": "ofo-3-pi-26",
+     "title": "3 ПИ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-26-5"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-26-6"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "0dbf0a2a9f55971c"
+    },
+    {
+     "id": "ofo-4-pi-26",
+     "title": "4 ПИ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-26-7"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-26-8"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "8bf78f0227bcacc3"
+    },
+    {
+     "id": "ofo-1-itiss-26",
+     "title": "1 ИТиСС-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ИТиСС-26-1"
+      },
+      {
+       "n": 2,
+       "label": "ИТиСС-26-2"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "470a9d32a1013e8e"
+    },
+    {
+     "id": "ofo-2-itiss-26",
+     "title": "2 ИТиСС-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ИТиСС-26-3"
+      },
+      {
+       "n": 2,
+       "label": "ИТиСС-26-4"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "bdde3fd9f9811be0"
+    },
+    {
+     "id": "ofo-3-itiss-26",
+     "title": "3 ИТиСС-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ИТиСС-26-5"
+      },
+      {
+       "n": 2,
+       "label": "ИТиСС-26-6"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "e3191ce960c856e1"
+    },
+    {
+     "id": "ofo-4-itiss-26",
+     "title": "4 ИТиСС-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ИТиСС-26-7"
+      },
+      {
+       "n": 2,
+       "label": "ИТиСС-26-8"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "3a9595668a192c59"
+    },
+    {
+     "id": "ofo-1-bi-25",
+     "title": "1 БИ-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "БИ-25-1"
+      },
+      {
+       "n": 2,
+       "label": "БИ-25-2"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "536b8c31a9c63089"
+    },
+    {
+     "id": "ofo-2-bi-25",
+     "title": "2 БИ-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "БИ-25-3"
+      },
+      {
+       "n": 2,
+       "label": "БИ-25-4"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "954056a7d790d475"
+    },
+    {
+     "id": "ofo-2-ib-25",
+     "title": "2 ИБ-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ИБ-25-1"
+      },
+      {
+       "n": 2,
+       "label": "ИБ-25-2"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "f04f7f9c6b04804f"
+    },
+    {
+     "id": "ofo-1-pi-25",
+     "title": "1 ПИ-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-25-1"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-25-2"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "66db953ae9a574cb"
+    },
+    {
+     "id": "ofo-2-pi-25",
+     "title": "2 ПИ-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-25-3"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-25-4"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "aefb9e160ab008b6"
+    },
+    {
+     "id": "ofo-3-pi-25",
+     "title": "3 ПИ-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-25-5"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-25-6"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "4000f79c871cad73"
+    },
+    {
+     "id": "ofo-1-itiss-25",
+     "title": "1 ИТиСС-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ИТиСС-25-1"
+      },
+      {
+       "n": 2,
+       "label": "ИТиСС-25-2"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "a5ccd310f1d879fd"
+    },
+    {
+     "id": "ofo-2-itiss-25",
+     "title": "2 ИТиСС-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ИТиСС-25-3"
+      },
+      {
+       "n": 2,
+       "label": "ИТиСС-25-4"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "9b0b2031623574d3"
+    },
+    {
+     "id": "ofo-1-bi-24",
+     "title": "1 БИ-24",
+     "course": 3,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "БИ-24-1"
+      },
+      {
+       "n": 2,
+       "label": "БИ-24-2"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "c77a7568ad1e989c"
+    },
+    {
+     "id": "ofo-2-bi-24",
+     "title": "2 БИ-24",
+     "course": 3,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "БИ-24-3"
+      },
+      {
+       "n": 2,
+       "label": "БИ-24-4"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "cdffc2e06e503cb2"
+    },
+    {
+     "id": "ofo-1-pi-24",
+     "title": "1 ПИ-24",
+     "course": 3,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-24-1"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-24-2"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "c0b83f88eab43662"
+    },
+    {
+     "id": "ofo-2-pi-24",
+     "title": "2 ПИ-24",
+     "course": 3,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-24-3"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-24-4"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "67888dc0b5d24641"
+    },
+    {
+     "id": "ofo-1-itiss-24",
+     "title": "1 ИТиСС-24",
+     "course": 3,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "3d5bbf4adc9a4c99"
+    },
+    {
+     "id": "ofo-2-itiss-24",
+     "title": "2 ИТиСС-24",
+     "course": 3,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": true,
+     "hash": "3e76958ca160f520"
+    },
+    {
+     "id": "ofo-1-bi-23",
+     "title": "1 БИ-23",
+     "course": 4,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "БИ-23-1"
+      },
+      {
+       "n": 2,
+       "label": "БИ-23-2"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "772ebf30b0315e44"
+    },
+    {
+     "id": "ofo-1-pi-23",
+     "title": "1 ПИ-23",
+     "course": 4,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-23-1"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-23-2"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "4b8bac0ee7259766"
+    },
+    {
+     "id": "ofo-2-pi-23",
+     "title": "2 ПИ-23",
+     "course": 4,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "ПИ-23-3"
+      },
+      {
+       "n": 2,
+       "label": "ПИ-23-4"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "20af72c8ae643fac"
+    },
+    {
+     "id": "ofo-itiss-23",
+     "title": "ИТиСС-23",
+     "course": 4,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "95953eea810fe6a3"
+    }
+   ]
+  },
+  {
+   "code": "ozfo",
+   "title": "Очно-заочная",
+   "groups": [
+    {
+     "id": "ozfo-oz-bi-26",
+     "title": "ОЗ-БИ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "9576d2bf63b3ced8"
+    },
+    {
+     "id": "ozfo-oz-ib-26",
+     "title": "ОЗ-ИБ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "173446517a9239ab"
+    },
+    {
+     "id": "ozfo-oz-1-itiss-26",
+     "title": "ОЗ-1 ИТиСС-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      },
+      {
+       "n": 2,
+       "label": "Подгруппа 2"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "a510f08e6c130d89"
+    },
+    {
+     "id": "ozfo-oz-2-itiss-26",
+     "title": "ОЗ-2 ИТиСС-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      },
+      {
+       "n": 2,
+       "label": "Подгруппа 2"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "1547b929347d6a57"
+    },
+    {
+     "id": "ozfo-oz-3-itiss-26",
+     "title": "ОЗ-3 ИТиСС-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      },
+      {
+       "n": 2,
+       "label": "Подгруппа 2"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "fbcf93361a742440"
+    },
+    {
+     "id": "ozfo-oz-bi-25",
+     "title": "ОЗ-БИ-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "138a2054d05ab945"
+    },
+    {
+     "id": "ozfo-oz-ib-25",
+     "title": "ОЗ-ИБ-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "4a80aca655f3ee49"
+    },
+    {
+     "id": "ozfo-oz-1-itiss-25",
+     "title": "ОЗ-1 ИТиСС-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "6dddaa796c7ac45a"
+    },
+    {
+     "id": "ozfo-oz-2-itiss-25",
+     "title": "ОЗ-2 ИТиСС-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "607fc838edab3800"
+    },
+    {
+     "id": "ozfo-oz-bi-24",
+     "title": "ОЗ-БИ-24",
+     "course": 3,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "e20170f3336138ff"
+    },
+    {
+     "id": "ozfo-oz-ib-24",
+     "title": "ОЗ-ИБ-24",
+     "course": 3,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "d0b7b062be7a76ec"
+    },
+    {
+     "id": "ozfo-oz-itiss-24",
+     "title": "ОЗ-ИТиСС-24",
+     "course": 3,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "1c5bafc811103f69"
+    },
+    {
+     "id": "ozfo-oz-bi-23",
+     "title": "ОЗ-БИ-23",
+     "course": 4,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "059ae9646c5ad5e8"
+    },
+    {
+     "id": "ozfo-oz-ib-23",
+     "title": "ОЗ-ИБ-23",
+     "course": 4,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "9988a3a77669db75"
+    },
+    {
+     "id": "ozfo-oz-itiss-23",
+     "title": "ОЗ-ИТиСС-23",
+     "course": 4,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "2a4dc4bb2b93f769"
+    },
+    {
+     "id": "ozfo-oz-bi-22",
+     "title": "ОЗ-БИ-22",
+     "course": 5,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "163d72975662c461"
+    },
+    {
+     "id": "ozfo-oz-itiss-22",
+     "title": "ОЗ-ИТиСС-22",
+     "course": 5,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "fa468d12bd4306f0"
+    }
+   ]
+  },
+  {
+   "code": "mag",
+   "title": "Магистратура",
+   "groups": [
+    {
+     "id": "mag-m-bi-26",
+     "title": "М-БИ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "a3f51d1893b13827"
+    },
+    {
+     "id": "mag-m-ivt-26",
+     "title": "М-ИВТ-26",
+     "course": 1,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "a3dd3011f7c9000a"
+    },
+    {
+     "id": "mag-m-bi-25",
+     "title": "М-БИ-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "0362cbedd89e0c3e"
+    },
+    {
+     "id": "mag-m-ivt-25",
+     "title": "М-ИВТ-25",
+     "course": 2,
+     "subgroups": [
+      {
+       "n": 1,
+       "label": "Подгруппа 1"
+      }
+     ],
+     "hasGenderedPe": false,
+     "hash": "7732e6e2e05fe5e8"
+    }
+   ]
+  }
+ ]
+}
