@@ -40,18 +40,40 @@ String agoText(DateTime moment, DateTime now) {
 }
 
 /// Короткое название предмета для виджета: «Технологическое предпринимательство» → «Технол. предпр.».
+/// Сначала выкидываем предлоги, потом по одному сокращаем самые длинные слова — пока название не влезет.
+/// Слова с латиницей и дефисом не трогаем (Python, ViPNet, Бизнес-планирование).
 String shortSubject(String subject, {int maxLength = 18}) {
   if (subject.length <= maxLength) return subject;
-  final words = subject.split(' ');
-  final short = words.map((w) {
-    if (w.length <= 4 || w == w.toUpperCase()) return w; // короткие слова и аббревиатуры не трогаем
-    // обрезаем после согласной, чтобы не получилось «Техноло.»
-    var cut = 6;
+
+  const fillers = {'и', 'в', 'на', 'для', 'по', 'о', 'об', 'с', 'к'};
+  final words = [
+    for (final w in subject.split(' '))
+      if (!fillers.contains(w.toLowerCase())) w,
+  ];
+
+  bool canShorten(String w) =>
+      w.length > 5 && !w.endsWith('.') && !w.contains('-') && !RegExp(r'[A-Za-z]').hasMatch(w) && w != w.toUpperCase();
+
+  String abbreviate(String w) {
+    // обрезаем так, чтобы не оставить гласную на конце («Технол.», а не «Техно.»)
+    var cut = 5;
     while (cut > 3 && 'аеёиоуыэюяй'.contains(w[cut - 1].toLowerCase())) {
       cut--;
     }
     return '${w.substring(0, cut)}.';
-  }).where((w) => !const {'и', 'в', 'на', 'для', 'по'}.contains(w));
-  final result = short.join(' ');
-  return result.length <= maxLength + 4 ? result : '${result.substring(0, maxLength + 3)}…';
+  }
+
+  String joined() => words.join(' ');
+  while (joined().length > maxLength) {
+    // самое длинное слово из тех, что ещё можно сократить
+    var longest = -1;
+    for (var i = 0; i < words.length; i++) {
+      if (canShorten(words[i]) && (longest == -1 || words[i].length > words[longest].length)) longest = i;
+    }
+    if (longest == -1) break;
+    words[longest] = abbreviate(words[longest]);
+  }
+
+  final result = joined();
+  return result.length <= maxLength + 6 ? result : '${result.substring(0, maxLength + 5)}…';
 }
