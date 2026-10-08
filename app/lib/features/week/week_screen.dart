@@ -40,8 +40,8 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
           children: [
             SegmentedButton<int>(
               segments: [
-                ButtonSegment(value: 1, label: Text(currentWeek == 1 ? '1 неделя · сейчас' : '1 неделя')),
-                ButtonSegment(value: 2, label: Text(currentWeek == 2 ? '2 неделя · сейчас' : '2 неделя')),
+                ButtonSegment(value: 1, label: FittedBox(fit: BoxFit.scaleDown, child: Text(currentWeek == 1 ? '1 неделя · сейчас' : '1 неделя'))),
+                ButtonSegment(value: 2, label: FittedBox(fit: BoxFit.scaleDown, child: Text(currentWeek == 2 ? '2 неделя · сейчас' : '2 неделя'))),
               ],
               selected: {week},
               onSelectionChanged: (s) => setState(() => _week = s.first),

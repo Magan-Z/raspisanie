@@ -16,6 +16,7 @@ import 'data/local/database.dart';
 import 'data/remote/schedule_api.dart';
 import 'data/repositories/homework_repository.dart';
 import 'data/repositories/schedule_repository.dart';
+import 'domain/diff_summary.dart';
 import 'domain/homework.dart';
 import 'domain/models.dart';
 
@@ -181,6 +182,11 @@ Future<SyncResult> syncSchedule(WidgetRef ref) async {
   if (result.indexChanged || result.groupChanged) {
     ref.invalidate(indexProvider);
   }
+  final profile = ref.read(settingsProvider).profile;
+  if (result.groupChanged && result.diffJson != null && profile != null) {
+    final items = summarizeDiff(result.diffJson!, profile);
+    if (items.isNotEmpty) ref.read(updateBannerProvider.notifier).show(items);
+  }
   ref.invalidate(lastFetchedProvider);
   return result;
 }
@@ -199,3 +205,25 @@ final allGroupsProvider = FutureProvider<List<GroupSchedule>>((ref) async {
   await ref.watch(indexProvider.future);
   return ref.watch(repositoryProvider).loadAllGroups();
 });
+
+// ---------- баннер «Расписание обновилось» ----------
+
+/// Список изменений, который показывается на экране «Сегодня», пока пользователь не нажмёт «Понятно».
+class UpdateBannerNotifier extends Notifier<List<String>> {
+  static const _key = 'updateBanner';
+
+  @override
+  List<String> build() => ref.watch(sharedPreferencesProvider).getStringList(_key) ?? const [];
+
+  Future<void> show(List<String> items) async {
+    await ref.read(sharedPreferencesProvider).setStringList(_key, items);
+    state = items;
+  }
+
+  Future<void> dismiss() async {
+    await ref.read(sharedPreferencesProvider).remove(_key);
+    state = const [];
+  }
+}
+
+final updateBannerProvider = NotifierProvider<UpdateBannerNotifier, List<String>>(UpdateBannerNotifier.new);

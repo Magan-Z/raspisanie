@@ -58,7 +58,10 @@ void main() {
         if (g['id'] == 'ofo-1-bi-25') g['hash'] = 'newhash';
       }
     }
-    final files = {'index.json': jsonEncode(index)};
+    final files = {
+      'index.json': jsonEncode(index),
+      'diff/latest.json': '{"groups": {}}',
+    };
     for (final f in Directory('test/fixtures/all').listSync().whereType<File>()) {
       final name = f.path.split('/').last;
       final group = jsonDecode(f.readAsStringSync()) as Map<String, dynamic>;
@@ -96,6 +99,27 @@ void main() {
     final group = await r.loadGroup('ofo-1-bi-25');
     expect(group.lessons, hasLength(22)); // свежая версия, а не встроенная (23)
     expect(await r.lastFetchedAt(), isNotNull);
+  });
+
+  test('если расписание группы изменилось — вместе с ним приходит diff для баннера', () async {
+    final site = _FakeSite(siteFiles());
+    final r = repo(site);
+    await r.sync(groupId: 'ofo-1-bi-25'); // первая загрузка: «изменением» не считается
+    site.files = siteFiles(version: '2099-03-03T00:00:00Z-n2')..['groups/ofo-1-bi-25.json'] = jsonEncode({
+      ...jsonDecode(site.files['groups/ofo-1-bi-25.json']!) as Map<String, dynamic>,
+      'version': '2099-03-03T00:00:00Z-n2',
+    });
+    final index = jsonDecode(site.files['index.json']!) as Map<String, dynamic>;
+    for (final form in index['forms']) {
+      for (final g in form['groups']) {
+        if (g['id'] == 'ofo-1-bi-25') g['hash'] = 'hash-2';
+      }
+    }
+    site.files['index.json'] = jsonEncode(index);
+
+    final result = await r.sync(groupId: 'ofo-1-bi-25');
+    expect(result.groupChanged, isTrue);
+    expect(result.diffJson, '{"groups": {}}');
   });
 
   test('повторная синхронизация: ETag → 304, группы заново не скачиваются', () async {

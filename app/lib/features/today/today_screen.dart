@@ -9,6 +9,7 @@ import '../../core/bells.dart';
 import '../../core/formatting.dart';
 import '../../domain/models.dart';
 import '../../domain/schedule_resolver.dart';
+import '../../domain/diff_summary.dart';
 import '../../domain/homework.dart';
 import '../common/lesson_widgets.dart';
 import '../homework/add_homework_sheet.dart';
@@ -70,6 +71,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               _controller.animateToPage(_firstPage + today.difference(_baseDay!).inDays,
                   duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
             }),
+            const _UpdateBanner(),
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -266,6 +268,37 @@ class _SyncLabel extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(text, style: Theme.of(context).textTheme.bodySmall),
+    );
+  }
+}
+
+/// «Расписание обновилось: 2 изменения» + список. Остаётся, пока не нажмёте «Понятно».
+class _UpdateBanner extends ConsumerWidget {
+  const _UpdateBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(updateBannerProvider);
+    if (items.isEmpty) return const SizedBox();
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      color: scheme.tertiaryContainer,
+      elevation: 0,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(diffHeadline(items.length),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: scheme.onTertiaryContainer, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          for (final item in items.take(6)) Text(item, style: TextStyle(color: scheme.onTertiaryContainer)),
+          if (items.length > 6) Text('…и ещё ${items.length - 6}', style: TextStyle(color: scheme.onTertiaryContainer)),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(onPressed: () => ref.read(updateBannerProvider.notifier).dismiss(), child: const Text('Понятно')),
+          ),
+        ]),
+      ),
     );
   }
 }

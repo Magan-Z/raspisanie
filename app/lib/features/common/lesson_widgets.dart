@@ -68,6 +68,9 @@ class LessonTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = subjectColor(subject, theme.brightness);
+    // Крупный системный шрифт: колонка времени шире, аудитория уезжает под название (иначе строка не помещается)
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    final roomBelow = scale > 1.3;
     final tile = Container(
       decoration: BoxDecoration(
         color: highlighted ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerLow,
@@ -79,7 +82,7 @@ class LessonTile extends StatelessWidget {
         children: [
           Container(width: 5, height: 52, margin: const EdgeInsets.only(right: 10), decoration: BoxDecoration(color: color, borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)))),
           SizedBox(
-            width: 52,
+            width: 52 * scale.clamp(1.0, 2.0),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(start, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
               Text(end, style: theme.textTheme.bodySmall),
@@ -101,10 +104,12 @@ class LessonTile extends StatelessWidget {
                 KindBadge(kind),
                 if (teacher != null) Text(teacher!, style: theme.textTheme.bodyMedium),
               ]),
+              if (roomBelow && room != null)
+                Text(room!, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
               if (note != null) Padding(padding: const EdgeInsets.only(top: 4), child: Text(note!, style: theme.textTheme.bodySmall)),
             ]),
           ),
-          if (room != null)
+          if (!roomBelow && room != null)
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: Text(room!, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),

@@ -14,9 +14,10 @@ import '../remote/schedule_api.dart';
 
 /// Итог синхронизации.
 class SyncResult {
-  const SyncResult({this.indexChanged = false, this.groupChanged = false, this.error});
+  const SyncResult({this.indexChanged = false, this.groupChanged = false, this.diffJson, this.error});
   final bool indexChanged;
   final bool groupChanged;
+  final String? diffJson; // diff/latest.json, если расписание вашей группы изменилось
   final Object? error;
 }
 
@@ -113,7 +114,15 @@ class ScheduleRepository {
       var groupChanged = false;
       if (groupId != null) groupChanged = await _syncGroup(api, groupId);
       await _syncOtherGroups(api, except: groupId);
-      return SyncResult(indexChanged: indexChanged, groupChanged: groupChanged);
+
+      // Что именно изменилось — нужно только для баннера; не получилось скачать — не страшно
+      String? diffJson;
+      if (groupChanged) {
+        try {
+          diffJson = (await api.fetch('diff/latest.json')).body;
+        } catch (_) {}
+      }
+      return SyncResult(indexChanged: indexChanged, groupChanged: groupChanged, diffJson: diffJson);
     } catch (error) {
       return SyncResult(error: error);
     }

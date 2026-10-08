@@ -166,4 +166,29 @@ void main() {
     expect(find.widgetWithText(Chip, '2-05'), findsNothing);
     expect(find.widgetWithText(Chip, '3 корпус'), findsNothing); // «3 корпус» — не аудитория
   });
+
+  testWidgets('Баннер «Расписание обновилось» показывается и закрывается кнопкой «Понятно»', (tester) async {
+    await _start(tester, prefs: {...profile, 'updateBanner': ['Изменено: Ср, 4 пара — ЧТК и этика (аудитория: 2-15 → 2-16)']});
+    expect(find.text('Расписание обновилось: 1 изменение'), findsOneWidget);
+    expect(find.textContaining('2-15 → 2-16'), findsOneWidget);
+
+    await tester.tap(find.text('Понятно'));
+    await _settle(tester);
+    expect(find.text('Расписание обновилось: 1 изменение'), findsNothing);
+  });
+
+  testWidgets('Крупный шрифт (×2) и узкий экран: ни на одной вкладке нет переполнения', (tester) async {
+    await _start(tester, prefs: profile);
+    tester.view.physicalSize = const Size(320, 640); // узкий телефон
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await _settle(tester);
+
+    for (final tab in ['Сегодня', 'Неделя', 'ДЗ', 'Поиск', 'Настройки']) {
+      await tester.tap(find.text(tab).last);
+      await _settle(tester);
+      final problem = tester.takeException();
+      if (problem != null) fail('вкладка «$tab» ломается при крупном шрифте: $problem');
+    }
+  });
 }

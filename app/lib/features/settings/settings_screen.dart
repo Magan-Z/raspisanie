@@ -39,7 +39,8 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.person_outline),
             title: const Text('Подгруппа'),
-            trailing: DropdownButton<int>(
+            subtitle: DropdownButton<int>(
+              isExpanded: true,
               value: profile.subgroup,
               underline: const SizedBox(),
               items: [for (final s in group.subgroups) DropdownMenuItem(value: s.n, child: Text(s.label))],
@@ -50,7 +51,8 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.sports_outlined),
             title: const Text('Физкультура'),
-            trailing: DropdownButton<PeChoice>(
+            subtitle: DropdownButton<PeChoice>(
+              isExpanded: true,
               value: profile.pe,
               underline: const SizedBox(),
               items: [for (final p in PeChoice.values) DropdownMenuItem(value: p, child: Text(p.title))],
@@ -61,7 +63,8 @@ class SettingsScreen extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.brightness_6_outlined),
           title: const Text('Тема'),
-          trailing: DropdownButton<ThemeMode>(
+          subtitle: DropdownButton<ThemeMode>(
+            isExpanded: true,
             value: settings.themeMode,
             underline: const SizedBox(),
             items: const [
@@ -75,19 +78,22 @@ class SettingsScreen extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.swap_horiz),
           title: const Text('Номер недели'),
-          subtitle: Text(settings.forcedWeek == null
-              ? 'Считается автоматически (${index == null ? '—' : '${_autoWeek(index, today)} неделя'}). Переключите вручную, если в институте чередование сбилось.'
-              : 'Выбрана вручную: ${settings.forcedWeek} неделя'),
-          trailing: DropdownButton<int?>(
-            value: settings.forcedWeek,
-            underline: const SizedBox(),
-            items: const [
-              DropdownMenuItem(value: null, child: Text('Авто')),
-              DropdownMenuItem(value: 1, child: Text('1 неделя')),
-              DropdownMenuItem(value: 2, child: Text('2 неделя')),
-            ],
-            onChanged: notifier.setForcedWeek,
-          ),
+          subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(settings.forcedWeek == null
+                ? 'Считается автоматически (${index == null ? '—' : '${_autoWeek(index, today)} неделя'}). Переключите вручную, если в институте чередование сбилось.'
+                : 'Выбрана вручную: ${settings.forcedWeek} неделя'),
+            DropdownButton<int?>(
+              isExpanded: true,
+              value: settings.forcedWeek,
+              underline: const SizedBox(),
+              items: const [
+                DropdownMenuItem(value: null, child: Text('Авто')),
+                DropdownMenuItem(value: 1, child: Text('1 неделя')),
+                DropdownMenuItem(value: 2, child: Text('2 неделя')),
+              ],
+              onChanged: notifier.setForcedWeek,
+            ),
+          ]),
         ),
         const Divider(),
         Consumer(builder: (context, ref, _) {
