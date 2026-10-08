@@ -5,7 +5,7 @@ enum LessonKind {
   lecture('Лекция', 'Л'),
   practice('Практика', 'П'),
   pe('Физ-ра', 'Ф'),
-  curator('Кураторский час', 'К');
+  curator('Куратор', 'К');
 
   const LessonKind(this.title, this.letter);
   final String title;
@@ -28,7 +28,7 @@ enum PeChoice {
       PeChoice.values.firstWhere((p) => p.name == value, orElse: () => PeChoice.both);
 }
 
-/// Занятие из расписания (одна запись из groups/<id>.json).
+/// Занятие из расписания (одна запись из файла группы).
 class Lesson {
   const Lesson({
     required this.weekday,
@@ -185,7 +185,7 @@ class ScheduleIndex {
   }
 }
 
-/// groups/<id>.json — расписание одной группы.
+/// Файл группы (groups/ID.json) — расписание одной группы.
 class GroupSchedule {
   const GroupSchedule({
     required this.version,

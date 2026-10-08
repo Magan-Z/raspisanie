@@ -1,0 +1,214 @@
+{
+ "schemaVersion": 1,
+ "version": "2026-10-08T14:33:47Z-2c6c2fc8",
+ "group": {
+  "id": "ozfo-oz-bi-26",
+  "title": "ОЗ-БИ-26",
+  "form": "ozfo",
+  "course": 1,
+  "subgroups": [
+   {
+    "n": 1,
+    "label": "Подгруппа 1"
+   }
+  ]
+ },
+ "lessons": [
+  {
+   "weekday": 5,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Введение в специальность",
+   "teacher": "Мальсагов Б.С.",
+   "room": "2-23",
+   "tags": [],
+   "raw": "Введение в специальсность Мальсагов Б.С. 2-23"
+  },
+  {
+   "weekday": 5,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Математика",
+   "teacher": "Куликова М.Х.",
+   "room": "4-30",
+   "tags": [],
+   "raw": "Математика Куликова М.Х. 4-30"
+  },
+  {
+   "weekday": 5,
+   "pair": 3,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "История",
+   "teacher": "Техиев Э.И.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "История Техиев Э.И. 2-05"
+  },
+  {
+   "weekday": 5,
+   "pair": 3,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Обучение служением",
+   "teacher": "Лабазанов И.Л.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "Обучение служением Лабазанов И.Л. 2-05"
+  },
+  {
+   "weekday": 5,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Иностранный язык",
+   "teacher": "Джукаева М.А.",
+   "room": "2-07",
+   "tags": [],
+   "raw": "Иностранный язык Джукаева М.А. 2-07"
+  },
+  {
+   "weekday": 5,
+   "pair": 5,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "pe",
+   "subject": "Физическая культура и спорт",
+   "teacher": "Навурбиев А.В.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "Физическая культура и спорт Навурбиев А.В. 2-05"
+  },
+  {
+   "weekday": 6,
+   "pair": 1,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Основы Российской государственности",
+   "teacher": "Эльбиева Л.Р",
+   "room": "4-23",
+   "tags": [],
+   "raw": "Основы Российской государственности Эльбиева Л.Р 4-23"
+  },
+  {
+   "weekday": 6,
+   "pair": 2,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Экономическая теория",
+   "teacher": "Чилаев А.Ш.",
+   "room": "3-12",
+   "tags": [],
+   "raw": "Экономическая теория Чилаев А.Ш. 3-12"
+  },
+  {
+   "weekday": 6,
+   "pair": 2,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Чеченский язык",
+   "teacher": "Мамалова Х.Э.",
+   "room": "4-39",
+   "tags": [],
+   "raw": "Чеченский язык Мамалова Х.Э. 4-39"
+  },
+  {
+   "weekday": 6,
+   "pair": 3,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Экономическая теория",
+   "teacher": "Чилаев А.Ш.",
+   "room": "4-04",
+   "tags": [],
+   "raw": "Экономическая теория Чилаев А.Ш. 4-04"
+  },
+  {
+   "weekday": 6,
+   "pair": 3,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "История",
+   "teacher": "Нуридова А.Х.",
+   "room": "4-23",
+   "tags": [],
+   "raw": "История Нуридова А.Х. 4-23"
+  },
+  {
+   "weekday": 6,
+   "pair": 4,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Основы Российской государственности",
+   "teacher": "Эльбиева Л.Р.",
+   "room": "3-20",
+   "tags": [],
+   "raw": "Основы Российской государственности Эльбиева Л.Р. 3-20"
+  },
+  {
+   "weekday": 6,
+   "pair": 4,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Информатика",
+   "teacher": "Абубакаров М.",
+   "room": "3-12",
+   "tags": [],
+   "raw": "Информатика Абубакаров М. 3-12"
+  },
+  {
+   "weekday": 6,
+   "pair": 5,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Обучение служением",
+   "teacher": "Лабазанов И.Л.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "Обучение служением Лабазанов И.Л. 2-05"
+  }
+ ]
+}

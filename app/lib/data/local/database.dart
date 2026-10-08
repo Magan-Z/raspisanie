@@ -7,7 +7,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 part 'database.g.dart';
 
-/// Кэш файлов групп: groups/<id>.json.
+/// Кэш файлов групп (groups/ID.json).
 class ScheduleCache extends Table {
   TextColumn get groupId => text()();
   TextColumn get version => text()();

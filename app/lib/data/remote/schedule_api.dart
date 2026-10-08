@@ -25,7 +25,7 @@ class ScheduleApi {
     final base = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
     final uri = Uri.parse(base).resolve(path);
     final response = await _client.get(uri, headers: {
-      if (etag != null) 'If-None-Match': etag,
+      'If-None-Match': ?etag,
       'Cache-Control': 'no-cache',
     }).timeout(_timeout);
 

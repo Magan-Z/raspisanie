@@ -1,0 +1,361 @@
+{
+ "schemaVersion": 1,
+ "version": "2026-10-08T14:33:47Z-2c6c2fc8",
+ "group": {
+  "id": "ofo-2-pi-24",
+  "title": "2 ПИ-24",
+  "form": "ofo",
+  "course": 3,
+  "subgroups": [
+   {
+    "n": 1,
+    "label": "ПИ-24-3"
+   },
+   {
+    "n": 2,
+    "label": "ПИ-24-4"
+   }
+  ]
+ },
+ "lessons": [
+  {
+   "weekday": 1,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Web-программирование",
+   "teacher": "Магомадов В.С.",
+   "room": "2-18",
+   "tags": [],
+   "raw": "Web-программирование Магомадов В.С. 2-18"
+  },
+  {
+   "weekday": 1,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    2
+   ],
+   "kind": "practice",
+   "subject": "Программирование на Python",
+   "teacher": "Умархаджиев М-Х.Р.",
+   "room": "3-08",
+   "tags": [],
+   "raw": "Программирование на Python Умархаджиев М-Х.Р. 3-08"
+  },
+  {
+   "weekday": 1,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Базы данных",
+   "teacher": "Энгиноев У.Т.",
+   "room": "3-21",
+   "tags": [],
+   "raw": "Базы данных Энгиноев У.Т. 3-21"
+  },
+  {
+   "weekday": 1,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    2
+   ],
+   "kind": "practice",
+   "subject": "Алгоритмы и структуры данных",
+   "teacher": "Шуева Э.А.",
+   "room": "2-10",
+   "tags": [],
+   "raw": "Алгоритмы и структуры данных Шуева Э.А. 2-10"
+  },
+  {
+   "weekday": 2,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Алгоритмы и структуры данных",
+   "teacher": "Шуева Э.А.",
+   "room": "2-21",
+   "tags": [],
+   "raw": "Алгоритмы и структуры данных Шуева Э.А. 2-21"
+  },
+  {
+   "weekday": 2,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "lecture",
+   "subject": "Базы данных",
+   "teacher": "Энгиноев У.Т.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "Базы данных Энгиноев У.Т. 2-05"
+  },
+  {
+   "weekday": 2,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "pe",
+   "subject": "Физическая культура и спорт",
+   "teacher": "Навурбиев А.В.",
+   "room": "3 корпус",
+   "tags": [
+    "male"
+   ],
+   "raw": "Физическая культура и спорт (юноши) Навурбиев А.В. 3 корпус"
+  },
+  {
+   "weekday": 2,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Программирование на Python",
+   "teacher": "Кибиев Р.С-М.",
+   "room": "3-17",
+   "tags": [],
+   "raw": "Программирование на Python Кибиев Р.С-М. 3-17"
+  },
+  {
+   "weekday": 2,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    2
+   ],
+   "kind": "practice",
+   "subject": "Web-программирование",
+   "teacher": "Магомадов В.С.",
+   "room": "2-10",
+   "tags": [],
+   "raw": "Web-программирование Магомадов В.С. 2-10"
+  },
+  {
+   "weekday": 2,
+   "pair": 5,
+   "week": 1,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "curator",
+   "subject": "Кураторский час",
+   "teacher": "Аюбов С-М.",
+   "room": "2-13",
+   "tags": [],
+   "raw": "Кураторский час Аюбов С-М. 2-13"
+  },
+  {
+   "weekday": 3,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "practice",
+   "subject": "Программирование на Python",
+   "teacher": "Кибиев Р.С-М.",
+   "room": "3-17",
+   "tags": [],
+   "raw": "Программирование на Python Кибиев Р.С-М. 3-17"
+  },
+  {
+   "weekday": 3,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "practice",
+   "subject": "Объектно-ориентированное программирование",
+   "teacher": "Минаев О.М.",
+   "room": "2-21",
+   "tags": [],
+   "raw": "Объектно-ориентировнное программирование Минаев О.М. 2-21"
+  },
+  {
+   "weekday": 3,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    2
+   ],
+   "kind": "practice",
+   "subject": "Объектно-ориентированное программирование",
+   "teacher": "Минаев О.М.",
+   "room": "2-21",
+   "tags": [],
+   "raw": "Объектно-ориентировнное программирование Минаев О.М. 2-21"
+  },
+  {
+   "weekday": 4,
+   "pair": 1,
+   "week": 1,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "lecture",
+   "subject": "Правоведение",
+   "teacher": "Дадаева М.С.",
+   "room": "3-03",
+   "tags": [],
+   "raw": "Правоведение Дадаева М.С. 3-03"
+  },
+  {
+   "weekday": 4,
+   "pair": 1,
+   "week": 2,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "practice",
+   "subject": "Web-программирование",
+   "teacher": "Губашева Х.А.",
+   "room": "3-08",
+   "tags": [],
+   "raw": "Web-программирование Губашева Х.А. 3-08"
+  },
+  {
+   "weekday": 4,
+   "pair": 2,
+   "week": 1,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "lecture",
+   "subject": "Экономика",
+   "teacher": "Абубакаров М.В.",
+   "room": "3-03",
+   "tags": [],
+   "raw": "Экономика Абубакаров М.В. 3-03"
+  },
+  {
+   "weekday": 4,
+   "pair": 2,
+   "week": 2,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "practice",
+   "subject": "Web-программирование",
+   "teacher": "Губашева Х.А.",
+   "room": "3-08",
+   "tags": [],
+   "raw": "Web-программирование Губашева Х.А. 3-08"
+  },
+  {
+   "weekday": 4,
+   "pair": 3,
+   "week": 1,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "practice",
+   "subject": "Экономика",
+   "teacher": "Абубакаров М.В.",
+   "room": "3-12",
+   "tags": [],
+   "raw": "Экономика Абубакаров М.В. 3-12"
+  },
+  {
+   "weekday": 4,
+   "pair": 4,
+   "week": 1,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "practice",
+   "subject": "Правоведение",
+   "teacher": "Азиева П.З.",
+   "room": "3-01",
+   "tags": [],
+   "raw": "Правоведение Азиева П.З. 3-01"
+  },
+  {
+   "weekday": 5,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "pe",
+   "subject": "Физическая культура и спорт",
+   "teacher": "Магомадова Я.Г.",
+   "room": "3 корпус",
+   "tags": [
+    "female"
+   ],
+   "raw": "Физическая культура и спорт (девушки) Магомадова Я.Г. 3 корпус"
+  },
+  {
+   "weekday": 6,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    2
+   ],
+   "kind": "practice",
+   "subject": "Базы данных",
+   "teacher": "Энгиноев У.Т.",
+   "room": "4-17",
+   "tags": [],
+   "raw": "Базы данных Энгиноев У.Т. 4-17"
+  },
+  {
+   "weekday": 6,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1,
+    2
+   ],
+   "kind": "practice",
+   "subject": "Алгоритмы и структуры данных",
+   "teacher": "Энгиноев У.Т.",
+   "room": "2-10",
+   "tags": [],
+   "raw": "Алгоритмы и структуры данных Энгиноев У.Т. 2-10"
+  },
+  {
+   "weekday": 6,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Объектно-ориентированное программирование",
+   "teacher": "Минаев О.М.",
+   "room": "2-21",
+   "tags": [],
+   "raw": "Объектно-ориентировнное программирование Минаев О.М. 2-21"
+  }
+ ]
+}

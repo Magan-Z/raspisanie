@@ -1,0 +1,130 @@
+{
+ "schemaVersion": 1,
+ "version": "2026-10-08T14:33:47Z-2c6c2fc8",
+ "group": {
+  "id": "ozfo-oz-ib-25",
+  "title": "ОЗ-ИБ-25",
+  "form": "ozfo",
+  "course": 2,
+  "subgroups": [
+   {
+    "n": 1,
+    "label": "Подгруппа 1"
+   }
+  ]
+ },
+ "lessons": [
+  {
+   "weekday": 5,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Программирование",
+   "teacher": "Ибрагимова З.М.",
+   "room": "3-08",
+   "tags": [],
+   "raw": "Программирование Ибрагимова З.М. 3-08"
+  },
+  {
+   "weekday": 5,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Управление IT-проектами",
+   "teacher": "Юнаева С.М.",
+   "room": "3-19",
+   "tags": [],
+   "raw": "Управление IТ-проектами Юнаева С.М. 3-19"
+  },
+  {
+   "weekday": 5,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Философия",
+   "teacher": "Кутаев А.Х.",
+   "room": "3-01",
+   "tags": [],
+   "raw": "Философия Кутаев А.Х. 3-01"
+  },
+  {
+   "weekday": 5,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Управление IT-проектами",
+   "teacher": "Мизаев М.М.",
+   "room": "2-14",
+   "tags": [],
+   "raw": "Управление IТ-проектами Мизаев М.М. 2-14"
+  },
+  {
+   "weekday": 5,
+   "pair": 5,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Иностранный язык",
+   "teacher": "Джукаева М.А.",
+   "room": "3-13",
+   "tags": [],
+   "raw": "Иностранный язык Джукаева М.А. 3-13"
+  },
+  {
+   "weekday": 6,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Математика",
+   "teacher": "Куликова М.Х.",
+   "room": "4-30",
+   "tags": [],
+   "raw": "Математика Куликова М.Х. 4-30"
+  },
+  {
+   "weekday": 6,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Математика",
+   "teacher": "Куликова М.Х.",
+   "room": "4-30",
+   "tags": [],
+   "raw": "Математика Куликова М.Х. 4-30"
+  },
+  {
+   "weekday": 6,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Информационная безопасность",
+   "teacher": "Аюбов С-М.",
+   "room": "3-28",
+   "tags": [],
+   "raw": "Информационная безопасность Аюбов С-М. 3-28"
+  }
+ ]
+}

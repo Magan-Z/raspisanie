@@ -1,0 +1,200 @@
+{
+ "schemaVersion": 1,
+ "version": "2026-10-08T14:33:47Z-2c6c2fc8",
+ "group": {
+  "id": "ozfo-oz-ib-26",
+  "title": "ОЗ-ИБ-26",
+  "form": "ozfo",
+  "course": 1,
+  "subgroups": [
+   {
+    "n": 1,
+    "label": "Подгруппа 1"
+   }
+  ]
+ },
+ "lessons": [
+  {
+   "weekday": 5,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Физика",
+   "teacher": "Акаева М.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "Физика Акаева М. 2-05"
+  },
+  {
+   "weekday": 5,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Информатика",
+   "teacher": "Эльмурзаева М.Э.",
+   "room": "3-17",
+   "tags": [],
+   "raw": "Информатика Эльмурзаева М.Э. 3-17"
+  },
+  {
+   "weekday": 5,
+   "pair": 3,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "История",
+   "teacher": "Техиев Э.И.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "История Техиев Э.И. 2-05"
+  },
+  {
+   "weekday": 5,
+   "pair": 3,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Обучение служением",
+   "teacher": "Лабазанов И.Л.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "Обучение служением Лабазанов И.Л. 2-05"
+  },
+  {
+   "weekday": 5,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Математика",
+   "teacher": "Куликова М.Х.",
+   "room": "4-30",
+   "tags": [],
+   "raw": "Математика Куликова М.Х. 4-30"
+  },
+  {
+   "weekday": 5,
+   "pair": 5,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "pe",
+   "subject": "Физическая культура и спорт",
+   "teacher": "Навурбиев А.В.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "Физическая культура и спорт Навурбиев А.В. 2-05"
+  },
+  {
+   "weekday": 6,
+   "pair": 1,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Основы Российской государственности",
+   "teacher": "Эльбиева Л.Р.",
+   "room": "4-35",
+   "tags": [],
+   "raw": "Основы Российской государственности Эльбиева Л.Р. 4-35"
+  },
+  {
+   "weekday": 6,
+   "pair": 1,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Основы Российской государственности",
+   "teacher": "Эльбиева Л.Р",
+   "room": "4-23",
+   "tags": [],
+   "raw": "Основы Российской государственности Эльбиева Л.Р 4-23"
+  },
+  {
+   "weekday": 6,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Иностранный язык",
+   "teacher": "Джукаева М.А.",
+   "room": "4-09",
+   "tags": [],
+   "raw": "Иностранный язык Джукаева М.А. 4-09"
+  },
+  {
+   "weekday": 6,
+   "pair": 3,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Чеченский язык",
+   "teacher": "Мамалова Х.Э.",
+   "room": "4-39",
+   "tags": [],
+   "raw": "Чеченский язык Мамалова Х.Э. 4-39"
+  },
+  {
+   "weekday": 6,
+   "pair": 3,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "История",
+   "teacher": "Нуридова А.Х.",
+   "room": "4-23",
+   "tags": [],
+   "raw": "История Нуридова А.Х. 4-23"
+  },
+  {
+   "weekday": 6,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Физика",
+   "teacher": "Талхигова Х.",
+   "room": "3-22",
+   "tags": [],
+   "raw": "Физика Талхигова Х. 3-22"
+  },
+  {
+   "weekday": 6,
+   "pair": 5,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Обучение служением",
+   "teacher": "Лабазанов И.Л.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "Обучение служением Лабазанов И.Л. 2-05"
+  }
+ ]
+}
