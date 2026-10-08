@@ -1,0 +1,27 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Результат парсера (собирается заново в GitHub Actions)
+public/
+data/public/
+
+# Служебные файлы macOS и Excel
+.DS_Store
+~$*
+
+# Flutter / Android
+app/.dart_tool/
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/android/.gradle/
+app/android/local.properties
+app/android/key.properties
+*.jks
+*.keystore
+
+# Исходный файл из WhatsApp (рабочая копия лежит в data/sources/raspisanie.xlsx)
+/мое расписание.xlsx

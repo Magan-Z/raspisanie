@@ -1,0 +1,75 @@
+# Публикация расписания на GitHub Pages.
+# Запускается, когда меняется что-то в папке data/ (например, загружен новый xlsx),
+# или вручную: вкладка Actions → «Публикация расписания» → Run workflow.
+name: Публикация расписания
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - ".github/workflows/publish-schedule.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Две публикации одновременно не запускаем
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: data
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: data/requirements.txt
+
+      - name: Установка библиотек
+        run: pip install -r requirements.txt
+
+      - name: Тесты
+        run: python -m pytest
+
+      - name: Адрес сайта
+        id: pages
+        uses: actions/configure-pages@v5
+
+      # Если проверки не пройдут, шаг упадёт, GitHub пришлёт письмо,
+      # а на сайте останется прошлая (хорошая) версия.
+      - name: Разбор расписания
+        run: python -m schedule_parser --out ../public --previous "${{ steps.pages.outputs.base_url }}/"
+
+      - name: Страница подписки
+        run: |
+          cp web/index.html ../public/index.html
+          touch ../public/.nojekyll
+
+      - name: Отчёт в журнал
+        if: always()
+        run: cat ../public/report.txt || true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
