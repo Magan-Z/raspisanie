@@ -1,0 +1,144 @@
+{
+ "schemaVersion": 1,
+ "version": "2026-10-08T14:33:47Z-2c6c2fc8",
+ "group": {
+  "id": "ozfo-oz-bi-23",
+  "title": "ОЗ-БИ-23",
+  "form": "ozfo",
+  "course": 4,
+  "subgroups": [
+   {
+    "n": 1,
+    "label": "Подгруппа 1"
+   }
+  ]
+ },
+ "lessons": [
+  {
+   "weekday": 5,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Анализ данных",
+   "teacher": "Гузуева Э.Р.",
+   "room": "2-23",
+   "tags": [],
+   "raw": "Анализ данных Гузуева Э.Р. 2-23"
+  },
+  {
+   "weekday": 5,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "ИС в бухгалтерском учете",
+   "teacher": "Батукаева А.Р.",
+   "room": "2-20",
+   "tags": [],
+   "raw": "ИС в бухгалтерском учете Батукаева А.Р. 2-20"
+  },
+  {
+   "weekday": 5,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "1с-предприятие",
+   "teacher": "Батукаева А.Р.",
+   "room": "2-20",
+   "tags": [],
+   "raw": "1с-предприятие Батукаева А.Р. 2-20"
+  },
+  {
+   "weekday": 5,
+   "pair": 5,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "ИС в бухгалтерском учете",
+   "teacher": "Батукаева А.Р.",
+   "room": "2-20",
+   "tags": [],
+   "raw": "ИС в бухгалтерском учете Батукаева А.Р. 2-20"
+  },
+  {
+   "weekday": 6,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Архитектура предприятий",
+   "teacher": "Батаева П.С.",
+   "room": "2-16",
+   "tags": [],
+   "raw": "Архитектура предприятий Батаева П.С. 2-16"
+  },
+  {
+   "weekday": 6,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "1с-предприятие",
+   "teacher": "Батукаева А.Р.",
+   "room": "2-16",
+   "tags": [],
+   "raw": "1с-предприятие Батукаева А.Р. 2-16"
+  },
+  {
+   "weekday": 6,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Архитектура предприятий",
+   "teacher": "Эсмурзаева М.Х.",
+   "room": "2-23",
+   "tags": [],
+   "raw": "Архитектура предприятий Эсмурзаева М.Х. 2-23"
+  },
+  {
+   "weekday": 6,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Бизнес-планирование",
+   "teacher": "Болтукаев И.И.",
+   "room": "2-16",
+   "tags": [],
+   "raw": "Бизнес-планирование Болтукаев И.И. 2-16"
+  },
+  {
+   "weekday": 6,
+   "pair": 5,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Бизнес-планирование",
+   "teacher": "Юнаева С.М.",
+   "room": "2-16",
+   "tags": [],
+   "raw": "Бизнес-планирование Юнаева С.М. 2-16"
+  }
+ ]
+}

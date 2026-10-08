@@ -1,10 +1,11 @@
-// Нижняя панель: «Сегодня» · «Неделя» · «Настройки».
+// Нижняя панель: «Сегодня» · «Неделя» · «ДЗ» · «Поиск» · «Настройки».
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_state.dart';
 import 'homework/homework_screen.dart';
+import 'search/search_screen.dart';
 import 'settings/settings_screen.dart';
 import 'today/today_screen.dart';
 import 'week/week_screen.dart';
@@ -40,7 +41,7 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
-    const pages = [TodayScreen(), WeekScreen(), HomeworkScreen(), SettingsScreen()];
+    const pages = [TodayScreen(), WeekScreen(), HomeworkScreen(), SearchScreen(), SettingsScreen()];
     return Scaffold(
       body: SafeArea(child: IndexedStack(index: _tab, children: pages)),
       bottomNavigationBar: NavigationBar(
@@ -51,6 +52,7 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
           NavigationDestination(
               icon: Icon(Icons.calendar_view_week_outlined), selectedIcon: Icon(Icons.calendar_view_week), label: 'Неделя'),
           NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment), label: 'ДЗ'),
+          NavigationDestination(icon: Icon(Icons.search), selectedIcon: Icon(Icons.search), label: 'Поиск'),
           NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Настройки'),
         ],
       ),

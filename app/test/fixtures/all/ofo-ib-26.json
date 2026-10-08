@@ -1,0 +1,274 @@
+{
+ "schemaVersion": 1,
+ "version": "2026-10-08T14:33:47Z-2c6c2fc8",
+ "group": {
+  "id": "ofo-ib-26",
+  "title": "ИБ-26",
+  "form": "ofo",
+  "course": 1,
+  "subgroups": [
+   {
+    "n": 1,
+    "label": "Подгруппа 1"
+   }
+  ]
+ },
+ "lessons": [
+  {
+   "weekday": 1,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Математика",
+   "teacher": "Гацаева Р.С-А.",
+   "room": "3-14",
+   "tags": [],
+   "raw": "Математика Гацаева Р.С-А. 3-14"
+  },
+  {
+   "weekday": 1,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Математика",
+   "teacher": "Гацаева Р.С-А.",
+   "room": "3-14",
+   "tags": [],
+   "raw": "Математика Гацаева Р.С-А. 3-14"
+  },
+  {
+   "weekday": 1,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Основы Российской государственности",
+   "teacher": "Эльбиева Л.Р.",
+   "room": "4-22",
+   "tags": [],
+   "raw": "Основы российской государственности Эльбиева Л.Р. 4-22"
+  },
+  {
+   "weekday": 1,
+   "pair": 4,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "curator",
+   "subject": "Кураторский час",
+   "teacher": "Шуева Э.А.",
+   "room": "2-10",
+   "tags": [],
+   "raw": "Кураторский час Шуева Э.А. 2-10"
+  },
+  {
+   "weekday": 2,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "pe",
+   "subject": "Физическая культура и спорт",
+   "teacher": "Навурбиев А.В.",
+   "room": "3 корпус",
+   "tags": [
+    "male"
+   ],
+   "raw": "Физическая культура и спорт (юноши) Навурбиев А.В. 3 корпус"
+  },
+  {
+   "weekday": 2,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Физика",
+   "teacher": "Алероев М.А.",
+   "room": "3-36",
+   "tags": [],
+   "raw": "Физика Алероев М.А. 3-36"
+  },
+  {
+   "weekday": 2,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Иностранный язык",
+   "teacher": "Газимаева Х.А.",
+   "room": "4-22",
+   "tags": [],
+   "raw": "Иностранный язык Газимаева Х.А. 4-22"
+  },
+  {
+   "weekday": 2,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Чеченский язык",
+   "teacher": "Мамалова Х.Э.",
+   "room": "3-14",
+   "tags": [],
+   "raw": "Чеченский язык Мамалова Х.Э. 3-14"
+  },
+  {
+   "weekday": 3,
+   "pair": 2,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Обучение служением",
+   "teacher": "Лабазанов И.Л.",
+   "room": "4-33",
+   "tags": [],
+   "raw": "Обучение служением Лабазанов И.Л. 4-33"
+  },
+  {
+   "weekday": 3,
+   "pair": 3,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Обучение служением",
+   "teacher": "Лабазанов И.Л.",
+   "room": "2-07",
+   "tags": [],
+   "raw": "Обучение служением Лабазанов И.Л. 2-07"
+  },
+  {
+   "weekday": 3,
+   "pair": 3,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Физика",
+   "teacher": "Алероев М.А.",
+   "room": "3-36",
+   "tags": [],
+   "raw": "Физика Алероев М.А. 3-36"
+  },
+  {
+   "weekday": 3,
+   "pair": 4,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Физика",
+   "teacher": "Алероев М.А.",
+   "room": "3-24",
+   "tags": [],
+   "raw": "Физика Алероев М.А.3-24"
+  },
+  {
+   "weekday": 4,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "История России",
+   "teacher": "Матагова Х.А.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "История России Матагова Х.А. 2-05"
+  },
+  {
+   "weekday": 4,
+   "pair": 2,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Информатика",
+   "teacher": "Эльмурзаева М.Э.",
+   "room": "3-21",
+   "tags": [],
+   "raw": "Информатика Эльмурзаева М.Э. 3-21"
+  },
+  {
+   "weekday": 4,
+   "pair": 2,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Основы Российской государственности",
+   "teacher": "Эльбиева Л.Р.",
+   "room": "2-05",
+   "tags": [],
+   "raw": "Основы российской государственности Эльбиева Л.Р. 2-05"
+  },
+  {
+   "weekday": 5,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "pe",
+   "subject": "Физическая культура и спорт",
+   "teacher": "Магомадова Я.Г.",
+   "room": "3 корпус",
+   "tags": [
+    "female"
+   ],
+   "raw": "Физическая культура и спорт (девушки) Магомадова Я.Г. 3 корпус"
+  },
+  {
+   "weekday": 6,
+   "pair": 1,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "История России",
+   "teacher": "Техиев Э.И.",
+   "room": "3-13",
+   "tags": [],
+   "raw": "История России Техиев Э.И. 3-13"
+  },
+  {
+   "weekday": 6,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Информатика",
+   "teacher": "Эльмурзаева М.Э.",
+   "room": "4-19",
+   "tags": [],
+   "raw": "Информатика Эльмурзаева М.Э. 4-19"
+  }
+ ]
+}

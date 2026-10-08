@@ -71,6 +71,15 @@ class ScheduleRepository {
     throw StateError('Нет расписания группы $groupId');
   }
 
+  /// Расписания всех групп института — для поиска преподавателей и аудиторий.
+  Future<List<GroupSchedule>> loadAllGroups() async {
+    final index = await loadIndex();
+    return [
+      for (final form in index.forms)
+        for (final group in form.groups) await loadGroup(group.id),
+    ];
+  }
+
   // ---------- синхронизация ----------
 
   /// Проверяет обновления на сайте. Никогда не бросает исключений: ошибка возвращается в результате.
@@ -103,6 +112,7 @@ class ScheduleRepository {
 
       var groupChanged = false;
       if (groupId != null) groupChanged = await _syncGroup(api, groupId);
+      await _syncOtherGroups(api, except: groupId);
       return SyncResult(indexChanged: indexChanged, groupChanged: groupChanged);
     } catch (error) {
       return SyncResult(error: error);
@@ -130,6 +140,28 @@ class ScheduleRepository {
           fetchedAt: DateTime.now(),
         ));
     return cached != null; // первая загрузка — не «изменение»
+  }
+
+  /// Остальные группы (для поиска) обновляем по хешу; ошибка одной группы не мешает другим.
+  Future<void> _syncOtherGroups(ScheduleApi api, {String? except}) async {
+    final index = await loadIndex();
+    for (final form in index.forms) {
+      for (final group in form.groups) {
+        if (group.id == except) continue;
+        final cached = await (db.select(db.scheduleCache)..where((t) => t.groupId.equals(group.id))).getSingleOrNull();
+        if (cached?.hash == group.hash) continue;
+        if (cached == null) {
+          // Встроенная копия той же версии — скачивать нечего
+          final bundledJson = await _bundled('groups/${group.id}.json');
+          if (bundledJson != null && GroupSchedule.fromJson(_decode(bundledJson)).version == index.version) continue;
+        }
+        try {
+          await _syncGroup(api, group.id);
+        } catch (_) {
+          // Не получилось — попробуем при следующей синхронизации
+        }
+      }
+    }
   }
 
   // ---------- вспомогательное ----------

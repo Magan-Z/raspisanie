@@ -143,4 +143,27 @@ void main() {
     expect(find.text('Прочитать главу 3'), findsOneWidget);
     expect(find.text('Позже'), findsOneWidget); // 14 октября — уже следующая неделя
   });
+
+  testWidgets('Поиск: свободные аудитории и расписание преподавателя', (tester) async {
+    await _start(tester, prefs: profile); // среда 07.10.2026 13:30 МСК, 3 пара идёт
+
+    await tester.tap(find.text('Поиск').last);
+    await _settle(tester);
+
+    // Преподаватель: набираем «Халиев» → выбираем из подсказок
+    await tester.enterText(find.byType(TextField).first, 'Халиев');
+    await _settle(tester);
+    await tester.tap(find.text('Халиев М.С-У.').last);
+    await _settle(tester);
+    expect(find.textContaining('Сейчас ведёт: Технологическое предпринимательство'), findsOneWidget);
+
+    // Свободные аудитории на 3 пару: 2-05 занята, значит в списке свободных её нет
+    await tester.tap(find.text('Свободные'));
+    await _settle(tester);
+    await tester.tap(find.text('3 пара'));
+    await _settle(tester);
+    expect(find.textContaining('свободно'), findsOneWidget);
+    expect(find.widgetWithText(Chip, '2-05'), findsNothing);
+    expect(find.widgetWithText(Chip, '3 корпус'), findsNothing); // «3 корпус» — не аудитория
+  });
 }

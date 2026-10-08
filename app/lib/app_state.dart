@@ -191,3 +191,11 @@ final homeworkRepositoryProvider = Provider<HomeworkRepository>((ref) => Homewor
 
 /// Все ДЗ. После любого изменения вызываем ref.invalidate(homeworkProvider).
 final homeworkProvider = FutureProvider<List<HomeworkItem>>((ref) => ref.watch(homeworkRepositoryProvider).all());
+
+// ---------- поиск по институту ----------
+
+/// Расписания всех групп (для поиска). Перечитываются, когда обновился список групп.
+final allGroupsProvider = FutureProvider<List<GroupSchedule>>((ref) async {
+  await ref.watch(indexProvider.future);
+  return ref.watch(repositoryProvider).loadAllGroups();
+});

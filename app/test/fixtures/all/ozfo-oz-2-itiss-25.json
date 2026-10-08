@@ -1,0 +1,186 @@
+{
+ "schemaVersion": 1,
+ "version": "2026-10-08T14:33:47Z-2c6c2fc8",
+ "group": {
+  "id": "ozfo-oz-2-itiss-25",
+  "title": "ОЗ-2 ИТиСС-25",
+  "form": "ozfo",
+  "course": 2,
+  "subgroups": [
+   {
+    "n": 1,
+    "label": "Подгруппа 1"
+   }
+  ]
+ },
+ "lessons": [
+  {
+   "weekday": 5,
+   "pair": 1,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "ЧТК и этика",
+   "teacher": "Ахмадова М.П.",
+   "room": "4-22",
+   "tags": [],
+   "raw": "ЧТК и этика Ахмадова М.П. 4-22"
+  },
+  {
+   "weekday": 5,
+   "pair": 1,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Теория электрических цепей",
+   "teacher": "Алиев И.М.",
+   "room": "3-22",
+   "tags": [],
+   "raw": "Теория электрических цепей Алиев И.М. 3-22"
+  },
+  {
+   "weekday": 5,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Физические основы электротехники",
+   "teacher": "Алиев И.М.",
+   "room": "3-27",
+   "tags": [],
+   "raw": "Физические основы электротехники Алиев И.М. 3-27"
+  },
+  {
+   "weekday": 5,
+   "pair": 3,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "ЧТК и этика",
+   "teacher": "Ахмадова М.П.",
+   "room": "3-03",
+   "tags": [],
+   "raw": "ЧТК и этика Ахмадова М.П. 3-03"
+  },
+  {
+   "weekday": 5,
+   "pair": 3,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Философия",
+   "teacher": "Кутаев А.Х.",
+   "room": "3-01",
+   "tags": [],
+   "raw": "Философия Кутаев А.Х. 3-01"
+  },
+  {
+   "weekday": 5,
+   "pair": 4,
+   "week": 1,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Философия",
+   "teacher": "Кутаев А.Х.",
+   "room": "3-12",
+   "tags": [],
+   "raw": "Философия Кутаев А.Х. 3-12"
+  },
+  {
+   "weekday": 5,
+   "pair": 4,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Теория электрических цепей",
+   "teacher": "Алиев И.М.",
+   "room": "3-31",
+   "tags": [],
+   "raw": "Теория электрических цепей Алиев И.М. 3-31"
+  },
+  {
+   "weekday": 5,
+   "pair": 5,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Иностранный язык",
+   "teacher": "Батаева Д.Н.",
+   "room": "4-22",
+   "tags": [],
+   "raw": "Иностранный язык Батаева Д.Н. 4-22"
+  },
+  {
+   "weekday": 6,
+   "pair": 1,
+   "week": 2,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Теория электрических цепей",
+   "teacher": "Алиев И.М.",
+   "room": "3-24",
+   "tags": [],
+   "raw": "Теория электрических цепей Алиев И.М. 3-24"
+  },
+  {
+   "weekday": 6,
+   "pair": 2,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "lecture",
+   "subject": "Физические основы электротехники",
+   "teacher": "Алиев И.М.",
+   "room": "3-24",
+   "tags": [],
+   "raw": "Физические основы электротехники Алиев И.М. 3-24"
+  },
+  {
+   "weekday": 6,
+   "pair": 3,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Управление IT-проектами",
+   "teacher": "Тамаев М.",
+   "room": "2-14",
+   "tags": [],
+   "raw": "Управление IТ-проектами Тамаев М. 2-14"
+  },
+  {
+   "weekday": 6,
+   "pair": 4,
+   "week": 0,
+   "subgroups": [
+    1
+   ],
+   "kind": "practice",
+   "subject": "Программирование",
+   "teacher": "Энгиноев У.",
+   "room": "2-10",
+   "tags": [],
+   "raw": "Программирование Энгиноев У. 2-10"
+  }
+ ]
+}
