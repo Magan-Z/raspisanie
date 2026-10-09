@@ -22,7 +22,8 @@ class HomeShell extends ConsumerStatefulWidget {
   ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserver {
+class _HomeShellState extends ConsumerState<HomeShell>
+    with WidgetsBindingObserver {
   int _tab = 0;
 
   @override
@@ -30,13 +31,21 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Расписание уже показано из кэша — обновления проверяем фоном и молча
-    WidgetsBinding.instance.addPostFrameCallback((_) => syncSchedule(ProviderScope.containerOf(context)));
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => syncSchedule(ProviderScope.containerOf(context)),
+    );
 
     // Виджеты и уведомления: после любого изменения (расписание, ДЗ, правки, профиль, настройки) пересобираем
-    ref.listenManual(myScheduleProvider, (_, _) => _scheduleRefresh(), fireImmediately: true);
+    ref.listenManual(
+      myScheduleProvider,
+      (_, _) => _scheduleRefresh(),
+      fireImmediately: true,
+    );
     ref.listenManual(homeworkProvider, (_, _) => _scheduleRefresh());
     ref.listenManual(settingsProvider, (_, _) => _scheduleRefresh());
-    WidgetsBinding.instance.addPostFrameCallback((_) => _askNotificationPermissionOnce());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _askNotificationPermissionOnce(),
+    );
 
     // Ссылки с виджета («+ ДЗ»)
     final links = ref.read(linkChannelProvider);
@@ -98,23 +107,56 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
-    const pages = [TodayScreen(), WeekScreen(), HomeworkScreen(), SearchScreen(), SettingsScreen()];
+    const pages = [
+      TodayScreen(),
+      WeekScreen(),
+      HomeworkScreen(),
+      SearchScreen(),
+      SettingsScreen(),
+    ];
     return Scaffold(
-      body: SafeArea(child: IndexedStack(index: _tab, children: pages)),
+      body: SafeArea(
+        child: IndexedStack(index: _tab, children: pages),
+      ),
       // Подписи нижней панели не растут выше 1.15× — иначе слова переносятся и панель разваливается
-      bottomNavigationBar: MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.15)),
-        child: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.today_outlined), selectedIcon: Icon(Icons.today), label: 'Сегодня'),
-          NavigationDestination(
-              icon: Icon(Icons.calendar_view_week_outlined), selectedIcon: Icon(Icons.calendar_view_week), label: 'Неделя'),
-          NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment), label: 'ДЗ'),
-          NavigationDestination(icon: Icon(Icons.search), selectedIcon: Icon(Icons.search), label: 'Поиск'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Настройки'),
-        ],
+      bottomNavigationBar: Builder(
+        // MediaQuery берём именно здесь, внутри Scaffold: он уже убрал лишние отступы (иначе панель получается выше)
+        builder: (navContext) => MediaQuery(
+          data: MediaQuery.of(navContext).copyWith(
+            textScaler: MediaQuery.textScalerOf(navContext)
+                .clamp(maxScaleFactor: 1.15),
+          ),
+          child: NavigationBar(
+            selectedIndex: _tab,
+            onDestinationSelected: (i) => setState(() => _tab = i),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.today_outlined),
+                selectedIcon: Icon(Icons.today),
+                label: 'Сегодня',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.calendar_view_week_outlined),
+                selectedIcon: Icon(Icons.calendar_view_week),
+                label: 'Неделя',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.assignment_outlined),
+                selectedIcon: Icon(Icons.assignment),
+                label: 'ДЗ',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.search),
+                selectedIcon: Icon(Icons.search),
+                label: 'Поиск',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: 'Настройки',
+              ),
+            ],
+          ),
         ),
       ),
     );

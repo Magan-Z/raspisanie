@@ -118,7 +118,6 @@ object WidgetRenderer {
         )
         views.setTextViewText(R.id.week, snapshot.weekLabel)
 
-        val highlight = context.getColor(R.color.widget_highlight)
         for ((i, ids) in rowIds.withIndex()) {
             val (row, time, texts) = ids
             val lesson = view.lessons.getOrNull(i)
@@ -131,7 +130,7 @@ object WidgetRenderer {
             views.setTextViewText(texts.first, lesson.short)
             views.setTextViewText(texts.second, lesson.room ?: "")
             val isCurrent = view.isToday && nowMs >= lesson.startMs && nowMs < lesson.endMs
-            views.setInt(row, "setBackgroundColor", if (isCurrent) highlight else 0)
+            views.setInt(row, "setBackgroundResource", if (isCurrent) R.drawable.widget_row_highlight else 0)
         }
 
         // «+ ДЗ» — открывает ввод домашки с предметом ближайшей (или идущей) пары

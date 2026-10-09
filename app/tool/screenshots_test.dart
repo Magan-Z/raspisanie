@@ -16,7 +16,6 @@ import 'package:raspisanie/app_state.dart';
 import 'package:raspisanie/core/clock.dart';
 import 'package:raspisanie/data/local/database.dart';
 import 'package:raspisanie/data/repositories/schedule_repository.dart';
-import 'package:raspisanie/domain/models.dart';
 import 'package:raspisanie/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,11 +35,17 @@ Future<void> loadFonts() async {
 void main() {
   Future<void> shoot(WidgetTester tester, String name, {required bool dark, DateTime? now, double textScale = 1, Future<void> Function()? act, Map<String, Object> prefs = const {}, bool noProfile = false, Size size = const Size(1080, 2340)}) async {
     tester.view.physicalSize = size;
+    // Как на настоящем телефоне: строка состояния сверху и жестовая полоса снизу
+    tester.view.padding = const FakeViewPadding(top: 72, bottom: 66);
+    tester.view.viewPadding = const FakeViewPadding(top: 72, bottom: 66);
+    addTearDown(tester.view.resetPadding);
+    addTearDown(tester.view.resetViewPadding);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
     tester.platformDispatcher.textScaleFactorTestValue = textScale;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
+    // ignore: invalid_use_of_visible_for_testing_member
     SharedPreferences.setMockInitialValues({
       if (!noProfile) ...{'form': 'ofo', 'groupId': 'ofo-1-bi-25', 'subgroup': 1, 'pe': 'male'},
       'theme': dark ? 'dark' : 'light',
@@ -75,6 +80,9 @@ void main() {
     }
 
     await settle();
+    if (name == '1-today-light') {
+      debugPrint('RECT nav=${tester.getRect(find.byType(NavigationBar))} scaffold=${tester.getRect(find.byType(Scaffold).first)} view=${tester.view.physicalSize / tester.view.devicePixelRatio}');
+    }
     if (act != null) {
       await act();
       await settle();
