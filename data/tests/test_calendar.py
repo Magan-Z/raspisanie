@@ -40,7 +40,8 @@ def test_pair_times_in_utc() -> None:
 
 
 def test_study_days_skip_sundays_and_holidays() -> None:
-    days = study_days(CONFIG)
+    # В настройках праздников сейчас нет (владелец так решил), поэтому праздник задаём в самом тесте
+    days = study_days({**CONFIG, "holidays": ["2026-11-04"]})
     assert date(2026, 11, 4) not in days          # праздник
     assert date(2026, 10, 11) not in days         # воскресенье
     assert date(2026, 10, 10) in days             # суббота — учебный день

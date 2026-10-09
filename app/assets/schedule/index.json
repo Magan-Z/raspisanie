@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "version": "2026-10-08T14:33:47Z-2c6c2fc8",
+ "version": "2026-10-09T09:15:55Z-2c6c2fc8",
  "semester": {
   "id": "2026-autumn",
   "start": "2026-09-01",
@@ -30,9 +30,7 @@
    "17:50"
   ]
  ],
- "holidays": [
-  "2026-11-04"
- ],
+ "holidays": [],
  "forms": [
   {
    "code": "ofo",

@@ -62,7 +62,14 @@ void main() {
   });
 
   test('11.10.2026 (вс) → 0 пар', () => expect(on(10, 11), isEmpty));
-  test('04.11.2026 (праздник) → 0 пар', () => expect(on(11, 4), isEmpty));
+  test('Праздник из настроек → 0 пар (в самих настройках праздников сейчас нет — задаём в тесте)', () {
+    expect(on(11, 4), isNotEmpty); // без праздника в среду пары есть
+    final withHoliday = ScheduleIndex.fromJson({
+      ..._fixture('index.json'),
+      'holidays': ['2026-11-04'],
+    });
+    expect(resolve(DateTime.utc(2026, 11, 4), withHoliday, schedule, profile), isEmpty);
+  });
   test('Вне семестра → 0 пар', () => expect(on(8, 31), isEmpty));
 
   test('Понедельник: у п/г 2 в 4 пару иностранный язык, у п/г 1 — ТБК', () {

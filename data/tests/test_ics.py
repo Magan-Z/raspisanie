@@ -56,10 +56,15 @@ def test_female_pe_filtered_for_male(groups: dict[str, Group], config: dict) -> 
 
 
 def test_no_events_on_holiday_and_sundays(groups: dict[str, Group], config: dict) -> None:
-    text = build_calendar(groups["ofo-1-bi-25"], 1, None, config, NOW)
+    # В настройках праздников сейчас нет (владелец так решил), поэтому праздник задаём в самом тесте
+    with_holiday = {**config, "holidays": ["2026-11-04"]}
+    text = build_calendar(groups["ofo-1-bi-25"], 1, None, with_holiday, NOW)
     starts = re.findall(r"DTSTART:(\d{8})", text)
     assert starts
     assert "20261104" not in starts
+    # А без праздника в этот день (среда) пары есть
+    plain = build_calendar(groups["ofo-1-bi-25"], 1, None, config, NOW)
+    assert "20261104" in re.findall(r"DTSTART:(\d{8})", plain)
     for day in starts:
         assert datetime.strptime(day, "%Y%m%d").isoweekday() != 7
 

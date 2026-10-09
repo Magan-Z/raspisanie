@@ -22,7 +22,8 @@ void main() {
 
   test('воскресенье, праздник и вне семестра — пусто', () {
     expect(campusLessons(DateTime.utc(2026, 10, 11), index, schedules), isEmpty);
-    expect(campusLessons(DateTime.utc(2026, 11, 4), index, schedules), isEmpty);
+    final withHoliday = ScheduleIndex.fromJson({..._json('test/fixtures/index.json'), 'holidays': ['2026-11-04']});
+    expect(campusLessons(DateTime.utc(2026, 11, 4), withHoliday, schedules), isEmpty);
     expect(campusLessons(DateTime.utc(2026, 8, 31), index, schedules), isEmpty);
   });
 
