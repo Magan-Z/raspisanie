@@ -213,7 +213,7 @@ class _DayPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final homeworkDue = dueOn(ref.watch(homeworkProvider).value ?? const [], day);
+    final homeworkDue = dueOn(ref.watch(homeworkWithGroupProvider).value ?? const [], day);
     final lessons = resolve(day, data.index, data.schedule, data.profile, overrides: data.overrides, forcedWeek: data.forcedWeek);
     final theme = Theme.of(context);
     final container = ProviderScope.containerOf(context);

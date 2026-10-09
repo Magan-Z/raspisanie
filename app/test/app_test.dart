@@ -2,10 +2,14 @@
 // Расписание берётся из встроенной копии assets/schedule, база — в памяти.
 
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:raspisanie/data/remote/shared_api.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,7 +25,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fakes.dart';
 
-Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, DateTime? now, FakeGateway? gateway, List extraOverrides = const []}) async {
+Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, DateTime? now, FakeGateway? gateway, List extraOverrides = const [], SharedApi? sharedApi}) async {
   // Высокий «экран», чтобы весь список строился сразу (ListView строит только видимое)
   tester.view.physicalSize = const Size(900, 2600);
   tester.view.devicePixelRatio = 1;
@@ -41,6 +45,7 @@ Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, 
       repositoryProvider.overrideWithValue(ScheduleRepository(db: db, assets: DiskAssets())),
       notificationGatewayProvider.overrideWithValue(gateway ?? FakeGateway()),
       clockProvider.overrideWithValue(FixedClock(now ?? DateTime.utc(2026, 10, 7, 10, 30))), // 13:30 по Москве
+      sharedApiProvider.overrideWithValue(sharedApi), // по умолчанию общий сервер выключен; тесты старосты подставляют свой
       ...extraOverrides,
     ],
     child: const RaspisanieApp(),
@@ -274,6 +279,169 @@ void main() {
     links.send('raspisanie://search');
     await _settle(tester);
     expect(find.text('Свободные'), findsOneWidget); // вкладка «Поиск»
+  });
+
+  group('Староста и группа', () {
+    // Хеш расписания 1 БИ-25 в встроенной копии: правки старосты привязаны к нему
+    String groupHash() {
+      final index = jsonDecode(File('assets/schedule/index.json').readAsStringSync()) as Map<String, dynamic>;
+      for (final form in index['forms'] as List) {
+        for (final g in (form as Map)['groups'] as List) {
+          if ((g as Map)['id'] == 'ofo-1-bi-25') return g['hash'] as String;
+        }
+      }
+      throw StateError('нет группы');
+    }
+
+    Future<void> openSettingsAndScrollTo(WidgetTester tester, String text) async {
+      await tester.tap(find.text('Настройки').last);
+      await _settle(tester);
+      await tester.dragUntilVisible(find.text(text), find.byType(Scrollable).first, const Offset(0, -300));
+      await _settle(tester);
+    }
+
+    testWidgets('студент видит правку старосты (аудитория 3-33, пометка), а правки к старому расписанию — нет', (tester) async {
+      final backend = FakeBackend(hash: groupHash());
+      backend.overrides['o1'] = backend.override(); // 7 октября, 4 пара: аудитория 3-33
+      backend.overrides['old'] = backend.override(id: 'old', pair: 3, room: '9-99', hash: 'старый-хеш'); // к прошлому расписанию
+      await _start(tester, prefs: profile, sharedApi: backend.api());
+      await _settle(tester);
+
+      expect(find.text('3-33'), findsWidgets);
+      expect(find.text('2-15'), findsNothing); // прежняя аудитория заменена
+      expect(find.text('изменено старостой'), findsOneWidget);
+      expect(find.text('9-99'), findsNothing); // устаревшая правка не действует
+    });
+
+    testWidgets('выключатель «Правки и ДЗ старосты» возвращает расписание как есть', (tester) async {
+      final backend = FakeBackend(hash: groupHash());
+      backend.overrides['o1'] = backend.override();
+      await _start(tester, prefs: profile, sharedApi: backend.api());
+      await _settle(tester);
+      expect(find.text('3-33'), findsWidgets);
+
+      await openSettingsAndScrollTo(tester, 'Правки и ДЗ старосты');
+      await tester.tap(find.text('Правки и ДЗ старосты'));
+      await _settle(tester);
+      await tester.tap(find.text('Сегодня').last);
+      await _settle(tester);
+      expect(find.text('3-33'), findsNothing);
+      expect(find.text('2-15'), findsWidgets);
+    });
+
+    testWidgets('вкладка «От старосты» в ДЗ: задание видно, отметить «сделано» можно у себя', (tester) async {
+      final backend = FakeBackend(hash: groupHash());
+      backend.homework['h1'] = backend.hw();
+      await _start(tester, prefs: profile, sharedApi: backend.api());
+      await _settle(tester);
+
+      await tester.tap(find.text('ДЗ').last);
+      await _settle(tester);
+      expect(find.textContaining('От старосты (1)'), findsOneWidget);
+      await tester.tap(find.textContaining('От старосты'));
+      await _settle(tester);
+      expect(find.text('Читать главу 3'), findsOneWidget);
+      expect(find.text('от старосты'), findsOneWidget);
+      expect(find.byTooltip('Удалить для всей группы'), findsNothing); // студент удалить не может
+
+      await tester.tap(find.byType(Checkbox));
+      await _settle(tester);
+      expect(find.textContaining('От старосты (0)'), findsOneWidget); // отметил выполненным
+    });
+
+    testWidgets('староста: неверный код — ошибка; верный код (регистр не важен) — режим старосты', (tester) async {
+      final backend = FakeBackend(hash: groupHash());
+      await _start(tester, prefs: profile, sharedApi: backend.api());
+      await openSettingsAndScrollTo(tester, 'Я староста');
+
+      await tester.tap(find.text('Я староста'));
+      await _settle(tester);
+      await tester.enterText(find.byType(TextField).last, 'WRONG');
+      await tester.tap(find.text('Подтвердить'));
+      await _settle(tester);
+      expect(find.textContaining('Код не подошёл'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField).last, 'goodcode'); // регистр не важен
+      await tester.tap(find.text('Подтвердить'));
+      await _settle(tester);
+      expect(find.textContaining('Вы староста:'), findsOneWidget);
+      expect(find.text('Изменения для группы'), findsOneWidget);
+    });
+
+    testWidgets('староста отменяет пару для всей группы: пара исчезает, на сервер уходит правка с хешем расписания', (tester) async {
+      final backend = FakeBackend(hash: groupHash());
+      await _start(tester, prefs: {...profile, 'editorToken': 'tok-GOODCODE', 'editorGroup': 'ofo-1-bi-25'}, sharedApi: backend.api());
+      await _settle(tester);
+      expect(find.text('ЧТК и этика'), findsWidgets);
+
+      await tester.longPress(find.text('ЧТК и этика').last);
+      await _settle(tester);
+      await tester.dragUntilVisible(find.text('Отменить пару для группы'), find.byType(Scrollable).last, const Offset(0, -200));
+      await tester.tap(find.text('Отменить пару для группы'));
+      await _settle(tester);
+
+      expect(backend.calls, contains('put_group_override'));
+      final saved = backend.overrides.values.single;
+      expect(saved['type'], 'cancel');
+      expect(saved['pair'], 4);
+      expect(saved['date'], '2026-10-07');
+      expect(saved['base_hash'], groupHash());
+      expect(find.text('ЧТК и этика'), findsNothing); // у всех (и у самого старосты) пары нет
+    });
+
+    testWidgets('староста задаёт ДЗ для всей группы: уходит на сервер и появляется во вкладке «От старосты»', (tester) async {
+      final backend = FakeBackend(hash: groupHash());
+      await _start(tester, prefs: {...profile, 'editorToken': 'tok-GOODCODE', 'editorGroup': 'ofo-1-bi-25'}, sharedApi: backend.api());
+      await _settle(tester);
+
+      await tester.longPress(find.text('ЧТК и этика').last);
+      await _settle(tester);
+      await tester.tap(find.text('Добавить ДЗ'));
+      await _settle(tester);
+      await tester.enterText(find.byType(TextField).last, 'Подготовить доклад');
+      await tester.tap(find.text('Для всей группы'));
+      await _settle(tester);
+      await tester.tap(find.text('Добавить'));
+      await _settle(tester);
+
+      expect(backend.homework.values.single['body'], 'Подготовить доклад');
+      expect(backend.homework.values.single['subject'], 'ЧТК и этика');
+
+      await tester.tap(find.text('ДЗ').last);
+      await _settle(tester);
+      await tester.tap(find.textContaining('От старосты'));
+      await _settle(tester);
+      expect(find.text('Подготовить доклад'), findsOneWidget);
+      expect(find.byTooltip('Удалить для всей группы'), findsOneWidget); // староста может удалить
+
+      await tester.tap(find.byTooltip('Удалить для всей группы'));
+      await _settle(tester);
+      expect(backend.homework.values.single['deleted'], isTrue);
+      expect(find.text('Подготовить доклад'), findsNothing);
+    });
+
+    testWidgets('когда расписание обновилось (новый хеш), староста стирает устаревшие правки на сервере', (tester) async {
+      final backend = FakeBackend(hash: 'старый-хеш');
+      backend.overrides['o1'] = backend.override(); // привязана к «старому» расписанию
+      await _start(tester, prefs: {...profile, 'editorToken': 'tok-GOODCODE', 'editorGroup': 'ofo-1-bi-25'}, sharedApi: backend.api());
+      await _settle(tester);
+      await _settle(tester);
+
+      expect(backend.calls, contains('clear_stale_group_overrides'));
+      expect(backend.overrides['o1']!['deleted'], isTrue);
+      expect(find.text('3-33'), findsNothing);
+    });
+
+    testWidgets('без интернета остаётся то, что сохранено в телефоне; ошибок на экране нет', (tester) async {
+      final backend = FakeBackend(hash: groupHash());
+      backend.overrides['o1'] = backend.override();
+      final failing = SharedApi('https://fake.test', 'key', client: MockClient((_) async => throw http.ClientException('нет сети')));
+      await _start(tester, prefs: profile, sharedApi: failing);
+      await _settle(tester);
+      expect(find.text('3-33'), findsNothing); // ещё ничего не скачано
+      expect(find.text('ЧТК и этика'), findsWidgets); // обычное расписание работает
+      expect(tester.takeException(), isNull);
+    });
   });
 
   testWidgets('Поиск: свободные аудитории и расписание преподавателя', (tester) async {

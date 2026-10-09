@@ -11,19 +11,35 @@ import '../../core/formatting.dart';
 import '../../domain/homework.dart';
 import '../../theme/tokens.dart';
 import '../common/word_fit_text.dart';
+import '../../data/remote/shared_api.dart';
+import '../../domain/group_shared.dart';
+import '../../group_actions.dart';
 import 'attachment_widgets.dart';
 import '../common/empty_state.dart';
 import '../common/illustrations.dart';
 import 'add_homework_sheet.dart';
 
-class HomeworkScreen extends ConsumerWidget {
+class HomeworkScreen extends ConsumerStatefulWidget {
   const HomeworkScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeworkScreen> createState() => _HomeworkScreenState();
+}
+
+class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
+  bool _showGroup = false; // вкладка «От старосты»
+
+  @override
+  Widget build(BuildContext context) {
     final homework = ref.watch(homeworkProvider);
     final today = ref.watch(todayProvider);
     final theme = Theme.of(context);
+
+    // Вкладка «От старосты» есть, если староста что-то задал или это сам староста
+    final groupRows = ref.watch(groupHomeworkProvider);
+    final isEditor = ref.watch(isGroupEditorProvider);
+    final hasGroupTab = ref.watch(sharedApiProvider) != null && ref.watch(settingsProvider.select((s) => s.showGroupData)) && (groupRows.isNotEmpty || isEditor);
+    final showGroup = hasGroupTab && _showGroup;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -36,15 +52,30 @@ class HomeworkScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(icon: Icons.error_outline_rounded, title: 'Не удалось прочитать ДЗ', subtitle: '$e'),
         data: (items) {
-          if (items.isEmpty) {
+          if (items.isEmpty && !hasGroupTab) {
             return const EmptyState(
               illustration: IllustrationKind.noHomework,
               title: 'Домашки нет',
               subtitle: 'Задание можно добавить кнопкой «Добавить ДЗ» или нажатием на пару на экране «Сегодня».',
             );
           }
-          final groups = groupHomework(items, today);
-          final open = items.where((i) => !i.done).length;
+
+          // Список для выбранной вкладки: личные ДЗ или ДЗ старосты (приведены к одному виду для разбивки по срокам)
+          final done = ref.watch(groupHomeworkDoneProvider);
+          final shownItems = <HomeworkItem>[];
+          final rowOf = Map<HomeworkItem, GroupHomeworkRow>.identity();
+          if (showGroup) {
+            for (final g in groupRows) {
+              final item = HomeworkItem(subject: g.subject, text: g.text, dueDate: g.dueDate, kind: g.kind, done: done.contains(g.id), createdAt: g.dueDate);
+              shownItems.add(item);
+              rowOf[item] = g;
+            }
+          } else {
+            shownItems.addAll(items);
+          }
+          final groups = groupHomework(shownItems, today);
+          final open = shownItems.where((i) => !i.done).length;
+
           return ListView(
             padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.lg, Gap.lg, 104),
             children: [
@@ -52,11 +83,29 @@ class HomeworkScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
                 child: Text('Домашка', style: theme.textTheme.headlineMedium),
               ),
+              if (hasGroupTab) ...[
+                const SizedBox(height: Gap.sm),
+                Wrap(spacing: Gap.sm, children: [
+                  ChoiceChip(
+                    label: Text('Мои (${items.where((i) => !i.done).length})'),
+                    showCheckmark: false,
+                    selected: !showGroup,
+                    onSelected: (_) => setState(() => _showGroup = false),
+                  ),
+                  ChoiceChip(
+                    avatar: const Icon(Icons.groups_rounded, size: 18),
+                    label: Text('От старосты (${groupRows.where((g) => !done.contains(g.id)).length})'),
+                    showCheckmark: false,
+                    selected: showGroup,
+                    onSelected: (_) => setState(() => _showGroup = true),
+                  ),
+                ]),
+              ],
               const SizedBox(height: Gap.xs),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
                 child: Text(
-                  open == 0 ? 'Всё сделано' : 'Не сделано: $open',
+                  shownItems.isEmpty ? (showGroup ? 'Староста пока ничего не задал' : 'Своих заданий пока нет') : (open == 0 ? 'Всё сделано' : 'Не сделано: $open'),
                   style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
               ),
@@ -76,11 +125,99 @@ class HomeworkScreen extends ConsumerWidget {
                     Text('${entry.value.length}', style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                   ]),
                 ),
-                for (final item in entry.value) _HomeworkTile(item: item),
+                for (final item in entry.value) showGroup ? _GroupHomeworkTile(row: rowOf[item]!, done: item.done, canEdit: isEditor) : _HomeworkTile(item: item),
               ],
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// ДЗ, которое задал староста: отметить «сделано» можно у себя, удалить для всех — только староста.
+class _GroupHomeworkTile extends ConsumerWidget {
+  const _GroupHomeworkTile({required this.row, required this.done, required this.canEdit});
+  final GroupHomeworkRow row;
+  final bool done;
+  final bool canEdit;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final styles = ref.watch(subjectStylesProvider);
+    final tone = styles.tone(row.subject, theme.brightness);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Gap.sm),
+      child: Material(
+        color: done ? scheme.surfaceContainerLow : tone.container,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.lg)),
+        clipBehavior: Clip.antiAlias,
+        child: DecoratedBox(
+          decoration: BoxDecoration(border: Border(left: BorderSide(color: done ? scheme.outlineVariant : tone.accent, width: 6))),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Padding(
+              padding: const EdgeInsets.only(left: Gap.xs),
+              child: Semantics(
+                label: done ? 'Выполнено. Нажмите, чтобы вернуть' : 'Отметить выполненным',
+                child: Checkbox(
+                  value: done,
+                  shape: const CircleBorder(),
+                  side: BorderSide(color: tone.accent, width: 2),
+                  activeColor: tone.accent,
+                  onChanged: (_) {
+                    done ? HapticFeedback.selectionClick() : HapticFeedback.lightImpact();
+                    ref.read(groupHomeworkDoneProvider.notifier).toggle(row.id);
+                  },
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, Gap.md, Gap.xs, Gap.md),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  WordFitText(
+                    styles.name(row.subject),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: done ? scheme.onSurfaceVariant : tone.onContainer,
+                      decoration: done ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+                  const SizedBox(height: Gap.xs),
+                  Text(row.text, style: theme.textTheme.bodyLarge?.copyWith(color: done ? scheme.onSurfaceVariant : scheme.onSurface)),
+                  const SizedBox(height: Gap.sm),
+                  Wrap(spacing: Gap.sm, runSpacing: Gap.xs, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    Icon(Icons.event_rounded, size: 16, color: scheme.onSurfaceVariant),
+                    Text(
+                      'к ${dateText(row.dueDate)}${row.kind == null ? '' : ' · ${row.kind!.title.toLowerCase()}'}',
+                      style: theme.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: Gap.sm, vertical: 2),
+                      decoration: BoxDecoration(color: scheme.tertiaryContainer, borderRadius: BorderRadius.circular(8)),
+                      child: Text('от старосты', style: theme.textTheme.labelSmall?.copyWith(color: scheme.onTertiaryContainer)),
+                    ),
+                  ]),
+                ]),
+              ),
+            ),
+            if (canEdit)
+              IconButton(
+                tooltip: 'Удалить для всей группы',
+                icon: Icon(Icons.delete_outline_rounded, color: scheme.onSurfaceVariant),
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    await GroupEditorActions.of(context).deleteHomework(row.id);
+                  } on SharedApiException catch (e) {
+                    messenger.showSnackBar(SnackBar(content: Text(e.message)));
+                  }
+                },
+              ),
+          ]),
+        ),
       ),
     );
   }

@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:raspisanie/data/attachments/attachment_store.dart';
+import 'package:raspisanie/data/remote/shared_api.dart';
 import 'package:raspisanie/domain/attachment.dart';
 import 'package:raspisanie/domain/notification_plan.dart';
 import 'package:raspisanie/notifications/notification_gateway.dart';
@@ -144,4 +145,83 @@ class FakeLinks extends LinkChannel {
   void listen(void Function(String link) onLink) => _listener = onLink;
 
   void send(String link) => _listener?.call(link);
+}
+
+
+/// Поддельный сервер старост в памяти: те же вызовы, что у настоящего (get_group_data, redeem_code, put_/delete_…).
+/// Позволяет проверять сквозные сценарии без интернета.
+class FakeBackend {
+  FakeBackend({this.hash = 'h-test'});
+
+  /// Хеш расписания группы, к которому относятся правки (как в index.json).
+  final String hash;
+  final overrides = <String, Map<String, dynamic>>{};
+  final homework = <String, Map<String, dynamic>>{};
+  final calls = <String>[];
+  var _clock = 0;
+  final validCodes = {'GOODCODE': 'ofo-1-bi-25'};
+  final usedCodes = <String>{};
+
+  String _stamp() => DateTime.utc(2026, 10, 9, 12, 0, _clock++).toIso8601String();
+
+  Map<String, dynamic> override({String id = 'o1', int pair = 4, String type = 'replace', String? room = '3-33', String? hash, String date = '2026-10-07', String? note}) => {
+        'id': id, 'base_hash': hash ?? this.hash, 'date': date, 'pair': pair, 'type': type,
+        'subject': null, 'room': room, 'teacher': null, 'note': note, 'kind': null, 'repeat_weekly': false, 'match_subject': null,
+        'deleted': false, 'updated_at': _stamp(),
+      };
+
+  Map<String, dynamic> hw({String id = 'h1', String subject = 'Философия', String text = 'Читать главу 3', String due = '2026-10-14'}) =>
+      {'id': id, 'subject': subject, 'body': text, 'due_date': due, 'kind': null, 'deleted': false, 'updated_at': _stamp()};
+
+  SharedApi api() => SharedApi('https://fake.test', 'key', client: MockClient((request) async {
+        final fn = request.url.pathSegments.last;
+        final args = request.body.isEmpty ? <String, dynamic>{} : jsonDecode(request.body) as Map<String, dynamic>;
+        calls.add(fn);
+        http.Response ok(Object? body) => http.Response.bytes(utf8.encode(jsonEncode(body)), 200);
+        http.Response fail(String message) => http.Response.bytes(utf8.encode(jsonEncode({'message': message})), 400);
+
+        switch (fn) {
+          case 'get_group_data':
+            final since = args['p_since'] as String?;
+            bool wanted(Map<String, dynamic> r) =>
+                since == null ? r['deleted'] != true : DateTime.parse(r['updated_at'] as String).isAfter(DateTime.parse(since));
+            return ok({
+              'server_time': DateTime.utc(2026, 10, 9, 12, 5).toIso8601String(),
+              'overrides': overrides.values.where(wanted).toList(),
+              'homework': homework.values.where(wanted).toList(),
+            });
+          case 'redeem_code':
+            final code = (args['p_code'] as String).trim().toUpperCase();
+            if (!validCodes.containsKey(code)) return fail('bad_code');
+            if (!usedCodes.add(code)) return fail('code_used');
+            return ok({'group_id': validCodes[code], 'token': 'tok-$code'});
+          case 'put_group_override':
+            final row = Map<String, dynamic>.from(args['p_row'] as Map)..['deleted'] = false..['updated_at'] = '2026-10-09T13:00:${(_clock++).toString().padLeft(2, '0')}+00:00';
+            overrides[row['id'] as String] = row;
+            return ok(row['id']);
+          case 'delete_group_override':
+            overrides[args['p_id']]?['deleted'] = true;
+            overrides[args['p_id']]?['updated_at'] = '2026-10-09T13:30:${(_clock++).toString().padLeft(2, '0')}+00:00';
+            return http.Response('', 204);
+          case 'put_group_homework':
+            final row = Map<String, dynamic>.from(args['p_row'] as Map)..['deleted'] = false..['updated_at'] = '2026-10-09T13:00:${(_clock++).toString().padLeft(2, '0')}+00:00';
+            homework[row['id'] as String] = row;
+            return ok(row['id']);
+          case 'delete_group_homework':
+            homework[args['p_id']]?['deleted'] = true;
+            homework[args['p_id']]?['updated_at'] = '2026-10-09T13:30:${(_clock++).toString().padLeft(2, '0')}+00:00';
+            return http.Response('', 204);
+          case 'clear_stale_group_overrides':
+            var n = 0;
+            for (final o in overrides.values) {
+              if (o['deleted'] != true && o['base_hash'] != args['p_keep_hash']) {
+                o['deleted'] = true;
+                o['updated_at'] = '2026-10-09T13:40:${(_clock++).toString().padLeft(2, '0')}+00:00';
+                n++;
+              }
+            }
+            return ok(n);
+        }
+        return fail('unknown $fn');
+      }));
 }

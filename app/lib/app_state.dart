@@ -413,6 +413,19 @@ final groupHomeworkProvider = Provider<List<GroupHomeworkRow>>((ref) {
   return ref.watch(groupSharedProvider).value?.homeworkList ?? const [];
 });
 
+/// Все невыполненные ДЗ вместе: личные и ДЗ старосты (для виджетов, уведомлений и значков на парах).
+/// Выполнено ли ДЗ старосты, студент решает сам (хранится только у него).
+final homeworkWithGroupProvider = FutureProvider<List<HomeworkItem>>((ref) async {
+  final personal = await ref.watch(homeworkProvider.future);
+  final group = ref.watch(groupHomeworkProvider);
+  final done = ref.watch(groupHomeworkDoneProvider);
+  return [
+    ...personal,
+    for (final g in group)
+      HomeworkItem(subject: g.subject, text: g.text, dueDate: g.dueDate, kind: g.kind, done: done.contains(g.id), createdAt: g.dueDate),
+  ];
+});
+
 /// Обновить общие данные группы с сервера. Ошибки связи молча игнорируются (остаётся кэш).
 /// Возвращает ДЗ старосты, которых раньше не было (для уведомления).
 Future<List<GroupHomeworkRow>> syncGroupShared(ProviderContainer c) async {

@@ -12,7 +12,7 @@ import 'domain/notification_plan.dart';
 Future<void> pushWidgets(ProviderContainer c) async {
   final my = await c.read(myScheduleProvider.future);
   if (my == null) return;
-  final homework = await c.read(homeworkProvider.future);
+  final homework = await c.read(homeworkWithGroupProvider.future);
   await c.read(subjectStyleMapProvider.future); // свои названия предметов должны быть загружены
   final styles = c.read(subjectStylesProvider);
   await c.read(widgetBridgeProvider).push(
@@ -42,7 +42,7 @@ Future<void> replanNotifications(ProviderContainer c) async {
     index: my.index,
     schedule: my.schedule,
     profile: my.profile,
-    homework: await c.read(homeworkProvider.future),
+    homework: await c.read(homeworkWithGroupProvider.future),
     notifyBeforeMin: settings.notifyBeforeMin,
     eveningReminder: settings.eveningHomeworkReminder,
     overrides: my.overrides,

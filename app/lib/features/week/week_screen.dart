@@ -34,7 +34,7 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
     final my = ref.watch(myScheduleProvider);
     final today = ref.watch(todayProvider);
     final now = ref.watch(nowProvider).value ?? ref.read(clockProvider).now();
-    final homework = ref.watch(homeworkProvider).value ?? const <HomeworkItem>[];
+    final homework = ref.watch(homeworkWithGroupProvider).value ?? const <HomeworkItem>[];
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 

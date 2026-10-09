@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_state.dart';
+import '../../data/remote/shared_api.dart';
+import '../../group_actions.dart';
 import '../../data/attachments/attachment_store.dart';
 import '../../domain/attachment.dart';
 import 'attachment_widgets.dart';
@@ -37,6 +39,7 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
   LessonKind? _kind; // null — к любому занятию
   DateTime? _manualDue; // выбранный вручную срок
   final List<Attachment> _files = []; // уже скопированные в память приложения
+  bool _forGroup = false; // староста: ДЗ для всей группы
   bool _saved = false;
   late final AttachmentStore _store; // запоминаем заранее: в dispose() ref уже читать нельзя
 
@@ -126,6 +129,17 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
   }
 
   Future<void> _save(DateTime due) async {
+    // Староста: ДЗ уходит на сервер и появляется у всей группы во вкладке «От старосты»
+    if (_forGroup) {
+      try {
+        await GroupEditorActions.of(context).saveHomework(subject: _subject!, text: _text.text.trim(), due: due, kind: _kind);
+      } on SharedApiException catch (e) {
+        _say(e.message);
+        return;
+      }
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
     await ref.read(homeworkRepositoryProvider).add(HomeworkItem(
           subject: _subject!,
           text: _text.text.trim(),
@@ -206,7 +220,15 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
                 },
               ),
             ),
-            if (_files.isNotEmpty)
+            if (ref.watch(isGroupEditorProvider))
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Для всей группы'),
+                subtitle: Text(_forGroup ? 'Увидят все студенты группы во вкладке «От старосты» (только текст)' : 'Вы староста: можно задать ДЗ всем сразу'),
+                value: _forGroup,
+                onChanged: (v) => setState(() => _forGroup = v),
+              ),
+            if (_files.isNotEmpty && !_forGroup)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Wrap(spacing: 8, runSpacing: 8, children: [
@@ -222,7 +244,7 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
               ),
             Row(children: [
               OutlinedButton.icon(
-                onPressed: _files.length >= maxAttachmentsPerHomework ? null : _attach,
+                onPressed: (_files.length >= maxAttachmentsPerHomework || _forGroup) ? null : _attach,
                 icon: const Icon(Icons.attach_file_rounded),
                 label: Text(_files.isEmpty ? 'Прикрепить' : 'Ещё (${_files.length})'),
               ),

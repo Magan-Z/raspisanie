@@ -11,6 +11,11 @@ import '../../core/formatting.dart';
 import '../../domain/homework.dart';
 import '../../domain/models.dart';
 import '../../theme/tokens.dart';
+import '../../config.dart';
+import '../../data/remote/shared_api.dart';
+import '../../domain/group_shared.dart';
+import '../../group_actions.dart';
+import 'group_changes_screen.dart';
 import 'palette_picker.dart';
 import 'subjects_screen.dart';
 import '../common/brand_mark.dart';
@@ -120,6 +125,8 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SubjectsScreen())),
           ),
         ]),
+
+        if (sharedApiUrl.isNotEmpty) const _StarostaSection(),
 
         _Section(title: 'Расписание', children: [
           _Row(
@@ -284,6 +291,142 @@ Future<T?> _choose<T>(BuildContext context, String title, Map<T, String> options
 }
 
 /// Раздел настроек: подпись и скруглённая карточка со строками.
+/// «Староста и группа»: выключатель правок старосты, ввод кода и управление для самого старосты.
+class _StarostaSection extends ConsumerWidget {
+  const _StarostaSection();
+
+  Future<void> _enterCode(BuildContext context, WidgetRef ref) async {
+    final container = ProviderScope.containerOf(context);
+    final session = await showDialog<EditorSession>(context: context, builder: (_) => _CodeDialog(container: container));
+    if (session == null || !context.mounted) return;
+    await syncGroupShared(container);
+    if (!context.mounted) return;
+    final groupId = ref.read(settingsProvider).profile?.groupId;
+    final title = ref.read(indexProvider).value?.findGroup(session.groupId)?.title ?? session.groupId;
+    final other = groupId != session.groupId ? ' Чтобы редактировать, выберите эту группу в «Профиле».' : '';
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Вы староста группы $title.$other')));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final notifier = ref.read(settingsProvider.notifier);
+    final editor = ref.watch(editorProvider);
+    final title = editor == null ? null : (ref.watch(indexProvider).value?.findGroup(editor.groupId)?.title ?? editor.groupId);
+
+    return _Section(title: 'Староста и группа', children: [
+      _SwitchRow(
+        icon: Icons.groups_rounded,
+        title: 'Правки и ДЗ старосты',
+        subtitle: 'Показывать то, что староста поменял и задал для всей группы',
+        value: settings.showGroupData,
+        onChanged: notifier.setShowGroupData,
+      ),
+      if (editor == null)
+        _Row(
+          icon: Icons.admin_panel_settings_rounded,
+          title: 'Я староста',
+          subtitle: 'Ввести код, который вам выдали для вашей группы',
+          onTap: () => _enterCode(context, ref),
+        )
+      else ...[
+        _Row(
+          icon: Icons.verified_rounded,
+          title: 'Вы староста: $title',
+          subtitle: 'Нажмите на пару на экране «Сегодня» — там действия «Для всей группы». ДЗ для всех — в окне «Добавить ДЗ»',
+        ),
+        _Row(
+          icon: Icons.edit_note_rounded,
+          title: 'Изменения для группы',
+          subtitle: 'Что вы поменяли и задали для всех; можно удалить',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const GroupChangesScreen())),
+        ),
+        _Row(
+          icon: Icons.logout_rounded,
+          title: 'Выйти из режима старосты',
+          subtitle: 'На этом телефоне. Код можно будет ввести снова только после того, как его выдадут заново',
+          onTap: () async {
+            final ok = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Выйти из режима старосты?'),
+                content: const Text('Правки и ДЗ группы останутся, но менять их с этого телефона больше нельзя. Тот же код второй раз ввести не получится — понадобится новый.'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена')),
+                  FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Выйти')),
+                ],
+              ),
+            );
+            if (ok == true) await ref.read(editorProvider.notifier).clear();
+          },
+        ),
+      ],
+    ]);
+  }
+}
+
+/// Окно ввода кода старосты.
+class _CodeDialog extends StatefulWidget {
+  const _CodeDialog({required this.container});
+  final ProviderContainer container;
+
+  @override
+  State<_CodeDialog> createState() => _CodeDialogState();
+}
+
+class _CodeDialogState extends State<_CodeDialog> {
+  final _code = TextEditingController();
+  String? _error;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_code.text.trim().isEmpty || _busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final session = await GroupEditorActions.redeem(widget.container, _code.text);
+      if (mounted) Navigator.of(context).pop(session);
+    } on SharedApiException catch (e) {
+      if (mounted) setState(() {
+        _busy = false;
+        _error = e.message;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Код старосты'),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Введите код, который вам выдали для вашей группы.'),
+        const SizedBox(height: Gap.md),
+        TextField(
+          controller: _code,
+          autofocus: true,
+          enabled: !_busy,
+          textCapitalization: TextCapitalization.characters,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _submit(),
+          decoration: InputDecoration(labelText: 'Код', errorText: _error),
+        ),
+      ]),
+      actions: [
+        TextButton(onPressed: _busy ? null : () => Navigator.of(context).pop(), child: const Text('Отмена')),
+        FilledButton(onPressed: _busy ? null : _submit, child: Text(_busy ? 'Проверяем…' : 'Подтвердить')),
+      ],
+    );
+  }
+}
+
 class _Section extends StatelessWidget {
   const _Section({required this.title, required this.children});
   final String title;
