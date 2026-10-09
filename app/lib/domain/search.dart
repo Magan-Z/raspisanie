@@ -23,7 +23,7 @@ class CampusLesson {
   final List<String> groups; // названия групп, у которых это занятие
 }
 
-/// Аудитория в формате «корпус-номер»: 2-05, 3-120, 4-02а. («3 корпус», «читальный зал» — не считаем.)
+/// Аудитория в формате «этаж-номер»: 2-05, 3-120, 4-02а. («3 корпус», «читальный зал» — не считаем.)
 final _roomPattern = RegExp(r'^\d-\d{2,3}[а-я]?$');
 
 bool isNumberedRoom(String room) => _roomPattern.hasMatch(room);
@@ -67,17 +67,56 @@ List<CampusLesson> campusLessons(DateTime date, ScheduleIndex index, List<GroupS
 
 // ---------- преподаватели ----------
 
-/// Ключ для сравнения имён: в таблице один человек бывает записан по-разному
-/// («Батаева П.С», «Батаева П.С.», «Аюбов. С-М.»). Берём фамилию и первую букву инициалов.
-String teacherKey(String name) {
-  final parts = name.split(RegExp(r'\s+'));
+/// Имя разобрано на части: фамилия и первые буквы имени и отчества (строчные).
+/// Понимает и «Чураев И.Л.», и «Чураев Ибрагим Лечаевич». Если отчества нет — [second] пустой.
+({String surname, String first, String second}) _splitName(String name) {
+  final parts = name.trim().split(RegExp(r'\s+'));
   final surname = parts.first.replaceAll('.', '').toLowerCase();
-  final initial = parts.length > 1 ? parts[1].replaceAll('.', '').toLowerCase() : '';
-  return '$surname ${initial.isEmpty ? '' : initial[0]}';
+  if (parts.length == 1) return (surname: surname, first: '', second: '');
+
+  // Полное ФИО: «Имя» и «Отчество» — отдельные слова без точек
+  if (parts.length >= 3 && !parts[1].contains('.') && parts[1].length > 2) {
+    return (surname: surname, first: parts[1][0].toLowerCase(), second: parts[2][0].toLowerCase());
+  }
+  // Инициалы: «И.Л.», «С-М.», «И.»
+  final rest = parts.sublist(1).join('').toLowerCase();
+  final dot = rest.indexOf('.');
+  return (
+    surname: surname,
+    first: rest.isEmpty ? '' : rest[0],
+    second: dot >= 0 && dot + 1 < rest.length ? rest[dot + 1] : '',
+  );
 }
 
-/// Список преподавателей института (по алфавиту). Из нескольких написаний выбирается самое полное.
-List<String> teacherNames(Iterable<GroupSchedule> schedules) {
+/// Один и тот же человек? Фамилия и первая буква имени совпадают; буква отчества сравнивается,
+/// только если она есть в обоих написаниях («Алиева М.» подходит и к «Алиева М.В.»).
+bool sameTeacher(String a, String b) {
+  final x = _splitName(a), y = _splitName(b);
+  if (x.surname != y.surname) return false;
+  if (x.first.isNotEmpty && y.first.isNotEmpty && x.first != y.first) return false;
+  if (x.second.isNotEmpty && y.second.isNotEmpty && x.second != y.second) return false;
+  return true;
+}
+
+/// Ключ для сравнения имён: в таблице один человек бывает записан по-разному
+/// («Батаева П.С», «Батаева П.С.», «Аюбов. С-М.»). Фамилия + буквы имени и отчества.
+String teacherKey(String name) {
+  final n = _splitName(name);
+  return '${n.surname} ${n.first}${n.second}';
+}
+
+/// Полное ФИО из справочника [directory] (config.json → teachers) или само имя, если его там нет.
+String teacherFullName(String name, List<String> directory) {
+  for (final full in directory) {
+    if (sameTeacher(name, full)) return full;
+  }
+  return name;
+}
+
+/// Список преподавателей института (по алфавиту). Из нескольких написаний выбирается самое полное;
+/// если человек есть в справочнике [directory], показывается его полное ФИО.
+/// Преподаватели из справочника, которых нет в расписании, тоже попадают в список — их можно найти по имени.
+List<String> teacherNames(Iterable<GroupSchedule> schedules, {List<String> directory = const []}) {
   final best = <String, String>{};
   for (final schedule in schedules) {
     for (final lesson in schedule.lessons) {
@@ -88,18 +127,26 @@ List<String> teacherNames(Iterable<GroupSchedule> schedules) {
       if (current == null || name.length > current.length) best[key] = name;
     }
   }
-  return best.values.toList()..sort();
+
+  // «Алиева М.» лишняя, если есть «Алиева М.В.»
+  final names = best.values.toList();
+  final result = <String>{
+    for (final name in names)
+      if (_splitName(name).second.isNotEmpty ||
+          !names.any((o) => o != name && _splitName(o).second.isNotEmpty && sameTeacher(name, o)))
+        teacherFullName(name, directory),
+    ...directory,
+  };
+  return result.toList()..sort();
 }
 
 /// Занятия преподавателя в день [lessons] (результат [campusLessons]).
-List<CampusLesson> lessonsOfTeacher(String teacher, List<CampusLesson> lessons) {
-  final key = teacherKey(teacher);
-  return [for (final l in lessons) if (l.teacher != null && teacherKey(l.teacher!) == key) l];
-}
+List<CampusLesson> lessonsOfTeacher(String teacher, List<CampusLesson> lessons) =>
+    [for (final l in lessons) if (l.teacher != null && sameTeacher(teacher, l.teacher!)) l];
 
 // ---------- аудитории ----------
 
-/// Все аудитории института с номером в формате «корпус-номер», по порядку.
+/// Все аудитории института с номером в формате «этаж-номер», по порядку.
 List<String> allRooms(Iterable<GroupSchedule> schedules) {
   final rooms = {
     for (final s in schedules)

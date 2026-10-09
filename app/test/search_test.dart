@@ -53,6 +53,37 @@ void main() {
     });
   });
 
+  group('Полные ФИО преподавателей', () {
+    const directory = [
+      'Чураев Ибрагим Лечаевич',
+      'Халиев Магомед Сайд-Усманович',
+      'Юсупова Элина Ахмадовна', // в расписании такой нет
+      'Юсупова Малика Доккаевна',
+    ];
+    final names = teacherNames(schedules, directory: directory);
+
+    test('короткая запись заменяется полным ФИО', () {
+      expect(names, contains('Чураев Ибрагим Лечаевич'));
+      expect(names, isNot(contains('Чураев И.Л.')));
+      expect(names, contains('Халиев Магомед Сайд-Усманович'));
+    });
+    test('однофамилицы не путаются: Юсупова М.Д. — это Малика, а не Элина', () {
+      expect(teacherFullName('Юсупова М.Д.', directory), 'Юсупова Малика Доккаевна');
+      expect(sameTeacher('Юсупова М.Д.', 'Юсупова Элина Ахмадовна'), isFalse);
+    });
+    test('преподаватель из справочника без пар в расписании тоже находится', () {
+      expect(names, contains('Юсупова Элина Ахмадовна'));
+    });
+    test('занятия находятся и по полному ФИО', () {
+      final byFull = lessonsOfTeacher('Халиев Магомед Сайд-Усманович', lessons);
+      expect(byFull.length, lessonsOfTeacher('Халиев М.С-У.', lessons).length);
+      expect(byFull, isNotEmpty);
+    });
+    test('без справочника всё работает как раньше', () {
+      expect(teacherFullName('Лабазанов И.Л.', const []), 'Лабазанов И.Л.');
+    });
+  });
+
   group('Аудитории', () {
     final rooms = allRooms(schedules);
 

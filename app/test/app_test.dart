@@ -139,10 +139,10 @@ void main() {
     await tester.tap(find.text('Поиск').last);
     await _settle(tester);
 
-    // Преподаватель: набираем «Халиев» → выбираем из подсказок
-    await tester.enterText(find.byType(TextField).first, 'Халиев');
+    // Преподаватель: набираем имя («Сайд-Усманович» — из середины полного ФИО) → выбираем из подсказок
+    await tester.enterText(find.byType(TextField).first, 'Сайд-Усман');
     await _settle(tester);
-    await tester.tap(find.text('Халиев М.С-У.').last);
+    await tester.tap(find.text('Халиев Магомед Сайд-Усманович').last);
     await _settle(tester);
     expect(find.textContaining('Сейчас ведёт: Технологическое предпринимательство'), findsOneWidget);
 

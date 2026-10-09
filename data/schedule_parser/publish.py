@@ -70,6 +70,8 @@ def build_index(sheets: dict[str, list[Group]], config: dict, version: str) -> d
         "timezone": config["timezone"],
         "bells": config["bells"],
         "holidays": config["holidays"],
+        # Полные ФИО преподавателей (для поиска в приложении); список ведётся в config.json
+        "teachers": config.get("teachers", []),
         "forms": forms,
     }
 

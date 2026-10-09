@@ -148,6 +148,18 @@ void main() {
     });
   }
 
+  // Как на телефоне пользователя: шрифт крупнее обычного, вкладки поиска и этажи
+  for (final tab in ['Преподаватель', 'Аудитория', 'Свободные']) {
+    testWidgets('search phone $tab', (tester) async {
+      await tester.runAsync(loadFonts);
+      await shoot(tester, '9-search-phone-$tab', dark: false, textScale: 1.3, act: () async {
+        await tester.tap(find.text('Поиск').last);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(tab).first);
+      });
+    });
+  }
+
   testWidgets('today large font', (tester) async {
     await tester.runAsync(loadFonts);
     await shoot(tester, '7-today-bigfont', dark: false, textScale: 1.6);

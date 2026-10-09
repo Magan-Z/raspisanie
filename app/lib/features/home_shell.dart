@@ -124,7 +124,8 @@ class _HomeShellState extends ConsumerState<HomeShell>
         builder: (navContext) => MediaQuery(
           data: MediaQuery.of(navContext).copyWith(
             textScaler: MediaQuery.textScalerOf(navContext)
-                .clamp(maxScaleFactor: 1.15),
+                // на узких экранах (≈360 dp) пять подписей помещаются только в обычном размере
+                .clamp(maxScaleFactor: MediaQuery.sizeOf(navContext).width < 380 ? 1.0 : 1.15),
           ),
           child: NavigationBar(
             selectedIndex: _tab,

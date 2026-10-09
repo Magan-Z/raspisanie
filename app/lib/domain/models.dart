@@ -148,6 +148,7 @@ class ScheduleIndex {
     required this.bells,
     required this.holidays,
     required this.forms,
+    this.teachers = const [],
   });
 
   final String version;
@@ -159,6 +160,7 @@ class ScheduleIndex {
   final List<Bell> bells;
   final Set<DateTime> holidays;
   final List<FormInfo> forms;
+  final List<String> teachers; // полные ФИО преподавателей (необязательное поле index.json)
 
   factory ScheduleIndex.fromJson(Map<String, dynamic> json) {
     final semester = json['semester'] as Map<String, dynamic>;
@@ -172,6 +174,7 @@ class ScheduleIndex {
       bells: [for (final b in json['bells'] as List) Bell.fromJson(b as List)],
       holidays: {for (final h in json['holidays'] as List) parseDay(h as String)},
       forms: [for (final f in json['forms'] as List) FormInfo.fromJson(f as Map<String, dynamic>)],
+      teachers: [for (final t in (json['teachers'] as List? ?? const [])) t as String],
     );
   }
 
