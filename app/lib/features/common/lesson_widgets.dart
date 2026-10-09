@@ -6,6 +6,7 @@ import '../../domain/models.dart';
 import '../../theme/subject_palette.dart';
 import '../../theme/tokens.dart';
 import 'room_plate.dart';
+import 'word_fit_text.dart';
 
 /// Подпись типа занятия («Лекция» / «Практика»). Смысл несёт слово, а не цвет.
 class KindBadge extends StatelessWidget {
@@ -76,9 +77,10 @@ class LessonTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        child: IntrinsicHeight(
-          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Container(width: 6, color: tone.accent),
+        child: DecoratedBox(
+          // цветная полоса слева — граница, а не отдельный блок: так карточка не зависит от IntrinsicHeight
+          decoration: BoxDecoration(border: Border(left: BorderSide(color: tone.accent, width: 6))),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.md, Gap.md, Gap.md),
@@ -88,19 +90,18 @@ class LessonTile extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: Gap.xs),
                       child: Text(timeLabel!, style: theme.textTheme.labelMedium?.copyWith(color: tone.onContainer)),
                     ),
-                  Text.rich(
-                    TextSpan(children: [
-                      TextSpan(text: subject),
-                      if (hasHomework)
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: Gap.sm),
-                            child: Icon(Icons.assignment_late_rounded, size: 18, color: scheme.error, semanticLabel: 'Есть домашнее задание'),
-                          ),
-                        ),
-                    ]),
+                  WordFitText(
+                    subject,
                     style: theme.textTheme.titleMedium?.copyWith(color: textColor),
+                    trailing: hasHomework
+                        ? WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: Gap.sm),
+                              child: Icon(Icons.assignment_late_rounded, size: 18, color: scheme.error, semanticLabel: 'Есть домашнее задание'),
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(height: Gap.sm),
                   // Нижняя строка: тип и преподаватель слева, «табличка» с аудиторией справа

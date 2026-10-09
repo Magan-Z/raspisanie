@@ -18,6 +18,7 @@ import '../common/day_strip.dart';
 import '../common/empty_state.dart';
 import '../common/lesson_widgets.dart';
 import '../common/room_plate.dart';
+import '../common/word_fit_text.dart';
 import '../overrides/day_edits.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
@@ -349,28 +350,26 @@ class _TimelineRow extends StatelessWidget {
         ),
     };
 
-    return IntrinsicHeight(
-      child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        SizedBox(
-          width: timeWidth,
-          child: Padding(
-            padding: const EdgeInsets.only(top: Gap.md),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(start, style: theme.textTheme.titleSmall?.copyWith(color: phase == _Phase.past ? scheme.onSurfaceVariant : scheme.onSurface)),
-              Text(end, style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
-            ]),
-          ),
-        ),
-        SizedBox(
-          width: 24,
-          child: Stack(alignment: Alignment.topCenter, children: [
-            Positioned.fill(child: Center(child: Container(width: 2, color: scheme.outlineVariant))),
-            Positioned(top: Gap.lg, child: dot),
+    // Линия времени — часть правой ячейки (а не отдельная колонка с IntrinsicHeight): внутри карточек есть LayoutBuilder
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(
+        width: timeWidth,
+        child: Padding(
+          padding: const EdgeInsets.only(top: Gap.md),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(start, style: theme.textTheme.titleSmall?.copyWith(color: phase == _Phase.past ? scheme.onSurfaceVariant : scheme.onSurface)),
+            Text(end, style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
           ]),
         ),
-        Expanded(child: Padding(padding: const EdgeInsets.only(bottom: Gap.md), child: child)),
-      ]),
-    );
+      ),
+      Expanded(
+        child: Stack(children: [
+          Positioned(left: 11, top: 0, bottom: 0, width: 2, child: ColoredBox(color: scheme.outlineVariant)),
+          Positioned(top: Gap.lg, left: 0, width: 24, child: Center(child: dot)),
+          Padding(padding: const EdgeInsets.only(left: 24, bottom: Gap.md), child: child),
+        ]),
+      ),
+    ]);
   }
 }
 
@@ -385,22 +384,22 @@ class _GapRow extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final timeWidth = MediaQuery.textScalerOf(context).scale(48).clamp(48.0, 92.0);
-    return IntrinsicHeight(
-      child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        SizedBox(width: timeWidth),
-        SizedBox(width: 24, child: Center(child: Container(width: 2, color: scheme.outlineVariant))),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: Gap.md, top: Gap.xs),
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(width: timeWidth),
+      Expanded(
+        child: Stack(children: [
+          Positioned(left: 11, top: 0, bottom: 0, width: 2, child: ColoredBox(color: scheme.outlineVariant)),
+          Padding(
+            padding: const EdgeInsets.only(left: 24, bottom: Gap.md, top: Gap.xs),
             child: Row(children: [
               Icon(icon, size: 16, color: scheme.onSurfaceVariant),
               const SizedBox(width: Gap.sm),
               Flexible(child: Text(text, style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant))),
             ]),
           ),
-        ),
-      ]),
-    );
+        ]),
+      ),
+    ]);
   }
 }
 
@@ -455,7 +454,7 @@ class _NowCard extends StatelessWidget {
               KindBadge(lesson.kind, tone: tone),
             ]),
             const SizedBox(height: Gap.md),
-            Text(lesson.subject, style: theme.textTheme.titleLarge?.copyWith(color: scheme.onSurface)),
+            WordFitText(lesson.subject, style: theme.textTheme.titleLarge?.copyWith(color: scheme.onSurface)),
             const SizedBox(height: Gap.lg),
             // При очень крупном системном шрифте табличка и подписи идут друг под другом, а не в ряд
             Builder(builder: (context) {

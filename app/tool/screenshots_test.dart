@@ -160,6 +160,15 @@ void main() {
     });
   }
 
+  for (final entry in {'today': null, 'week': 'Неделя', 'homework': 'ДЗ', 'settings': 'Настройки'}.entries) {
+    testWidgets('phone font ${entry.key}', (tester) async {
+      await tester.runAsync(loadFonts);
+      await shoot(tester, '9-phone-${entry.key}', dark: false, textScale: 1.3, act: () async {
+        if (entry.value != null) await tester.tap(find.text(entry.value!).last);
+      });
+    });
+  }
+
   testWidgets('today large font', (tester) async {
     await tester.runAsync(loadFonts);
     await shoot(tester, '7-today-bigfont', dark: false, textScale: 1.6);

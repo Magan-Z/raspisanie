@@ -12,6 +12,7 @@ import '../../core/formatting.dart';
 import '../../domain/homework.dart';
 import '../../theme/subject_palette.dart';
 import '../../theme/tokens.dart';
+import '../common/word_fit_text.dart';
 import '../common/empty_state.dart';
 import 'add_homework_sheet.dart';
 
@@ -126,9 +127,10 @@ class _HomeworkTile extends ConsumerWidget {
           color: item.done ? scheme.surfaceContainerLow : tone.container,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.lg)),
           clipBehavior: Clip.antiAlias,
-          child: IntrinsicHeight(
-            child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Container(width: 6, color: item.done ? scheme.outlineVariant : tone.accent),
+          child: DecoratedBox(
+            // цветная полоса слева — граница карточки (без IntrinsicHeight, внутри есть LayoutBuilder)
+            decoration: BoxDecoration(border: Border(left: BorderSide(color: item.done ? scheme.outlineVariant : tone.accent, width: 6))),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Padding(
                 padding: const EdgeInsets.only(left: Gap.xs),
                 child: Semantics(
@@ -146,7 +148,7 @@ class _HomeworkTile extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(0, Gap.md, Gap.xs, Gap.md),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(
+                    WordFitText(
                       item.subject,
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: item.done ? scheme.onSurfaceVariant : tone.onContainer,
