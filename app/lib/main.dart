@@ -1,4 +1,5 @@
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,7 +13,8 @@ import 'theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
-  registerBackgroundSync(); // раз в ~6 часов проверяет обновления, даже когда приложение закрыто
+  // Раз в ~6 часов проверяет обновления, даже когда приложение закрыто (только Android; в браузере такого нет)
+  if (!kIsWeb) registerBackgroundSync();
   runApp(ProviderScope(
     overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
     child: const RaspisanieApp(),

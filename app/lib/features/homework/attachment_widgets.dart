@@ -2,8 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:io';
-
 import '../../app_state.dart';
 import '../../domain/attachment.dart';
 import '../../theme/tokens.dart';
@@ -90,7 +88,7 @@ class AttachmentStrip extends ConsumerWidget {
         builder: (_) => Dialog(
           clipBehavior: Clip.antiAlias,
           child: Stack(children: [
-            InteractiveViewer(child: Image.file(File(a.path), semanticLabel: a.name)),
+            InteractiveViewer(child: store.image(a)),
             Positioned(top: 4, right: 4, child: IconButton.filledTonal(tooltip: 'Закрыть', icon: const Icon(Icons.close_rounded), onPressed: () => Navigator.of(context).pop())),
           ]),
         ),
@@ -121,7 +119,7 @@ class AttachmentStrip extends ConsumerWidget {
               onTap: () => _open(context, ref, a),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(Radii.sm),
-                child: Image.file(File(a.path), width: 72, height: 72, fit: BoxFit.cover, cacheWidth: 216, excludeFromSemantics: true),
+                child: store.image(a, width: 72, height: 72, fit: BoxFit.cover, cacheWidth: 216),
               ),
             ),
           ),

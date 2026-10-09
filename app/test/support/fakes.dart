@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:raspisanie/data/attachments/attachment_store.dart';
@@ -92,7 +93,7 @@ class FakeAttachmentStore implements AttachmentStore {
   @override
   Future<Attachment> save(PickedFileInfo picked) async {
     final target = '${dir.path}/${DateTime.now().microsecondsSinceEpoch}_${picked.name}';
-    File(picked.path).copySync(target);
+    File(picked.path!).copySync(target);
     return Attachment(name: picked.name, path: target, sizeBytes: picked.sizeBytes);
   }
 
@@ -111,6 +112,9 @@ class FakeAttachmentStore implements AttachmentStore {
     opened.add(a.name);
     return null;
   }
+
+  @override
+  Widget image(Attachment a, {double? width, double? height, BoxFit? fit, int? cacheWidth}) => SizedBox(width: width, height: height);
 }
 
 /// Поддельное окно выбора: возвращает заранее заданные файлы.

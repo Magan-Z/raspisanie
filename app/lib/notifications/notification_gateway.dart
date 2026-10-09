@@ -47,6 +47,30 @@ abstract class NotificationGateway {
   });
 }
 
+/// Заглушка для браузера: запланированных уведомлений там нет, поэтому ничего не делаем.
+class NoopNotificationGateway implements NotificationGateway {
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<bool> requestPermission() async => false;
+
+  @override
+  Future<bool> areEnabled() async => false;
+
+  @override
+  Future<void> replaceAll(List<PlannedNotification> plan) async {}
+
+  @override
+  Stream<String> get taps => const Stream.empty();
+
+  @override
+  Future<String?> launchPayload() async => null;
+
+  @override
+  Future<void> showNow({required int id, required String title, required String body, NotificationChannel channel = NotificationChannel.updates}) async {}
+}
+
 class LocalNotificationGateway implements NotificationGateway {
   LocalNotificationGateway([FlutterLocalNotificationsPlugin? plugin]) : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 

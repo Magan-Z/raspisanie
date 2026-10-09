@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -111,6 +112,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
 
   /// Один раз спрашиваем разрешение на уведомления (Android 13+), когда они включены по умолчанию.
   Future<void> _askNotificationPermissionOnce() async {
+    if (kIsWeb) return; // в браузере разрешение на уведомления не нужно
     final prefs = ref.read(sharedPreferencesProvider);
     if (prefs.getBool('notificationPermissionAsked') ?? false) return;
     await prefs.setBool('notificationPermissionAsked', true);

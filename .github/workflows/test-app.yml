@@ -3,7 +3,7 @@ name: Проверка приложения
 
 on:
   push:
-    paths: ["app/**", ".github/workflows/test-app.yml"]
+    paths: ["app/**", "scripts/build_web.sh", ".github/workflows/test-app.yml"]
   pull_request:
     paths: ["app/**"]
 
@@ -27,6 +27,9 @@ jobs:
       - run: dart run build_runner build --delete-conflicting-outputs
       - run: dart analyze lib test
       - run: flutter test
+      # Веб-версия должна собираться (иначе iPhone-версия сломается незаметно)
+      - run: bash scripts/build_web.sh
+        working-directory: .
       # Тесты логики виджетов (Kotlin). Нужна хотя бы одна сборка Flutter, чтобы Gradle знал плагины.
       - run: flutter build apk --debug --target-platform android-arm64
       - run: ./gradlew :app:testDebugUnitTest

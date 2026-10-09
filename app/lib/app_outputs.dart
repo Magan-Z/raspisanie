@@ -2,6 +2,7 @@
 // Вызывается и с экрана (после любого изменения), и из фоновой задачи (раз в ~6 часов),
 // поэтому принимает ProviderContainer, а не WidgetRef.
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_state.dart';
@@ -57,6 +58,8 @@ Future<void> replanNotifications(ProviderContainer c) async {
 
 /// Виджеты + уведомления одним вызовом.
 Future<void> refreshOutputs(ProviderContainer c) async {
+  // В браузере нет ни виджетов, ни запланированных уведомлений
+  if (kIsWeb) return;
   await pushWidgets(c);
   await replanNotifications(c);
 }

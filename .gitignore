@@ -29,3 +29,9 @@ app/android/key.properties
 
 # Ключ подписи приложения — только у владельца, в репозиторий не попадает
 /ключ-подписи/
+
+# Веб-версия: эти файлы собираются скриптом scripts/build_web.sh
+app/web/sqlite3.wasm
+app/web/.sqlite3-version
+app/web/drift_worker.js
+app/web/drift_worker.js.*

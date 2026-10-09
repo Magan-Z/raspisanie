@@ -3,6 +3,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -252,10 +253,10 @@ Future<SyncResult> syncSchedule(ProviderContainer ref) async {
 // ---------- домашние задания ----------
 
 /// Файлы вложений к ДЗ (в тестах подменяется).
-final attachmentStoreProvider = Provider<AttachmentStore>((ref) => DiskAttachmentStore());
+final attachmentStoreProvider = Provider<AttachmentStore>((ref) => createAttachmentStore(ref.watch(databaseProvider)));
 
 /// Окна выбора файлов и камеры (в тестах подменяется).
-final attachmentPickerProvider = Provider<AttachmentPicker>((ref) => SystemAttachmentPicker());
+final attachmentPickerProvider = Provider<AttachmentPicker>((ref) => createAttachmentPicker());
 
 final homeworkRepositoryProvider =
     Provider<HomeworkRepository>((ref) => HomeworkRepository(ref.watch(databaseProvider), ref.watch(attachmentStoreProvider)));
@@ -331,4 +332,4 @@ final overridesProvider = FutureProvider<List<Override>>((ref) => ref.watch(over
 
 // ---------- уведомления ----------
 
-final notificationGatewayProvider = Provider<NotificationGateway>((ref) => LocalNotificationGateway());
+final notificationGatewayProvider = Provider<NotificationGateway>((ref) => kIsWeb ? NoopNotificationGateway() : LocalNotificationGateway());

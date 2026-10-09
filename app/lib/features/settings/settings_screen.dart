@@ -1,6 +1,7 @@
 // Настройки: сгруппированы по смыслу — профиль, оформление, расписание, уведомления, данные, о приложении.
 // Значения выбираются в нижнем окне со списком (удобно пальцем и не ломается при крупном шрифте).
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -94,7 +95,8 @@ class SettingsScreen extends ConsumerWidget {
             value: settings.amoled,
             onChanged: notifier.setAmoled,
           ),
-          _SwitchRow(
+          if (!kIsWeb)
+            _SwitchRow(
             icon: Icons.palette_rounded,
             title: 'Цвета из обоев',
             subtitle: 'Material You, Android 12 и новее. Выключено — фирменные цвета приложения',
@@ -145,48 +147,58 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ]),
 
-        _Section(title: 'Уведомления', children: [
-          _Row(
-            icon: Icons.notifications_rounded,
-            title: 'Напоминание перед парой',
-            value: settings.notifyBeforeMin == 0 ? 'Выключено' : 'За ${settings.notifyBeforeMin} мин',
-            onTap: () async {
-              final picked = await _choose<int>(
-                context,
-                'Напоминание перед парой',
-                const {0: 'Выключено', 5: 'За 5 минут', 10: 'За 10 минут', 15: 'За 15 минут', 30: 'За 30 минут'},
-                const [0, 5, 10, 15, 30].contains(settings.notifyBeforeMin) ? settings.notifyBeforeMin : 10,
-              );
-              if (picked != null) notifier.setNotifyBeforeMin(picked);
-            },
-          ),
-          _SwitchRow(
-            icon: Icons.assignment_late_rounded,
-            title: 'Вечером напоминать о ДЗ',
-            subtitle: 'В 19:00, если на завтра есть невыполненные задания',
-            value: settings.eveningHomeworkReminder,
-            onChanged: notifier.setEveningHomeworkReminder,
-          ),
-          Consumer(builder: (context, ref, _) {
-            return _Row(
-              icon: Icons.notifications_active_rounded,
-              title: 'Разрешить уведомления',
-              subtitle: 'Если уведомления не приходят — нажмите, чтобы разрешить их в системе',
+        // В браузере (iPhone) запланировать уведомление нельзя — честно говорим об этом и подсказываем замену
+        if (kIsWeb)
+          const _Section(title: 'Уведомления', children: [
+            _Row(
+              icon: Icons.notifications_off_rounded,
+              title: 'Напоминаний в браузере нет',
+              subtitle: 'Браузер iPhone не умеет ставить напоминания. Чтобы получать оповещения о парах, подпишитесь на календарь: ссылка есть на сайте расписания',
+            ),
+          ])
+        else
+          _Section(title: 'Уведомления', children: [
+            _Row(
+              icon: Icons.notifications_rounded,
+              title: 'Напоминание перед парой',
+              value: settings.notifyBeforeMin == 0 ? 'Выключено' : 'За ${settings.notifyBeforeMin} мин',
               onTap: () async {
-                var allowed = false;
-                try {
-                  final gateway = ref.read(notificationGatewayProvider);
-                  await gateway.init();
-                  allowed = await gateway.requestPermission() || await gateway.areEnabled();
-                } catch (_) {}
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(allowed ? 'Уведомления разрешены' : 'Уведомления запрещены. Включите их в настройках телефона: Приложения → Расписание → Уведомления'),
-                ));
+                final picked = await _choose<int>(
+                  context,
+                  'Напоминание перед парой',
+                  const {0: 'Выключено', 5: 'За 5 минут', 10: 'За 10 минут', 15: 'За 15 минут', 30: 'За 30 минут'},
+                  const [0, 5, 10, 15, 30].contains(settings.notifyBeforeMin) ? settings.notifyBeforeMin : 10,
+                );
+                if (picked != null) notifier.setNotifyBeforeMin(picked);
               },
-            );
-          }),
-        ]),
+            ),
+            _SwitchRow(
+              icon: Icons.assignment_late_rounded,
+              title: 'Вечером напоминать о ДЗ',
+              subtitle: 'В 19:00, если на завтра есть невыполненные задания',
+              value: settings.eveningHomeworkReminder,
+              onChanged: notifier.setEveningHomeworkReminder,
+            ),
+            Consumer(builder: (context, ref, _) {
+              return _Row(
+                icon: Icons.notifications_active_rounded,
+                title: 'Разрешить уведомления',
+                subtitle: 'Если уведомления не приходят — нажмите, чтобы разрешить их в системе',
+                onTap: () async {
+                  var allowed = false;
+                  try {
+                    final gateway = ref.read(notificationGatewayProvider);
+                    await gateway.init();
+                    allowed = await gateway.requestPermission() || await gateway.areEnabled();
+                  } catch (_) {}
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(allowed ? 'Уведомления разрешены' : 'Уведомления запрещены. Включите их в настройках телефона: Приложения → Расписание → Уведомления'),
+                  ));
+                },
+              );
+            }),
+          ]),
 
         _Section(title: 'Данные', children: [
           _Row(

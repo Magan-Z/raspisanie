@@ -8,6 +8,8 @@ on:
     branches: [main]
     paths:
       - "data/**"
+      - "app/**"            # веб-версия приложения (для iPhone) собирается вместе с сайтом
+      - "scripts/build_web.sh"
       - ".github/workflows/publish-schedule.yml"
   workflow_dispatch:
 
@@ -55,6 +57,26 @@ jobs:
         run: |
           cp web/index.html ../public/index.html
           touch ../public/.nojekyll
+
+      # Веб-версия приложения для iPhone: тот же интерфейс, что на Android, но в браузере (кроме виджетов и напоминаний).
+      # Собирается с самым свежим расписанием внутри, лежит на сайте по адресу /app/.
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Веб-версия приложения
+        working-directory: .
+        env:
+          BASE_HREF: /${{ github.event.repository.name }}/app/
+          SITE_URL: ${{ steps.pages.outputs.base_url }}/
+        run: |
+          rm -rf app/assets/schedule && mkdir -p app/assets/schedule/groups
+          cp public/index.json app/assets/schedule/
+          cp public/groups/*.json app/assets/schedule/groups/
+          (cd app && flutter pub get && dart run build_runner build --delete-conflicting-outputs)
+          bash scripts/build_web.sh
+          cp -R app/build/web public/app
 
       - name: Отчёт в журнал
         if: always()

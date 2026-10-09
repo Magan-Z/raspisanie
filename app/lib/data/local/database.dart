@@ -3,7 +3,7 @@
 //   dart run build_runner build
 
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'connection_io.dart' if (dart.library.js_interop) 'connection_web.dart';
 
 part 'database.g.dart';
 
@@ -56,6 +56,13 @@ class HomeworkAttachments extends Table {
   IntColumn get sizeBytes => integer().nullable()();
 }
 
+/// Содержимое вложений в браузере (на телефоне файлы лежат на диске, и эта таблица пуста).
+@DataClassName('AttachmentBlobRow')
+class AttachmentBlobs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  BlobColumn get bytes => blob()();
+}
+
 /// Личные правки расписания на конкретную дату.
 @DataClassName('OverrideRow')
 class Overrides extends Table {
@@ -102,12 +109,12 @@ class Deadlines extends Table {
   TextColumn get subject => text().nullable()();
 }
 
-@DriftDatabase(tables: [ScheduleCache, IndexCache, Homework, HomeworkAttachments, Overrides, SubjectAliases, Notes, Deadlines])
+@DriftDatabase(tables: [ScheduleCache, IndexCache, Homework, HomeworkAttachments, AttachmentBlobs, Overrides, SubjectAliases, Notes, Deadlines])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'raspisanie'));
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? openAppConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -126,6 +133,10 @@ class AppDatabase extends _$AppDatabase {
               "INSERT INTO homework_attachments (homework_id, name, path) "
               "SELECT id, 'Фото.jpg', photo_path FROM homework WHERE photo_path IS NOT NULL",
             );
+          }
+          // v3 → v4: хранилище вложений для браузерной версии
+          if (from < 4) {
+            await m.createTable(attachmentBlobs);
           }
         },
       );

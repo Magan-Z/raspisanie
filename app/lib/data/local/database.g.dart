@@ -1597,6 +1597,199 @@ class HomeworkAttachmentsCompanion extends UpdateCompanion<AttachmentRow> {
   }
 }
 
+class $AttachmentBlobsTable extends AttachmentBlobs
+    with TableInfo<$AttachmentBlobsTable, AttachmentBlobRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AttachmentBlobsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _bytesMeta = const VerificationMeta('bytes');
+  @override
+  late final GeneratedColumn<Uint8List> bytes = GeneratedColumn<Uint8List>(
+    'bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, bytes];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'attachment_blobs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AttachmentBlobRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('bytes')) {
+      context.handle(
+        _bytesMeta,
+        bytes.isAcceptableOrUnknown(data['bytes']!, _bytesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bytesMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AttachmentBlobRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AttachmentBlobRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      bytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}bytes'],
+      )!,
+    );
+  }
+
+  @override
+  $AttachmentBlobsTable createAlias(String alias) {
+    return $AttachmentBlobsTable(attachedDatabase, alias);
+  }
+}
+
+class AttachmentBlobRow extends DataClass
+    implements Insertable<AttachmentBlobRow> {
+  final int id;
+  final Uint8List bytes;
+  const AttachmentBlobRow({required this.id, required this.bytes});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['bytes'] = Variable<Uint8List>(bytes);
+    return map;
+  }
+
+  AttachmentBlobsCompanion toCompanion(bool nullToAbsent) {
+    return AttachmentBlobsCompanion(id: Value(id), bytes: Value(bytes));
+  }
+
+  factory AttachmentBlobRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AttachmentBlobRow(
+      id: serializer.fromJson<int>(json['id']),
+      bytes: serializer.fromJson<Uint8List>(json['bytes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'bytes': serializer.toJson<Uint8List>(bytes),
+    };
+  }
+
+  AttachmentBlobRow copyWith({int? id, Uint8List? bytes}) =>
+      AttachmentBlobRow(id: id ?? this.id, bytes: bytes ?? this.bytes);
+  AttachmentBlobRow copyWithCompanion(AttachmentBlobsCompanion data) {
+    return AttachmentBlobRow(
+      id: data.id.present ? data.id.value : this.id,
+      bytes: data.bytes.present ? data.bytes.value : this.bytes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AttachmentBlobRow(')
+          ..write('id: $id, ')
+          ..write('bytes: $bytes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, $driftBlobEquality.hash(bytes));
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AttachmentBlobRow &&
+          other.id == this.id &&
+          $driftBlobEquality.equals(other.bytes, this.bytes));
+}
+
+class AttachmentBlobsCompanion extends UpdateCompanion<AttachmentBlobRow> {
+  final Value<int> id;
+  final Value<Uint8List> bytes;
+  const AttachmentBlobsCompanion({
+    this.id = const Value.absent(),
+    this.bytes = const Value.absent(),
+  });
+  AttachmentBlobsCompanion.insert({
+    this.id = const Value.absent(),
+    required Uint8List bytes,
+  }) : bytes = Value(bytes);
+  static Insertable<AttachmentBlobRow> custom({
+    Expression<int>? id,
+    Expression<Uint8List>? bytes,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (bytes != null) 'bytes': bytes,
+    });
+  }
+
+  AttachmentBlobsCompanion copyWith({Value<int>? id, Value<Uint8List>? bytes}) {
+    return AttachmentBlobsCompanion(
+      id: id ?? this.id,
+      bytes: bytes ?? this.bytes,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (bytes.present) {
+      map['bytes'] = Variable<Uint8List>(bytes.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AttachmentBlobsCompanion(')
+          ..write('id: $id, ')
+          ..write('bytes: $bytes')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $OverridesTable extends Overrides
     with TableInfo<$OverridesTable, OverrideRow> {
   @override
@@ -3112,6 +3305,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $HomeworkTable homework = $HomeworkTable(this);
   late final $HomeworkAttachmentsTable homeworkAttachments =
       $HomeworkAttachmentsTable(this);
+  late final $AttachmentBlobsTable attachmentBlobs = $AttachmentBlobsTable(
+    this,
+  );
   late final $OverridesTable overrides = $OverridesTable(this);
   late final $SubjectAliasesTable subjectAliases = $SubjectAliasesTable(this);
   late final $NotesTable notes = $NotesTable(this);
@@ -3125,6 +3321,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     indexCache,
     homework,
     homeworkAttachments,
+    attachmentBlobs,
     overrides,
     subjectAliases,
     notes,
@@ -4037,6 +4234,147 @@ typedef $$HomeworkAttachmentsTableProcessedTableManager =
       AttachmentRow,
       PrefetchHooks Function()
     >;
+typedef $$AttachmentBlobsTableCreateCompanionBuilder =
+    AttachmentBlobsCompanion Function({
+      Value<int> id,
+      required Uint8List bytes,
+    });
+typedef $$AttachmentBlobsTableUpdateCompanionBuilder =
+    AttachmentBlobsCompanion Function({Value<int> id, Value<Uint8List> bytes});
+
+class $$AttachmentBlobsTableFilterComposer
+    extends Composer<_$AppDatabase, $AttachmentBlobsTable> {
+  $$AttachmentBlobsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get bytes => $composableBuilder(
+    column: $table.bytes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AttachmentBlobsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AttachmentBlobsTable> {
+  $$AttachmentBlobsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get bytes => $composableBuilder(
+    column: $table.bytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AttachmentBlobsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AttachmentBlobsTable> {
+  $$AttachmentBlobsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get bytes =>
+      $composableBuilder(column: $table.bytes, builder: (column) => column);
+}
+
+class $$AttachmentBlobsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AttachmentBlobsTable,
+          AttachmentBlobRow,
+          $$AttachmentBlobsTableFilterComposer,
+          $$AttachmentBlobsTableOrderingComposer,
+          $$AttachmentBlobsTableAnnotationComposer,
+          $$AttachmentBlobsTableCreateCompanionBuilder,
+          $$AttachmentBlobsTableUpdateCompanionBuilder,
+          (
+            AttachmentBlobRow,
+            BaseReferences<
+              _$AppDatabase,
+              $AttachmentBlobsTable,
+              AttachmentBlobRow
+            >,
+          ),
+          AttachmentBlobRow,
+          PrefetchHooks Function()
+        > {
+  $$AttachmentBlobsTableTableManager(
+    _$AppDatabase db,
+    $AttachmentBlobsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AttachmentBlobsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AttachmentBlobsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AttachmentBlobsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<Uint8List> bytes = const Value.absent(),
+          }) => AttachmentBlobsCompanion(id: id, bytes: bytes),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required Uint8List bytes,
+          }) => AttachmentBlobsCompanion.insert(id: id, bytes: bytes),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AttachmentBlobsTable, AttachmentBlobRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $AttachmentBlobsTable,
+                    AttachmentBlobRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AttachmentBlobsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AttachmentBlobsTable,
+      AttachmentBlobRow,
+      $$AttachmentBlobsTableFilterComposer,
+      $$AttachmentBlobsTableOrderingComposer,
+      $$AttachmentBlobsTableAnnotationComposer,
+      $$AttachmentBlobsTableCreateCompanionBuilder,
+      $$AttachmentBlobsTableUpdateCompanionBuilder,
+      (
+        AttachmentBlobRow,
+        BaseReferences<_$AppDatabase, $AttachmentBlobsTable, AttachmentBlobRow>,
+      ),
+      AttachmentBlobRow,
+      PrefetchHooks Function()
+    >;
 typedef $$OverridesTableCreateCompanionBuilder = OverridesCompanion Function({
   Value<int> id,
   required DateTime date,
@@ -4899,6 +5237,8 @@ class $AppDatabaseManager {
       $$HomeworkTableTableManager(_db, _db.homework);
   $$HomeworkAttachmentsTableTableManager get homeworkAttachments =>
       $$HomeworkAttachmentsTableTableManager(_db, _db.homeworkAttachments);
+  $$AttachmentBlobsTableTableManager get attachmentBlobs =>
+      $$AttachmentBlobsTableTableManager(_db, _db.attachmentBlobs);
   $$OverridesTableTableManager get overrides =>
       $$OverridesTableTableManager(_db, _db.overrides);
   $$SubjectAliasesTableTableManager get subjectAliases =>
