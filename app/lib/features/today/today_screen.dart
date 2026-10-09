@@ -16,6 +16,7 @@ import '../../theme/subject_palette.dart';
 import '../../theme/tokens.dart';
 import '../common/day_strip.dart';
 import '../common/empty_state.dart';
+import '../common/illustrations.dart';
 import '../common/lesson_widgets.dart';
 import '../common/room_plate.dart';
 import '../common/word_fit_text.dart';
@@ -225,7 +226,7 @@ class _DayPage extends ConsumerWidget {
                 height: constraints.maxHeight,
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   EmptyState(
-                    icon: holiday ? Icons.celebration_rounded : (sunday ? Icons.weekend_rounded : Icons.free_breakfast_rounded),
+                    illustration: holiday ? IllustrationKind.holiday : IllustrationKind.freeDay,
                     title: holiday ? 'Праздничный день' : 'Пар нет',
                     subtitle: sunday ? 'Воскресенье — отдыхаем' : 'Можно заняться своими делами',
                     action: _EditsButton(day: day, count: editsCount),

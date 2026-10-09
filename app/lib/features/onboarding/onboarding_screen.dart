@@ -7,6 +7,7 @@ import '../../app_state.dart';
 import '../../domain/models.dart';
 import '../../theme/tokens.dart';
 import '../common/brand_mark.dart';
+import '../common/illustrations.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key, this.changing = false});
@@ -64,13 +65,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       padding: const EdgeInsets.all(Gap.xl),
       children: [
         if (!widget.changing) ...[
-          const Align(alignment: Alignment.centerLeft, child: BrandMark(size: 72)),
-          const SizedBox(height: Gap.xl),
-          Text('Расписание', style: theme.textTheme.displaySmall),
-          const SizedBox(height: Gap.sm),
-          Text(
-            'Расписание всего института в телефоне: пары, аудитории, домашка и напоминания. Без регистрации.',
-            style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          // Приветствие: цветная карточка с иллюстрацией, названием и обещанием «без регистрации»
+          Container(
+            padding: const EdgeInsets.fromLTRB(Gap.xl, Gap.xl, Gap.xl, Gap.lg),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(Radii.xl),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                BrandMark(size: 56, background: theme.colorScheme.primary, foreground: theme.colorScheme.onPrimary, accent: theme.colorScheme.tertiaryContainer),
+                const Spacer(),
+                const Illustration(IllustrationKind.welcome, width: 128),
+              ]),
+              const SizedBox(height: Gap.lg),
+              Text('Расписание', style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.onPrimaryContainer)),
+              const SizedBox(height: Gap.sm),
+              Text(
+                'Расписание всего института в телефоне: пары, аудитории, домашка и напоминания. Без регистрации.',
+                style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onPrimaryContainer),
+              ),
+            ]),
           ),
           const SizedBox(height: Gap.xl),
           Text('Выберите свою группу — это займёт несколько секунд', style: theme.textTheme.titleMedium),

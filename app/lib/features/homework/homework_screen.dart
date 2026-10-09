@@ -14,6 +14,7 @@ import '../../theme/tokens.dart';
 import '../common/word_fit_text.dart';
 import 'attachment_widgets.dart';
 import '../common/empty_state.dart';
+import '../common/illustrations.dart';
 import 'add_homework_sheet.dart';
 
 class HomeworkScreen extends ConsumerWidget {
@@ -38,7 +39,7 @@ class HomeworkScreen extends ConsumerWidget {
         data: (items) {
           if (items.isEmpty) {
             return const EmptyState(
-              icon: Icons.task_alt_rounded,
+              illustration: IllustrationKind.noHomework,
               title: 'Домашки нет',
               subtitle: 'Задание можно добавить кнопкой «Добавить ДЗ» или нажатием на пару на экране «Сегодня».',
             );
