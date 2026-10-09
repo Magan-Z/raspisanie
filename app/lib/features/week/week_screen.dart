@@ -106,6 +106,7 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
                     dimmed: entry.day == today && !now.isBefore(l.endAt),
                     note: l.note ?? (l.isPersonal ? 'изменено вами' : (l.isGroup ? 'изменено старостой' : null)),
                     hasHomework: dueOn(homework, entry.day).any((h) => h.subject == l.subject),
+                    withGroups: l.withGroups,
                     onLongPress: () => showLessonActions(context, l),
                     onTap: () => showLessonActions(context, l),
                   ),

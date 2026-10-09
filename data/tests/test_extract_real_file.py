@@ -153,3 +153,28 @@ def test_values_in_allowed_ranges(groups: dict[str, Group]) -> None:
 def test_subject_fixes_applied(groups: dict[str, Group]) -> None:
     subjects = {l.subject for g in groups.values() for l in g.lessons}
     assert not any("Аккаутинг" in s or "IТ-" in s for s in subjects)
+
+
+# ---------- с кем объединена лекция ----------
+
+def test_lecture_knows_which_groups_it_is_shared_with(groups: dict[str, Group]) -> None:
+    g = groups["ofo-1-bi-25"]
+    philosophy = find(g, MON, 1)[0]
+    assert philosophy.kind == "lecture"
+    assert philosophy.with_groups == ["2 БИ-25", "2 ИБ-25"]
+    # у группы-партнёра та же лекция указывает обратно на 1 БИ-25
+    partner = find(groups["ofo-2-bi-25"], MON, 1)[0]
+    assert "1 БИ-25" in partner.with_groups
+
+
+def test_practice_is_not_shared(groups: dict[str, Group]) -> None:
+    for g in groups.values():
+        for lesson in g.lessons:
+            if lesson.kind == "practice":
+                assert lesson.with_groups == [], (g.title, lesson.raw)
+
+
+def test_json_has_with_groups_only_when_shared(groups: dict[str, Group]) -> None:
+    g = groups["ofo-1-bi-25"]
+    assert find(g, MON, 1)[0].to_dict()["withGroups"] == ["2 БИ-25", "2 ИБ-25"]
+    assert "withGroups" not in find(g, MON, 2)[0].to_dict()

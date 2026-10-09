@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app_state.dart';
 import '../../core/formatting.dart';
 import '../../domain/homework.dart';
+import '../../domain/models.dart';
 import '../../theme/tokens.dart';
 import '../common/word_fit_text.dart';
 import '../../data/remote/shared_api.dart';
@@ -36,8 +37,9 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
     final theme = Theme.of(context);
 
     // Вкладка «От старосты» есть, если староста что-то задал или это сам староста
-    final groupRows = ref.watch(groupHomeworkProvider);
     final isEditor = ref.watch(isGroupEditorProvider);
+    // Студент видит ДЗ для всей группы и для своей подгруппы; староста — все, чтобы мог управлять любым
+    final groupRows = ref.watch(isEditor ? groupHomeworkAllProvider : groupHomeworkProvider);
     final hasGroupTab = ref.watch(sharedApiProvider) != null && ref.watch(settingsProvider.select((s) => s.showGroupData)) && (groupRows.isNotEmpty || isEditor);
     final showGroup = hasGroupTab && _showGroup;
 
@@ -199,6 +201,15 @@ class _GroupHomeworkTile extends ConsumerWidget {
                       decoration: BoxDecoration(color: scheme.tertiaryContainer, borderRadius: BorderRadius.circular(8)),
                       child: Text('от старосты', style: theme.textTheme.labelSmall?.copyWith(color: scheme.onTertiaryContainer)),
                     ),
+                    if (row.subgroup != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: Gap.sm, vertical: 2),
+                        decoration: BoxDecoration(color: scheme.secondaryContainer, borderRadius: BorderRadius.circular(8)),
+                        child: Text(
+                          'для ${_subgroupLabel(ref, row.subgroup!)}',
+                          style: theme.textTheme.labelSmall?.copyWith(color: scheme.onSecondaryContainer),
+                        ),
+                      ),
                   ]),
                   GroupAttachmentStrip(files: row.files, color: tone.accent),
                 ]),
@@ -222,6 +233,15 @@ class _GroupHomeworkTile extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Название подгруппы из расписания («БИ-25-1»); если не нашлось — «подгруппы 2».
+String _subgroupLabel(WidgetRef ref, int n) {
+  final subgroups = ref.watch(myScheduleProvider).value?.schedule.subgroups ?? const <SubgroupInfo>[];
+  for (final s in subgroups) {
+    if (s.n == n) return s.label;
+  }
+  return 'подгруппы $n';
 }
 
 class _HomeworkTile extends ConsumerWidget {

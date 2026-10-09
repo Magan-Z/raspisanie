@@ -15,6 +15,7 @@ import '../../domain/homework.dart';
 import '../../domain/homework_due.dart';
 import '../../domain/models.dart';
 import '../../domain/week_view.dart';
+import '../../theme/tokens.dart';
 
 /// Открывает окно добавления. [subject] — предмет, если уже известен (например, по долгому нажатию на пару).
 Future<void> showAddHomework(BuildContext context, {String? subject}) {
@@ -41,6 +42,7 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
   DateTime? _manualDue; // выбранный вручную срок
   final List<Attachment> _files = []; // уже скопированные в память приложения
   bool _forGroup = false; // староста: ДЗ для всей группы
+  int? _subgroup; // староста: ДЗ только одной подгруппе (null — всем)
   bool _saved = false;
   bool _busy = false; // идёт отправка на сервер (файлы могут грузиться долго)
   late final AttachmentStore _store; // запоминаем заранее: в dispose() ref уже читать нельзя
@@ -62,6 +64,12 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
     }
     _text.dispose();
     super.dispose();
+  }
+
+  /// У выбранного предмета есть деление на подгруппы (и ДЗ для группы): можно выбрать подгруппу.
+  bool get _splits {
+    final data = ref.read(myScheduleProvider).value;
+    return _forGroup && _subject != null && data != null && subjectSplitsBySubgroup(data.schedule, _subject!);
   }
 
   /// Срок: выбранный вручную или следующее занятие предмета.
@@ -139,7 +147,7 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
     if (_forGroup) {
       setState(() => _busy = true);
       try {
-        await GroupEditorActions.of(context).saveHomework(subject: _subject!, text: _text.text.trim(), due: due, kind: _kind, files: _files);
+        await GroupEditorActions.of(context).saveHomework(subject: _subject!, text: _text.text.trim(), due: due, kind: _kind, subgroup: _splits ? _subgroup : null, files: _files);
       } on SharedApiException catch (e) {
         if (mounted) setState(() => _busy = false);
         _say(e.message);
@@ -192,6 +200,7 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
               onSelected: (v) => setState(() {
                 _subject = v;
                 _manualDue = null;
+                _subgroup = null;
               }),
             ),
             const SizedBox(height: 12),
@@ -237,7 +246,23 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
                     ? 'Увидят все студенты группы во вкладке «От старосты». Файлы: до $maxGroupFilesPerHomework шт., каждый до ${maxGroupFileBytes ~/ (1024 * 1024)} МБ'
                     : 'Вы староста: можно задать ДЗ всем сразу'),
                 value: _forGroup,
-                onChanged: (v) => setState(() => _forGroup = v),
+                onChanged: (v) => setState(() {
+                  _forGroup = v;
+                  if (!v) _subgroup = null;
+                }),
+              ),
+            if (_splits)
+              Padding(
+                padding: const EdgeInsets.only(bottom: Gap.sm),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Для кого ДЗ', style: theme.textTheme.labelLarge),
+                  const SizedBox(height: Gap.xs),
+                  Wrap(spacing: 8, children: [
+                    ChoiceChip(label: const Text('Всей группе'), selected: _subgroup == null, onSelected: (_) => setState(() => _subgroup = null)),
+                    for (final s in data.schedule.subgroups)
+                      ChoiceChip(label: Text(s.label), selected: _subgroup == s.n, onSelected: (_) => setState(() => _subgroup = s.n)),
+                  ]),
+                ]),
               ),
             if (_files.isNotEmpty)
               Padding(

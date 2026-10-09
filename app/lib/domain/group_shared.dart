@@ -106,14 +106,28 @@ class GroupFileRef {
 
 /// ДЗ, которое задал староста для всей группы.
 class GroupHomeworkRow {
-  const GroupHomeworkRow({required this.id, required this.subject, required this.text, required this.dueDate, this.kind, this.files = const []});
+  const GroupHomeworkRow({
+    required this.id,
+    required this.subject,
+    required this.text,
+    required this.dueDate,
+    this.kind,
+    this.subgroup,
+    this.files = const [],
+  });
 
   final String id;
   final String subject;
   final String text;
   final DateTime dueDate; // «только день», UTC
   final LessonKind? kind;
+
+  /// Номер подгруппы, для которой задано ДЗ (иностранный язык и т.п.). null — всей группе.
+  final int? subgroup;
   final List<GroupFileRef> files;
+
+  /// Видно ли это ДЗ студенту из подгруппы [mine]: общее — всем, подгрупповое — только своей подгруппе.
+  bool visibleTo(int mine) => subgroup == null || subgroup == mine;
 
   factory GroupHomeworkRow.fromJson(Map<String, dynamic> j) => GroupHomeworkRow(
         id: j['id'] as String,
@@ -121,6 +135,7 @@ class GroupHomeworkRow {
         text: j['body'] as String,
         dueDate: parseDay(j['due_date'] as String),
         kind: j['kind'] == null ? null : LessonKind.parse(j['kind'] as String),
+        subgroup: (j['subgroup'] as num?)?.toInt(),
         files: [for (final f in (j['files'] as List? ?? const [])) GroupFileRef.fromJson(f as Map<String, dynamic>)],
       );
 
@@ -130,6 +145,7 @@ class GroupHomeworkRow {
         'body': text,
         'due_date': dayText(dueDate),
         'kind': kind?.name,
+        'subgroup': subgroup,
         'files': [for (final f in files) f.toJson()],
       };
 }

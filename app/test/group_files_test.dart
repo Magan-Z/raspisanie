@@ -14,6 +14,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'support/fakes.dart';
 
 void main() {
+  group('GroupHomeworkRow с подгруппой', () {
+    test('ДЗ для подгруппы: читается, записывается, видно только своей подгруппе', () {
+      final row = GroupHomeworkRow.fromJson({...FakeBackend().hw(), 'subgroup': 2});
+      expect(row.subgroup, 2);
+      expect(GroupHomeworkRow.fromJson(row.toJson()).subgroup, 2);
+      expect(row.visibleTo(2), isTrue);
+      expect(row.visibleTo(1), isFalse);
+    });
+
+    test('ДЗ без подгруппы (в том числе старое) видно всем', () {
+      final row = GroupHomeworkRow.fromJson(FakeBackend().hw());
+      expect(row.subgroup, isNull);
+      expect(row.visibleTo(1) && row.visibleTo(2), isTrue);
+    });
+  });
+
   group('GroupHomeworkRow с файлами', () {
     test('список файлов читается и записывается без потерь', () {
       final row = GroupHomeworkRow.fromJson(FakeBackend().hw(files: [

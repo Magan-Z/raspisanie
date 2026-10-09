@@ -279,3 +279,31 @@ end $$;
 
 revoke execute on function public.purge_group_files(text) from public, anon, authenticated;
 grant execute on function public.put_group_file(text, uuid, text, text), public.get_group_file(text, uuid) to anon, authenticated;
+
+-- ============================================================================
+-- Часть 3 (миграция group_homework_subgroup): ДЗ можно задать одной подгруппе.
+-- subgroup — номер подгруппы (1–6); null — всей группе.
+-- ============================================================================
+alter table public.group_homework add column subgroup smallint check (subgroup between 1 and 6);
+
+create or replace function public.put_group_homework(p_token text, p_row jsonb) returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare g text := public.editor_group(p_token); v_id uuid; n int; fl jsonb := coalesce(p_row->'files', '[]'::jsonb);
+begin
+  perform public.purge_tombstones();
+  if jsonb_typeof(fl) <> 'array' or jsonb_array_length(fl) > 5 then raise exception 'too_many_files'; end if;
+  v_id := coalesce((p_row->>'id')::uuid, gen_random_uuid());
+  if not exists (select 1 from public.group_homework where id = v_id) then
+    select count(*) into n from public.group_homework where group_id = g and not deleted;
+    if n >= 300 then raise exception 'too_many'; end if;
+  end if;
+  insert into public.group_homework (id, group_id, subject, body, due_date, kind, subgroup, files, deleted, updated_at)
+  values (v_id, g, p_row->>'subject', p_row->>'body', (p_row->>'due_date')::date, nullif(p_row->>'kind',''),
+          nullif(p_row->>'subgroup','')::smallint, fl, false, now())
+  on conflict (id) do update set
+    subject = excluded.subject, body = excluded.body, due_date = excluded.due_date, kind = excluded.kind,
+    subgroup = excluded.subgroup, files = excluded.files, deleted = false, updated_at = now()
+  where public.group_homework.group_id = g;
+  perform public.purge_group_files(g);
+  return v_id;
+end $$;

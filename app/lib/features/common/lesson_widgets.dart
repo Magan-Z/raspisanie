@@ -46,6 +46,7 @@ class LessonTile extends ConsumerWidget {
     this.note,
     this.hasHomework = false,
     this.footer,
+    this.withGroups = const [],
     this.onLongPress,
     this.onTap,
   });
@@ -60,6 +61,7 @@ class LessonTile extends ConsumerWidget {
   final String? note;
   final bool hasHomework;
   final String? footer; // дополнительная строка внизу (например, список групп в поиске)
+  final List<String> withGroups; // группы, с которыми объединена лекция (на карточке — значок с числом)
   final VoidCallback? onLongPress;
   final VoidCallback? onTap;
 
@@ -115,6 +117,12 @@ class LessonTile extends ConsumerWidget {
                       child: Wrap(spacing: Gap.sm, runSpacing: Gap.xs, crossAxisAlignment: WrapCrossAlignment.center, children: [
                         KindBadge(kind, tone: tone),
                         if (teacher != null) Text(teacher!, style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                        if (withGroups.isNotEmpty)
+                          Row(mainAxisSize: MainAxisSize.min, children: [
+                            Icon(Icons.groups_rounded, size: 16, color: scheme.onSurfaceVariant),
+                            const SizedBox(width: 2),
+                            Text('+${withGroups.length}', style: theme.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                          ]),
                       ]),
                     ),
                     if (room != null) ...[
@@ -152,6 +160,7 @@ class LessonTile extends ConsumerWidget {
       container: true,
       label: '${timeLabel != null ? '$timeLabel, ' : ''}$subject, ${kind.title}'
           '${room != null ? ', аудитория $room' : ''}${teacher != null ? ', $teacher' : ''}'
+          '${withGroups.isNotEmpty ? '. Вместе с группами: ${withGroups.join(', ')}' : ''}'
           '${hasHomework ? '. Есть домашнее задание' : ''}${note != null ? '. $note' : ''}${footer != null ? '. $footer' : ''}',
       onTap: onTap,
       onLongPress: onLongPress,

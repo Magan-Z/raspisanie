@@ -32,3 +32,8 @@ List<String> subjectsOf(GroupSchedule schedule, UserProfile profile) {
   };
   return names.toList()..sort();
 }
+
+/// Делится ли предмет по подгруппам (иностранный язык, лабораторные): хотя бы одно занятие только для части подгрупп.
+/// Тогда староста может задать ДЗ одной подгруппе.
+bool subjectSplitsBySubgroup(GroupSchedule schedule, String subject) =>
+    schedule.subgroups.length > 1 && schedule.lessons.any((l) => l.subject == subject && l.subgroups.length < schedule.subgroups.length);

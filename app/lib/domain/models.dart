@@ -41,6 +41,7 @@ class Lesson {
     required this.room,
     required this.tags,
     required this.raw,
+    this.withGroups = const [],
   });
 
   final int weekday; // 1 = понедельник … 6 = суббота
@@ -53,6 +54,7 @@ class Lesson {
   final String? room;
   final List<String> tags; // male / female
   final String raw;
+  final List<String> withGroups; // с какими группами объединена лекция («2 БИ-25»); пусто — только эта группа
 
   factory Lesson.fromJson(Map<String, dynamic> json) => Lesson(
         weekday: json['weekday'] as int,
@@ -65,6 +67,7 @@ class Lesson {
         room: json['room'] as String?,
         tags: (json['tags'] as List).cast<String>(),
         raw: json['raw'] as String,
+        withGroups: [for (final g in (json['withGroups'] as List? ?? const [])) g as String],
       );
 }
 
@@ -307,6 +310,7 @@ class ResolvedLesson {
     this.note,
     this.isPersonal = false,
     this.isGroup = false,
+    this.withGroups = const [],
   });
 
   final DateTime date;
@@ -322,6 +326,7 @@ class ResolvedLesson {
   final String? note;
   final bool isPersonal; // изменено личной правкой
   final bool isGroup; // изменено старостой для всей группы
+  final List<String> withGroups; // с какими группами объединена лекция (пусто — только эта группа)
 
   ResolvedLesson copyWith({String? subject, String? teacher, String? room, String? note, bool? isPersonal, bool? isGroup}) =>
       ResolvedLesson(
@@ -338,6 +343,8 @@ class ResolvedLesson {
         note: note ?? this.note,
         isPersonal: isPersonal ?? this.isPersonal,
         isGroup: isGroup ?? this.isGroup,
+        // если пару заменили другим предметом, прежний «поток» к ней уже не относится
+        withGroups: subject != null && subject != this.subject ? const [] : withGroups,
       );
 }
 

@@ -281,6 +281,17 @@ void main() {
     expect(find.text('Свободные'), findsOneWidget); // вкладка «Поиск»
   });
 
+  testWidgets('Общая лекция: на карточке значок «+1», в меню пары — с какими группами она объединена', (tester) async {
+    await _start(tester, prefs: profile);
+
+    // «Технологическое предпринимательство» — лекция вместе с 2 БИ-25; практика (ЧТК и этика) ни с кем не объединена
+    expect(find.text('+1'), findsOneWidget);
+    await tester.tap(find.text('Технологическое предпринимательство').last);
+    await _settle(tester);
+    expect(find.text('Лекция вместе с группами'), findsOneWidget);
+    expect(find.text('2 БИ-25'), findsOneWidget);
+  });
+
   group('Староста и группа', () {
     // Хеш расписания 1 БИ-25 в встроенной копии: правки старосты привязаны к нему
     String groupHash() {
@@ -509,6 +520,73 @@ void main() {
       expect(find.textContaining('Файл не найден на сервере'), findsOneWidget);
       expect(store.opened, isEmpty);
       expect(find.byIcon(Icons.download_rounded), findsOneWidget); // осталась возможность повторить
+    });
+
+    testWidgets('ДЗ для подгруппы: студент видит общее и своё, ДЗ другой подгруппы скрыто', (tester) async {
+      final backend = FakeBackend(hash: groupHash());
+      backend.homework['all'] = {...backend.hw(id: 'all', text: 'Для всех'), 'subgroup': null};
+      backend.homework['mine'] = {...backend.hw(id: 'mine', text: 'Для моей подгруппы'), 'subgroup': 1};
+      backend.homework['other'] = {...backend.hw(id: 'other', text: 'Для второй подгруппы'), 'subgroup': 2};
+      await _start(tester, prefs: profile, sharedApi: backend.api()); // профиль: подгруппа 1
+      await tester.tap(find.text('ДЗ').last);
+      await _settle(tester);
+
+      expect(find.textContaining('От старосты (2)'), findsOneWidget);
+      await tester.tap(find.textContaining('От старосты'));
+      await _settle(tester);
+      expect(find.text('Для всех'), findsOneWidget);
+      expect(find.text('Для моей подгруппы'), findsOneWidget);
+      expect(find.text('Для второй подгруппы'), findsNothing);
+      expect(find.text('для БИ-25-1'), findsOneWidget);
+    });
+
+    testWidgets('староста видит ДЗ всех подгрупп и может удалить любое', (tester) async {
+      final backend = FakeBackend(hash: groupHash());
+      backend.homework['other'] = {...backend.hw(id: 'other', text: 'Для второй подгруппы'), 'subgroup': 2};
+      await _start(tester, prefs: {...profile, 'editorToken': 'tok-GOODCODE', 'editorGroup': 'ofo-1-bi-25'}, sharedApi: backend.api());
+      await tester.tap(find.text('ДЗ').last);
+      await _settle(tester);
+      await tester.tap(find.textContaining('От старосты'));
+      await _settle(tester);
+      expect(find.text('Для второй подгруппы'), findsOneWidget);
+      expect(find.text('для БИ-25-2'), findsOneWidget);
+      expect(find.byTooltip('Удалить для всей группы'), findsOneWidget);
+    });
+
+    testWidgets('староста: у предмета с подгруппами можно выбрать подгруппу, у остальных выбора нет', (tester) async {
+      final backend = FakeBackend(hash: groupHash());
+      await _start(tester, prefs: {...profile, 'editorToken': 'tok-GOODCODE', 'editorGroup': 'ofo-1-bi-25'}, sharedApi: backend.api());
+
+      Future<void> openSheet(String subject) async {
+        await tester.tap(find.text('ДЗ').last);
+        await _settle(tester);
+        await tester.tap(find.text('Добавить ДЗ'));
+        await _settle(tester);
+        await tester.tap(find.byType(DropdownMenu<String>));
+        await _settle(tester);
+        await tester.tap(find.text(subject).last);
+        await _settle(tester);
+        await tester.enterText(find.byType(TextField).last, 'Выучить слова');
+        await tester.tap(find.text('Для всей группы'));
+        await _settle(tester);
+      }
+
+      // Философия делится не по подгруппам — выбора нет
+      await openSheet('Философия');
+      expect(find.text('Для кого ДЗ'), findsNothing);
+      await tester.tapAt(const Offset(10, 10)); // закрыть окно
+      await _settle(tester);
+
+      await openSheet('Иностранный язык');
+      expect(find.text('Для кого ДЗ'), findsOneWidget);
+      await tester.tap(find.text('БИ-25-2'));
+      await _settle(tester);
+      await tester.tap(find.text('Добавить'));
+      await _settle(tester);
+
+      final saved = backend.homework.values.single;
+      expect(saved['subject'], 'Иностранный язык');
+      expect(saved['subgroup'], 2);
     });
 
     testWidgets('когда расписание обновилось (новый хеш), староста стирает устаревшие правки на сервере', (tester) async {

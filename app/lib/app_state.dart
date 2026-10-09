@@ -416,10 +416,17 @@ class GroupHomeworkDoneNotifier extends Notifier<Set<String>> {
 
 final groupHomeworkDoneProvider = NotifierProvider<GroupHomeworkDoneNotifier, Set<String>>(GroupHomeworkDoneNotifier.new);
 
-/// ДЗ старосты, видимое студенту (с учётом выключателя в настройках), по срокам.
-final groupHomeworkProvider = Provider<List<GroupHomeworkRow>>((ref) {
+/// Все ДЗ старосты группы (с учётом выключателя в настройках), по срокам. Включая ДЗ чужих подгрупп — их видит староста.
+final groupHomeworkAllProvider = Provider<List<GroupHomeworkRow>>((ref) {
   if (!ref.watch(settingsProvider.select((s) => s.showGroupData))) return const [];
   return ref.watch(groupSharedProvider).value?.homeworkList ?? const [];
+});
+
+/// ДЗ старосты, видимое студенту: для всей группы и для его подгруппы (ДЗ другой подгруппы скрыто).
+final groupHomeworkProvider = Provider<List<GroupHomeworkRow>>((ref) {
+  final mine = ref.watch(settingsProvider.select((s) => s.profile?.subgroup));
+  final all = ref.watch(groupHomeworkAllProvider);
+  return mine == null ? all : [for (final h in all) if (h.visibleTo(mine)) h];
 });
 
 /// Все невыполненные ДЗ вместе: личные и ДЗ старосты (для виджетов, уведомлений и значков на парах).
@@ -456,7 +463,9 @@ Future<List<GroupHomeworkRow>> syncGroupShared(ProviderContainer c) async {
       }
     }
     c.invalidate(groupSharedProvider);
-    return result.newHomework;
+    // Уведомление только о ДЗ, которое относится ко мне (общее или для моей подгруппы)
+    final mine = c.read(settingsProvider).profile?.subgroup;
+    return mine == null ? result.newHomework : [for (final h in result.newHomework) if (h.visibleTo(mine)) h];
   } on SharedApiException {
     return const [];
   }

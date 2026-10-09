@@ -104,9 +104,16 @@ def _lessons_in_slot(
                 tags=parsed.tags,
                 raw=text,
                 cells=[a.coord for a in areas],
+                with_groups=_groups_sharing(areas, layout, group),
             )
         )
     return lessons
+
+
+def _groups_sharing(areas: list[Area], layout: SheetLayout, own: GroupLayout) -> list[str]:
+    """С какими ещё группами объединена ячейка (общая лекция, поток): названия групп слева направо."""
+    cols = {c for a in areas for c in a.cols}
+    return [g.name for g in layout.groups if g is not own and cols & set(g.cols)]
 
 
 def _lesson_kind(text: str, areas: list[Area], layout: SheetLayout) -> str:

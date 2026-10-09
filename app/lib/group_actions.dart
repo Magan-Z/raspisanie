@@ -76,6 +76,7 @@ class GroupEditorActions {
     required String text,
     required DateTime due,
     LessonKind? kind,
+    int? subgroup,
     List<Attachment> files = const [],
   }) async {
     final filesService = container.read(groupFilesProvider);
@@ -86,7 +87,7 @@ class GroupEditorActions {
       refs = up.refs;
       local = up.local;
     }
-    await _api.putHomework(_session.token, GroupHomeworkRow(id: id ?? newUuid(), subject: subject, text: text, dueDate: due, kind: kind, files: refs));
+    await _api.putHomework(_session.token, GroupHomeworkRow(id: id ?? newUuid(), subject: subject, text: text, dueDate: due, kind: kind, subgroup: subgroup, files: refs));
     // ДЗ сохранено: локальные копии становятся «скачанными» файлами старосты
     for (final e in local.entries) {
       await filesService!.remember(e.key, e.value);

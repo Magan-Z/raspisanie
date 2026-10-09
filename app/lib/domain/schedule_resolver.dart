@@ -36,7 +36,7 @@ List<ResolvedLesson> resolve(
     if (!lessonFitsProfile(lesson, profile)) continue;
 
     result.add(_toResolved(day, lesson.pair, index.bells, week,
-        subject: lesson.subject, teacher: lesson.teacher, room: lesson.room, kind: lesson.kind, tags: lesson.tags));
+        subject: lesson.subject, teacher: lesson.teacher, room: lesson.room, kind: lesson.kind, tags: lesson.tags, withGroups: lesson.withGroups));
   }
 
   // 5. Правки: сначала старосты (для всей группы), поверх них — личные.
@@ -99,6 +99,7 @@ ResolvedLesson _toResolved(
   String? note,
   bool isPersonal = false,
   bool isGroup = false,
+  List<String> withGroups = const [],
 }) {
   final (start, end) = pairTimes(day, pair, bells);
   return ResolvedLesson(
@@ -115,6 +116,7 @@ ResolvedLesson _toResolved(
     note: note,
     isPersonal: isPersonal,
     isGroup: isGroup,
+    withGroups: withGroups,
   );
 }
 

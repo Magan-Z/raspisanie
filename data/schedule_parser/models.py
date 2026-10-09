@@ -25,9 +25,10 @@ class Lesson:
     tags: list[str]       # male / female (только для физ-ры)
     raw: str              # исходный текст ячейки
     cells: list[str] = field(default_factory=list)  # адреса ячеек (только для отчёта, в JSON не идут)
+    with_groups: list[str] = field(default_factory=list)  # с какими группами объединена лекция («2 БИ-25»); пусто — только эта группа
 
     def to_dict(self) -> dict:
-        return {
+        data = {
             "weekday": self.weekday,
             "pair": self.pair,
             "week": self.week,
@@ -39,6 +40,9 @@ class Lesson:
             "tags": self.tags,
             "raw": self.raw,
         }
+        if self.with_groups:  # поле необязательное: у обычных пар его нет, файлы не раздуваются
+            data["withGroups"] = self.with_groups
+        return data
 
 
 @dataclass

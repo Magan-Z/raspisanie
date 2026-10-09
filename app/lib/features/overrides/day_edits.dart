@@ -73,6 +73,12 @@ Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
               title: Text(lesson.subject, style: theme.textTheme.titleMedium),
               subtitle: Text('${dayTitle(lesson.date)}, ${lesson.pair} пара'),
             ),
+            if (lesson.withGroups.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.groups_rounded),
+                title: Text(lesson.kind == LessonKind.lecture ? 'Лекция вместе с группами' : 'Пара вместе с группами'),
+                subtitle: Text(lesson.withGroups.join(', ')),
+              ),
             ListTile(
               leading: const Icon(Icons.assignment_add),
               title: const Text('Добавить ДЗ'),
