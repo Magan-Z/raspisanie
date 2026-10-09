@@ -258,6 +258,8 @@ class Override {
     this.kind,
     this.repeatWeekly = false,
     this.matchSubject,
+    this.fromGroup = false,
+    this.remoteId,
   });
 
   final int? id; // null — ещё не сохранено в базу
@@ -279,6 +281,12 @@ class Override {
   /// в другие недели может идти другой предмет).
   final String? matchSubject;
 
+  /// true — это правка старосты для всей группы (приходит с сервера), а не личная.
+  final bool fromGroup;
+
+  /// Номер правки на сервере (только для правок старосты).
+  final String? remoteId;
+
   /// Действует ли правка в этот день.
   bool appliesOn(DateTime day) => date == day || (repeatWeekly && !day.isBefore(date) && day.weekday == date.weekday);
 }
@@ -298,6 +306,7 @@ class ResolvedLesson {
     required this.week,
     this.note,
     this.isPersonal = false,
+    this.isGroup = false,
   });
 
   final DateTime date;
@@ -312,8 +321,9 @@ class ResolvedLesson {
   final int week;
   final String? note;
   final bool isPersonal; // изменено личной правкой
+  final bool isGroup; // изменено старостой для всей группы
 
-  ResolvedLesson copyWith({String? subject, String? teacher, String? room, String? note, bool? isPersonal}) =>
+  ResolvedLesson copyWith({String? subject, String? teacher, String? room, String? note, bool? isPersonal, bool? isGroup}) =>
       ResolvedLesson(
         date: date,
         pair: pair,
@@ -327,6 +337,7 @@ class ResolvedLesson {
         week: week,
         note: note ?? this.note,
         isPersonal: isPersonal ?? this.isPersonal,
+        isGroup: isGroup ?? this.isGroup,
       );
 }
 
@@ -335,3 +346,7 @@ DateTime parseDay(String text) {
   final parts = text.split('-').map(int.parse).toList();
   return DateTime.utc(parts[0], parts[1], parts[2]);
 }
+
+/// «2026-10-07» — день в виде, который понимают сервер и файлы расписания.
+String dayText(DateTime day) =>
+    '${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';

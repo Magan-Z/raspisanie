@@ -181,4 +181,67 @@ void main() {
       expect(day(DateTime.utc(2026, 10, 2), overrides), isEmpty); // до даты правила в пятницу ничего нет
     });
   });
+
+  group('Правки старосты (для всей группы) и личные правки', () {
+    // 07.10.2026: пары — 3 (Технологическое предпринимательство 2-05) и 4 (ЧТК и этика 2-15)
+    Override groupRule(OverrideType type, int pair, {String? room, String? subject, String? note, bool weekly = false, String? match}) => Override(
+          date: DateTime.utc(2026, 10, 7),
+          pair: pair,
+          type: type,
+          room: room,
+          subject: subject,
+          note: note,
+          repeatWeekly: weekly,
+          matchSubject: match,
+          fromGroup: true,
+        );
+
+    test('староста сменил аудиторию — у всех другая аудитория и пометка «староста»', () {
+      final lessons = on(10, 7, profile, [groupRule(OverrideType.replace, 4, room: '3-33')]);
+      expect(lessons[1].room, '3-33');
+      expect(lessons[1].isGroup, isTrue);
+      expect(lessons[1].isPersonal, isFalse);
+      expect(lessons[0].isGroup, isFalse); // другая пара не тронута
+    });
+
+    test('староста отменил пару — её нет в расписании', () {
+      final lessons = on(10, 7, profile, [groupRule(OverrideType.cancel, 3)]);
+      expect(lessons.map((l) => l.pair), [4]);
+    });
+
+    test('староста перенёс пару: старое место пусто, на новом — пара с пометкой', () {
+      final lessons = on(10, 7, profile, [
+        groupRule(OverrideType.cancel, 4),
+        groupRule(OverrideType.add, 5, subject: 'ЧТК и этика', room: '2-15', note: 'перенесено'),
+      ]);
+      expect(lessons.map((l) => l.pair), [3, 5]);
+      expect(lessons.last.isGroup, isTrue);
+      expect(lessons.last.note, 'перенесено');
+    });
+
+    test('личная правка поверх правки старосты главнее', () {
+      final mine = Override(date: DateTime.utc(2026, 10, 7), pair: 4, type: OverrideType.replace, room: '1-01');
+      final lessons = on(10, 7, profile, [groupRule(OverrideType.replace, 4, room: '3-33'), mine]);
+      expect(lessons[1].room, '1-01');
+      expect(lessons[1].isPersonal, isTrue);
+      expect(lessons[1].isGroup, isTrue); // видно, что до этого её менял староста
+    });
+
+    test('личная отмена убирает и пару, изменённую старостой', () {
+      final mine = Override(date: DateTime.utc(2026, 10, 7), pair: 4, type: OverrideType.cancel);
+      final lessons = on(10, 7, profile, [groupRule(OverrideType.replace, 4, room: '3-33'), mine]);
+      expect(lessons.map((l) => l.pair), [3]);
+    });
+
+    test('«каждую неделю» от старосты действует и в следующие среды, но не раньше даты', () {
+      final rule = groupRule(OverrideType.replace, 3, room: '9-99', weekly: true, match: 'Технологическое предпринимательство');
+      expect(on(10, 7, profile, [rule])[0].room, '9-99');
+      expect(on(10, 14, profile, [rule]).any((l) => l.room == '9-99'), isTrue);
+      expect(on(9, 30, profile, [rule]).any((l) => l.room == '9-99'), isFalse);
+    });
+
+    test('без правок старосты расписание не меняется', () {
+      expect(on(10, 7, profile, const []).map((l) => l.isGroup), [false, false]);
+    });
+  });
 }

@@ -35,7 +35,10 @@ class _HomeShellState extends ConsumerState<HomeShell>
     WidgetsBinding.instance.addObserver(this);
     // Расписание уже показано из кэша — обновления проверяем фоном и молча
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => syncSchedule(ProviderScope.containerOf(context)),
+      (_) {
+        syncSchedule(ProviderScope.containerOf(context));
+        syncGroupShared(ProviderScope.containerOf(context)); // правки и ДЗ старосты
+      },
     );
 
     // Виджеты и уведомления: после любого изменения (расписание, ДЗ, правки, профиль, настройки) пересобираем
@@ -136,6 +139,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       syncSchedule(ProviderScope.containerOf(context));
+      syncGroupShared(ProviderScope.containerOf(context));
       _scheduleRefresh(); // наступил новый день — снимок и уведомления «7 дней вперёд» сдвигаются
     }
   }

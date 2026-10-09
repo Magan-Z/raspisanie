@@ -1790,6 +1790,219 @@ class AttachmentBlobsCompanion extends UpdateCompanion<AttachmentBlobRow> {
   }
 }
 
+class $GroupSharedCacheTable extends GroupSharedCache
+    with TableInfo<$GroupSharedCacheTable, GroupSharedRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GroupSharedCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _jsonMeta = const VerificationMeta('json');
+  @override
+  late final GeneratedColumn<String> json = GeneratedColumn<String>(
+    'json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [groupId, json];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'group_shared_cache';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GroupSharedRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('json')) {
+      context.handle(
+        _jsonMeta,
+        json.isAcceptableOrUnknown(data['json']!, _jsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_jsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {groupId};
+  @override
+  GroupSharedRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GroupSharedRow(
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      json: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}json'],
+      )!,
+    );
+  }
+
+  @override
+  $GroupSharedCacheTable createAlias(String alias) {
+    return $GroupSharedCacheTable(attachedDatabase, alias);
+  }
+}
+
+class GroupSharedRow extends DataClass implements Insertable<GroupSharedRow> {
+  final String groupId;
+  final String json;
+  const GroupSharedRow({required this.groupId, required this.json});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['group_id'] = Variable<String>(groupId);
+    map['json'] = Variable<String>(json);
+    return map;
+  }
+
+  GroupSharedCacheCompanion toCompanion(bool nullToAbsent) {
+    return GroupSharedCacheCompanion(
+      groupId: Value(groupId),
+      json: Value(json),
+    );
+  }
+
+  factory GroupSharedRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GroupSharedRow(
+      groupId: serializer.fromJson<String>(json['groupId']),
+      json: serializer.fromJson<String>(json['json']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'groupId': serializer.toJson<String>(groupId),
+      'json': serializer.toJson<String>(json),
+    };
+  }
+
+  GroupSharedRow copyWith({String? groupId, String? json}) =>
+      GroupSharedRow(groupId: groupId ?? this.groupId, json: json ?? this.json);
+  GroupSharedRow copyWithCompanion(GroupSharedCacheCompanion data) {
+    return GroupSharedRow(
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      json: data.json.present ? data.json.value : this.json,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroupSharedRow(')
+          ..write('groupId: $groupId, ')
+          ..write('json: $json')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(groupId, json);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GroupSharedRow &&
+          other.groupId == this.groupId &&
+          other.json == this.json);
+}
+
+class GroupSharedCacheCompanion extends UpdateCompanion<GroupSharedRow> {
+  final Value<String> groupId;
+  final Value<String> json;
+  final Value<int> rowid;
+  const GroupSharedCacheCompanion({
+    this.groupId = const Value.absent(),
+    this.json = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GroupSharedCacheCompanion.insert({
+    required String groupId,
+    required String json,
+    this.rowid = const Value.absent(),
+  }) : groupId = Value(groupId),
+       json = Value(json);
+  static Insertable<GroupSharedRow> custom({
+    Expression<String>? groupId,
+    Expression<String>? json,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (groupId != null) 'group_id': groupId,
+      if (json != null) 'json': json,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GroupSharedCacheCompanion copyWith({
+    Value<String>? groupId,
+    Value<String>? json,
+    Value<int>? rowid,
+  }) {
+    return GroupSharedCacheCompanion(
+      groupId: groupId ?? this.groupId,
+      json: json ?? this.json,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (json.present) {
+      map['json'] = Variable<String>(json.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroupSharedCacheCompanion(')
+          ..write('groupId: $groupId, ')
+          ..write('json: $json, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $OverridesTable extends Overrides
     with TableInfo<$OverridesTable, OverrideRow> {
   @override
@@ -3308,6 +3521,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AttachmentBlobsTable attachmentBlobs = $AttachmentBlobsTable(
     this,
   );
+  late final $GroupSharedCacheTable groupSharedCache = $GroupSharedCacheTable(
+    this,
+  );
   late final $OverridesTable overrides = $OverridesTable(this);
   late final $SubjectAliasesTable subjectAliases = $SubjectAliasesTable(this);
   late final $NotesTable notes = $NotesTable(this);
@@ -3322,6 +3538,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     homework,
     homeworkAttachments,
     attachmentBlobs,
+    groupSharedCache,
     overrides,
     subjectAliases,
     notes,
@@ -4375,6 +4592,164 @@ typedef $$AttachmentBlobsTableProcessedTableManager =
       AttachmentBlobRow,
       PrefetchHooks Function()
     >;
+typedef $$GroupSharedCacheTableCreateCompanionBuilder =
+    GroupSharedCacheCompanion Function({
+      required String groupId,
+      required String json,
+      Value<int> rowid,
+    });
+typedef $$GroupSharedCacheTableUpdateCompanionBuilder =
+    GroupSharedCacheCompanion Function({
+      Value<String> groupId,
+      Value<String> json,
+      Value<int> rowid,
+    });
+
+class $$GroupSharedCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $GroupSharedCacheTable> {
+  $$GroupSharedCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get json => $composableBuilder(
+    column: $table.json,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GroupSharedCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $GroupSharedCacheTable> {
+  $$GroupSharedCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get groupId => $composableBuilder(
+    column: $table.groupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get json => $composableBuilder(
+    column: $table.json,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GroupSharedCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GroupSharedCacheTable> {
+  $$GroupSharedCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get groupId =>
+      $composableBuilder(column: $table.groupId, builder: (column) => column);
+
+  GeneratedColumn<String> get json =>
+      $composableBuilder(column: $table.json, builder: (column) => column);
+}
+
+class $$GroupSharedCacheTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GroupSharedCacheTable,
+          GroupSharedRow,
+          $$GroupSharedCacheTableFilterComposer,
+          $$GroupSharedCacheTableOrderingComposer,
+          $$GroupSharedCacheTableAnnotationComposer,
+          $$GroupSharedCacheTableCreateCompanionBuilder,
+          $$GroupSharedCacheTableUpdateCompanionBuilder,
+          (
+            GroupSharedRow,
+            BaseReferences<
+              _$AppDatabase,
+              $GroupSharedCacheTable,
+              GroupSharedRow
+            >,
+          ),
+          GroupSharedRow,
+          PrefetchHooks Function()
+        > {
+  $$GroupSharedCacheTableTableManager(
+    _$AppDatabase db,
+    $GroupSharedCacheTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GroupSharedCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GroupSharedCacheTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GroupSharedCacheTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> groupId = const Value.absent(),
+                Value<String> json = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GroupSharedCacheCompanion(
+                groupId: groupId,
+                json: json,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String groupId,
+                required String json,
+                Value<int> rowid = const Value.absent(),
+              }) => GroupSharedCacheCompanion.insert(
+                groupId: groupId,
+                json: json,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$GroupSharedCacheTable, GroupSharedRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $GroupSharedCacheTable,
+                    GroupSharedRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GroupSharedCacheTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GroupSharedCacheTable,
+      GroupSharedRow,
+      $$GroupSharedCacheTableFilterComposer,
+      $$GroupSharedCacheTableOrderingComposer,
+      $$GroupSharedCacheTableAnnotationComposer,
+      $$GroupSharedCacheTableCreateCompanionBuilder,
+      $$GroupSharedCacheTableUpdateCompanionBuilder,
+      (
+        GroupSharedRow,
+        BaseReferences<_$AppDatabase, $GroupSharedCacheTable, GroupSharedRow>,
+      ),
+      GroupSharedRow,
+      PrefetchHooks Function()
+    >;
 typedef $$OverridesTableCreateCompanionBuilder = OverridesCompanion Function({
   Value<int> id,
   required DateTime date,
@@ -5239,6 +5614,8 @@ class $AppDatabaseManager {
       $$HomeworkAttachmentsTableTableManager(_db, _db.homeworkAttachments);
   $$AttachmentBlobsTableTableManager get attachmentBlobs =>
       $$AttachmentBlobsTableTableManager(_db, _db.attachmentBlobs);
+  $$GroupSharedCacheTableTableManager get groupSharedCache =>
+      $$GroupSharedCacheTableTableManager(_db, _db.groupSharedCache);
   $$OverridesTableTableManager get overrides =>
       $$OverridesTableTableManager(_db, _db.overrides);
   $$SubjectAliasesTableTableManager get subjectAliases =>

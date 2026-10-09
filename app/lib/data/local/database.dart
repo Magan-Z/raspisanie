@@ -63,6 +63,16 @@ class AttachmentBlobs extends Table {
   BlobColumn get bytes => blob()();
 }
 
+/// Общие данные группы (правки и ДЗ старосты), скачанные с сервера: одна строка на группу.
+@DataClassName('GroupSharedRow')
+class GroupSharedCache extends Table {
+  TextColumn get groupId => text()();
+  TextColumn get json => text()();
+
+  @override
+  Set<Column> get primaryKey => {groupId};
+}
+
 /// Личные правки расписания на конкретную дату.
 @DataClassName('OverrideRow')
 class Overrides extends Table {
@@ -109,12 +119,12 @@ class Deadlines extends Table {
   TextColumn get subject => text().nullable()();
 }
 
-@DriftDatabase(tables: [ScheduleCache, IndexCache, Homework, HomeworkAttachments, AttachmentBlobs, Overrides, SubjectAliases, Notes, Deadlines])
+@DriftDatabase(tables: [ScheduleCache, IndexCache, Homework, HomeworkAttachments, AttachmentBlobs, GroupSharedCache, Overrides, SubjectAliases, Notes, Deadlines])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? openAppConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -137,6 +147,10 @@ class AppDatabase extends _$AppDatabase {
           // v3 → v4: хранилище вложений для браузерной версии
           if (from < 4) {
             await m.createTable(attachmentBlobs);
+          }
+          // v4 → v5: кэш общих данных группы (правки и ДЗ старосты)
+          if (from < 5) {
+            await m.createTable(groupSharedCache);
           }
         },
       );

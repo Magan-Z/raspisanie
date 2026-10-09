@@ -10,6 +10,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'config.dart';
+import 'data/remote/shared_api.dart';
+import 'data/repositories/group_shared_repository.dart';
+import 'domain/group_shared.dart';
 import 'core/bells.dart';
 import 'core/clock.dart';
 import 'core/week.dart';
@@ -62,6 +65,7 @@ class Settings {
     this.palette = AppPalette.petrol,
     this.amoled = false,
     this.customSubjects = true,
+    this.showGroupData = true,
   });
 
   final UserProfile? profile; // null — первый запуск, профиль ещё не выбран
@@ -73,6 +77,7 @@ class Settings {
   final AppPalette palette; // цветовая тема
   final bool amoled; // чёрный фон в тёмной теме
   final bool customSubjects; // показывать свои названия и цвета предметов
+  final bool showGroupData; // показывать правки и ДЗ старосты
 }
 
 class SettingsNotifier extends Notifier<Settings> {
@@ -99,6 +104,7 @@ class SettingsNotifier extends Notifier<Settings> {
       palette: AppPalette.parse(prefs.getString('palette')),
       amoled: prefs.getBool('amoled') ?? false,
       customSubjects: prefs.getBool('customSubjects') ?? true,
+      showGroupData: prefs.getBool('showGroupData') ?? true,
     );
   }
 
@@ -131,6 +137,11 @@ class SettingsNotifier extends Notifier<Settings> {
 
   Future<void> setPalette(AppPalette palette) async {
     await _prefs.setString('palette', palette.id);
+    ref.invalidateSelf();
+  }
+
+  Future<void> setShowGroupData(bool value) async {
+    await _prefs.setBool('showGroupData', value);
     ref.invalidateSelf();
   }
 
@@ -193,7 +204,11 @@ final myScheduleProvider = FutureProvider<MySchedule?>((ref) async {
   if (profile == null) return null;
   final index = await ref.watch(indexProvider.future);
   final schedule = await ref.watch(groupScheduleProvider(profile.groupId).future);
-  final overrides = await ref.watch(overridesProvider.future);
+  final personal = await ref.watch(overridesProvider.future);
+  // Правки старосты (для всей группы): только к текущему расписанию группы — после загрузки нового xlsx они сами исчезают
+  final group = settings.showGroupData ? await ref.watch(groupSharedProvider.future) : GroupSharedState.empty;
+  final groupHash = index.findGroup(profile.groupId)?.hash;
+  final overrides = [for (final o in group.activeOverrides(groupHash)) o.toOverride(), ...personal];
   return MySchedule(index: index, schedule: schedule, profile: profile, forcedWeek: settings.forcedWeek, overrides: overrides);
 });
 
@@ -322,6 +337,108 @@ final subjectStylesProvider = Provider<SubjectStyles>((ref) {
   final map = ref.watch(subjectStyleMapProvider).value ?? const {};
   return SubjectStyles(enabled: enabled, styles: map);
 });
+
+// ---------- общие данные группы (староста) ----------
+
+/// Клиент общего сервера; null — сервер не настроен (функции старосты скрыты).
+final sharedApiProvider = Provider<SharedApi?>((ref) => sharedApiUrl.isEmpty ? null : SharedApi(sharedApiUrl, sharedApiKey));
+
+final groupSharedRepositoryProvider = Provider<GroupSharedRepository?>((ref) {
+  final api = ref.watch(sharedApiProvider);
+  return api == null ? null : GroupSharedRepository(ref.watch(databaseProvider), api);
+});
+
+/// Правки и ДЗ старосты для моей группы (из кэша телефона). После обновления с сервера — ref.invalidate(groupSharedProvider).
+final groupSharedProvider = FutureProvider<GroupSharedState>((ref) async {
+  final groupId = ref.watch(settingsProvider.select((s) => s.profile?.groupId));
+  final repo = ref.watch(groupSharedRepositoryProvider);
+  if (groupId == null || repo == null) return GroupSharedState.empty;
+  return repo.cached(groupId);
+});
+
+/// Староста ли этот телефон: токен и группа хранятся в настройках телефона.
+class EditorNotifier extends Notifier<EditorSession?> {
+  SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
+
+  @override
+  EditorSession? build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final token = prefs.getString('editorToken');
+    final group = prefs.getString('editorGroup');
+    return token == null || group == null ? null : EditorSession(token: token, groupId: group);
+  }
+
+  Future<void> set(EditorSession session) async {
+    await _prefs.setString('editorToken', session.token);
+    await _prefs.setString('editorGroup', session.groupId);
+    state = session;
+  }
+
+  Future<void> clear() async {
+    await _prefs.remove('editorToken');
+    await _prefs.remove('editorGroup');
+    state = null;
+  }
+}
+
+final editorProvider = NotifierProvider<EditorNotifier, EditorSession?>(EditorNotifier.new);
+
+/// Староста этой группы (его права действуют, только если он смотрит расписание той же группы).
+final isGroupEditorProvider = Provider<bool>((ref) {
+  final editor = ref.watch(editorProvider);
+  final groupId = ref.watch(settingsProvider.select((s) => s.profile?.groupId));
+  return editor != null && editor.groupId == groupId && ref.watch(sharedApiProvider) != null;
+});
+
+/// Какие ДЗ старосты студент уже отметил выполненными (хранится только у него).
+class GroupHomeworkDoneNotifier extends Notifier<Set<String>> {
+  SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
+
+  @override
+  Set<String> build() => (ref.watch(sharedPreferencesProvider).getStringList('groupHomeworkDone') ?? const []).toSet();
+
+  Future<void> toggle(String id) async {
+    final next = {...state};
+    next.contains(id) ? next.remove(id) : next.add(id);
+    await _prefs.setStringList('groupHomeworkDone', next.toList());
+    state = next;
+  }
+}
+
+final groupHomeworkDoneProvider = NotifierProvider<GroupHomeworkDoneNotifier, Set<String>>(GroupHomeworkDoneNotifier.new);
+
+/// ДЗ старосты, видимое студенту (с учётом выключателя в настройках), по срокам.
+final groupHomeworkProvider = Provider<List<GroupHomeworkRow>>((ref) {
+  if (!ref.watch(settingsProvider.select((s) => s.showGroupData))) return const [];
+  return ref.watch(groupSharedProvider).value?.homeworkList ?? const [];
+});
+
+/// Обновить общие данные группы с сервера. Ошибки связи молча игнорируются (остаётся кэш).
+/// Возвращает ДЗ старосты, которых раньше не было (для уведомления).
+Future<List<GroupHomeworkRow>> syncGroupShared(ProviderContainer c) async {
+  final repo = c.read(groupSharedRepositoryProvider);
+  final groupId = c.read(settingsProvider).profile?.groupId;
+  if (repo == null || groupId == null) return const [];
+  try {
+    final result = await repo.sync(groupId);
+    // Староста стирает с сервера правки к устаревшему расписанию (новое расписание точнее)
+    final editor = c.read(editorProvider);
+    final hash = (await c.read(indexProvider.future)).findGroup(groupId)?.hash;
+    final api = c.read(sharedApiProvider);
+    if (editor != null && editor.groupId == groupId && hash != null && api != null && result.state.staleOverrides(hash).isNotEmpty) {
+      try {
+        await api.clearStale(editor.token, hash);
+        await repo.sync(groupId);
+      } on SharedApiException {
+        // повторим в следующий раз
+      }
+    }
+    c.invalidate(groupSharedProvider);
+    return result.newHomework;
+  } on SharedApiException {
+    return const [];
+  }
+}
 
 // ---------- личные правки ----------
 

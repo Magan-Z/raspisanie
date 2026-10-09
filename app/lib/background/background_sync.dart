@@ -16,6 +16,17 @@ const _taskName = 'syncSchedule';
 /// Сама работа — отдельной функцией, чтобы её можно было проверить тестом.
 Future<void> runBackgroundSync(ProviderContainer container) async {
   await syncSchedule(container);
+  // Правки и ДЗ старосты. Если появилось новое ДЗ — сообщаем уведомлением (приложение может быть закрыто)
+  final fresh = await syncGroupShared(container);
+  if (fresh.isNotEmpty && container.read(settingsProvider).showGroupData) {
+    try {
+      await container.read(notificationGatewayProvider).showNow(
+            id: 2,
+            title: fresh.length == 1 ? 'Староста добавил ДЗ' : 'Староста добавил ДЗ: ${fresh.length}',
+            body: fresh.take(3).map((h) => '${h.subject}: ${h.text}').join('\n'),
+          );
+    } catch (_) {}
+  }
   await refreshOutputs(container);
 }
 

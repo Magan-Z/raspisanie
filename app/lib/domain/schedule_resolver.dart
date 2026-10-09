@@ -39,9 +39,19 @@ List<ResolvedLesson> resolve(
         subject: lesson.subject, teacher: lesson.teacher, room: lesson.room, kind: lesson.kind, tags: lesson.tags));
   }
 
-  // 5. Личные правки. Сначала правила «каждую неделю», потом правки на конкретный день — они главнее.
-  // Отмены и замены применяются раньше добавлений: перенесённая пара не должна отмениться собственной отменой.
-  final applicable = overrides.where((o) => o.appliesOn(day)).toList()
+  // 5. Правки: сначала старосты (для всей группы), поверх них — личные.
+  _applyOverrides(result, [for (final o in overrides) if (o.fromGroup) o], day, index, week, group: true);
+  _applyOverrides(result, [for (final o in overrides) if (!o.fromGroup) o], day, index, week, group: false);
+
+  // 6. По порядку пар (время уже проставлено в _toResolved)
+  result.sort((a, b) => a.pair.compareTo(b.pair));
+  return result;
+}
+
+/// Применяет один «слой» правок к списку пар дня. Сначала правила «каждую неделю», потом правки на конкретный день —
+/// они главнее. Отмены и замены применяются раньше добавлений: перенесённая пара не должна отмениться собственной отменой.
+void _applyOverrides(List<ResolvedLesson> result, List<Override> layer, DateTime day, ScheduleIndex index, int week, {required bool group}) {
+  final applicable = layer.where((o) => o.appliesOn(day)).toList()
     ..sort((a, b) => a.repeatWeekly == b.repeatWeekly ? 0 : (a.repeatWeekly ? -1 : 1));
   bool matches(Override o, ResolvedLesson l) => l.pair == o.pair && (o.matchSubject == null || l.subject == o.matchSubject);
 
@@ -51,7 +61,14 @@ List<ResolvedLesson> resolve(
     } else {
       for (var i = 0; i < result.length; i++) {
         if (matches(o, result[i])) {
-          result[i] = result[i].copyWith(subject: o.subject, teacher: o.teacher, room: o.room, note: o.note, isPersonal: true);
+          result[i] = result[i].copyWith(
+            subject: o.subject,
+            teacher: o.teacher,
+            room: o.room,
+            note: o.note,
+            isPersonal: group ? null : true,
+            isGroup: group ? true : null,
+          );
         }
       }
     }
@@ -64,12 +81,9 @@ List<ResolvedLesson> resolve(
         kind: o.kind ?? LessonKind.practice,
         tags: const [],
         note: o.note,
-        isPersonal: true));
+        isPersonal: !group,
+        isGroup: group));
   }
-
-  // 6. По порядку пар (время уже проставлено в _toResolved)
-  result.sort((a, b) => a.pair.compareTo(b.pair));
-  return result;
 }
 
 ResolvedLesson _toResolved(
@@ -84,6 +98,7 @@ ResolvedLesson _toResolved(
   required List<String> tags,
   String? note,
   bool isPersonal = false,
+  bool isGroup = false,
 }) {
   final (start, end) = pairTimes(day, pair, bells);
   return ResolvedLesson(
@@ -99,6 +114,7 @@ ResolvedLesson _toResolved(
     week: week,
     note: note,
     isPersonal: isPersonal,
+    isGroup: isGroup,
   );
 }
 

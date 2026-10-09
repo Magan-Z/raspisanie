@@ -306,7 +306,7 @@ class _DayPage extends ConsumerWidget {
           room: l.room,
           highlighted: phase == _Phase.current,
           dimmed: phase == _Phase.past,
-          note: l.note ?? (l.isPersonal ? 'изменено вами' : null),
+          note: l.note ?? (l.isPersonal ? 'изменено вами' : (l.isGroup ? 'изменено старостой' : null)),
           hasHomework: homeworkDue.any((h) => h.subject == l.subject),
           onLongPress: () => showLessonActions(context, l),
           onTap: () => showLessonActions(context, l),
