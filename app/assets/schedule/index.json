@@ -1,6 +1,6 @@
 {
  "schemaVersion": 1,
- "version": "2026-10-09T23:16:28Z-b972b0ce",
+ "version": "2026-10-09T23:25:52Z-bd58d24c",
  "semester": {
   "id": "2026-autumn",
   "start": "2026-09-01",
@@ -711,7 +711,7 @@
       }
      ],
      "hasGenderedPe": false,
-     "hash": "1c5bafc811103f69"
+     "hash": "4a3da4222dfa480d"
     },
     {
      "id": "ozfo-oz-bi-23",
