@@ -83,7 +83,13 @@ cd data && ../.venv/bin/python -m schedule_parser --out public
 
 ---
 
-## Этап 1. Публикация на GitHub Pages — что нужно сделать один раз
+## Этап 1. Публикация на GitHub Pages
+
+**Уже сделано:** репозиторий https://github.com/Magan-Z/raspisanie, сайт подписки **https://magan-z.github.io/raspisanie/**
+(Pages включён, источник — GitHub Actions). Расписание обновляется автоматически при каждом изменении файлов в папке `data/`.
+Ниже — как всё это устроено, если понадобится повторить с нуля.
+
+### Как это настроить с нуля
 
 Всё для публикации уже готово (`.github/workflows/publish-schedule.yml`). Осталось завести репозиторий:
 
