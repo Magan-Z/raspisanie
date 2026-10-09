@@ -17,6 +17,7 @@ import 'core/bells.dart';
 import 'core/clock.dart';
 import 'core/week.dart';
 import 'data/attachments/attachment_store.dart';
+import 'data/attachments/group_files.dart';
 import 'data/local/database.dart';
 import 'data/remote/schedule_api.dart';
 import 'data/repositories/homework_repository.dart';
@@ -342,6 +343,14 @@ final subjectStylesProvider = Provider<SubjectStyles>((ref) {
 
 /// Клиент общего сервера; null — сервер не настроен (функции старосты скрыты).
 final sharedApiProvider = Provider<SharedApi?>((ref) => sharedApiUrl.isEmpty ? null : SharedApi(sharedApiUrl, sharedApiKey));
+
+/// Файлы и фото к ДЗ старосты (загрузка и скачивание); null — сервер не настроен.
+final groupFilesProvider = Provider<GroupFiles?>((ref) {
+  final api = ref.watch(sharedApiProvider);
+  return api == null
+      ? null
+      : GroupFiles(api: api, store: ref.watch(attachmentStoreProvider), prefs: ref.watch(sharedPreferencesProvider));
+});
 
 final groupSharedRepositoryProvider = Provider<GroupSharedRepository?>((ref) {
   final api = ref.watch(sharedApiProvider);

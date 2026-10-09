@@ -200,6 +200,7 @@ class _GroupHomeworkTile extends ConsumerWidget {
                       child: Text('от старосты', style: theme.textTheme.labelSmall?.copyWith(color: scheme.onTertiaryContainer)),
                     ),
                   ]),
+                  GroupAttachmentStrip(files: row.files, color: tone.accent),
                 ]),
               ),
             ),

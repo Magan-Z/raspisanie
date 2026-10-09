@@ -7,6 +7,7 @@ import '../../app_state.dart';
 import '../../data/remote/shared_api.dart';
 import '../../group_actions.dart';
 import '../../data/attachments/attachment_store.dart';
+import '../../data/attachments/group_files.dart';
 import '../../domain/attachment.dart';
 import 'attachment_widgets.dart';
 import '../../core/formatting.dart';
@@ -41,6 +42,7 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
   final List<Attachment> _files = []; // уже скопированные в память приложения
   bool _forGroup = false; // староста: ДЗ для всей группы
   bool _saved = false;
+  bool _busy = false; // идёт отправка на сервер (файлы могут грузиться долго)
   late final AttachmentStore _store; // запоминаем заранее: в dispose() ref уже читать нельзя
 
   @override
@@ -103,16 +105,20 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
     }
   }
 
+  /// Для всей группы файлов можно меньше и они легче: они лежат на общем сервере.
+  int get _maxFiles => _forGroup ? maxGroupFilesPerHomework : maxAttachmentsPerHomework;
+  int get _maxBytes => _forGroup ? maxGroupFileBytes : maxAttachmentBytes;
+
   Future<void> _addPicked(List<PickedFileInfo> picked) async {
     final store = ref.read(attachmentStoreProvider);
     var skippedBig = 0;
     var skippedMany = 0;
     for (final p in picked) {
-      if (_files.length >= maxAttachmentsPerHomework) {
+      if (_files.length >= _maxFiles) {
         skippedMany++;
         continue;
       }
-      if ((p.sizeBytes ?? 0) > maxAttachmentBytes) {
+      if ((p.sizeBytes ?? 0) > _maxBytes) {
         skippedBig++;
         continue;
       }
@@ -120,8 +126,8 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
       if (!mounted) return;
       setState(() => _files.add(saved));
     }
-    if (skippedBig > 0) _say('Файл больше ${maxAttachmentBytes ~/ (1024 * 1024)} МБ не прикреплён');
-    if (skippedMany > 0) _say('К одному заданию можно прикрепить не больше $maxAttachmentsPerHomework файлов');
+    if (skippedBig > 0) _say('Файл больше ${_maxBytes ~/ (1024 * 1024)} МБ не прикреплён');
+    if (skippedMany > 0) _say('К одному заданию можно прикрепить не больше $_maxFiles файлов');
   }
 
   void _say(String text) {
@@ -131,12 +137,15 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
   Future<void> _save(DateTime due) async {
     // Староста: ДЗ уходит на сервер и появляется у всей группы во вкладке «От старосты»
     if (_forGroup) {
+      setState(() => _busy = true);
       try {
-        await GroupEditorActions.of(context).saveHomework(subject: _subject!, text: _text.text.trim(), due: due, kind: _kind);
+        await GroupEditorActions.of(context).saveHomework(subject: _subject!, text: _text.text.trim(), due: due, kind: _kind, files: _files);
       } on SharedApiException catch (e) {
+        if (mounted) setState(() => _busy = false);
         _say(e.message);
         return;
       }
+      _saved = true; // копии файлов остаются в телефоне старосты как «скачанные»
       if (mounted) Navigator.of(context).pop();
       return;
     }
@@ -224,11 +233,13 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Для всей группы'),
-                subtitle: Text(_forGroup ? 'Увидят все студенты группы во вкладке «От старосты» (только текст)' : 'Вы староста: можно задать ДЗ всем сразу'),
+                subtitle: Text(_forGroup
+                    ? 'Увидят все студенты группы во вкладке «От старосты». Файлы: до $maxGroupFilesPerHomework шт., каждый до ${maxGroupFileBytes ~/ (1024 * 1024)} МБ'
+                    : 'Вы староста: можно задать ДЗ всем сразу'),
                 value: _forGroup,
                 onChanged: (v) => setState(() => _forGroup = v),
               ),
-            if (_files.isNotEmpty && !_forGroup)
+            if (_files.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Wrap(spacing: 8, runSpacing: 8, children: [
@@ -244,12 +255,17 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
               ),
             Row(children: [
               OutlinedButton.icon(
-                onPressed: (_files.length >= maxAttachmentsPerHomework || _forGroup) ? null : _attach,
+                onPressed: _files.length >= _maxFiles ? null : _attach,
                 icon: const Icon(Icons.attach_file_rounded),
                 label: Text(_files.isEmpty ? 'Прикрепить' : 'Ещё (${_files.length})'),
               ),
               const Spacer(),
-              FilledButton(onPressed: canSave ? () => _save(due) : null, child: const Text('Добавить')),
+              FilledButton(
+                onPressed: canSave && !_busy ? () => _save(due) : null,
+                child: _busy
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5))
+                    : const Text('Добавить'),
+              ),
             ]),
           ],
         ),

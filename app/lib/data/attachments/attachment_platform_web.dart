@@ -69,6 +69,9 @@ class DatabaseAttachmentStore implements AttachmentStore {
   @override
   bool exists(Attachment attachment) => _id(attachment) != null;
 
+  @override
+  Future<Uint8List?> readBytes(Attachment attachment) => _bytes(attachment);
+
   Future<Uint8List?> _bytes(Attachment attachment) async {
     final id = _id(attachment);
     if (id == null) return null;

@@ -420,6 +420,97 @@ void main() {
       expect(find.text('Подготовить доклад'), findsNothing);
     });
 
+    testWidgets('староста прикрепляет файл к ДЗ группы: файл уходит на сервер, у старосты открывается без скачивания', (tester) async {
+      final dir = Directory.systemTemp.createTempSync('hw_files');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final source = File('${dir.path}/Задачи.pdf')..writeAsBytesSync([5, 6, 7, 8]);
+      final store = FakeAttachmentStore();
+      addTearDown(() => store.dir.deleteSync(recursive: true));
+      final backend = FakeBackend(hash: groupHash());
+      await _start(tester, prefs: {...profile, 'editorToken': 'tok-GOODCODE', 'editorGroup': 'ofo-1-bi-25'}, sharedApi: backend.api(), extraOverrides: [
+        attachmentStoreProvider.overrideWithValue(store),
+        attachmentPickerProvider.overrideWithValue(FakeAttachmentPicker([PickedFileInfo(name: 'Задачи.pdf', path: source.path, sizeBytes: 4)])),
+      ]);
+
+      await tester.longPress(find.text('ЧТК и этика').last);
+      await _settle(tester);
+      await tester.tap(find.text('Добавить ДЗ'));
+      await _settle(tester);
+      await tester.enterText(find.byType(TextField).last, 'Решить задачи');
+      await tester.tap(find.text('Для всей группы'));
+      await _settle(tester);
+      await tester.tap(find.text('Прикрепить'));
+      await _settle(tester);
+      await tester.tap(find.text('Файл'));
+      await _settle(tester);
+      await tester.tap(find.text('Добавить'));
+      await _settle(tester);
+
+      expect(backend.files.values.single.name, 'Задачи.pdf');
+      expect(backend.files.values.single.bytes, [5, 6, 7, 8]);
+      final saved = backend.homework.values.single;
+      expect((saved['files'] as List).single['name'], 'Задачи.pdf');
+      expect((saved['files'] as List).single['id'], backend.files.keys.single);
+
+      await tester.tap(find.text('ДЗ').last);
+      await _settle(tester);
+      await tester.tap(find.textContaining('От старосты'));
+      await _settle(tester);
+      await tester.tap(find.text('Задачи.pdf'));
+      await _settle(tester);
+      expect(store.opened, ['Задачи.pdf']);
+      expect(backend.calls, isNot(contains('get_group_file'))); // свой файл не скачивается заново
+    });
+
+    testWidgets('студент видит файл от старосты, нажатие скачивает его и открывает; повторно — без скачивания', (tester) async {
+      final store = FakeAttachmentStore();
+      addTearDown(() => store.dir.deleteSync(recursive: true));
+      final backend = FakeBackend(hash: groupHash());
+      backend.files['f1'] = (name: 'Лекция.pdf', bytes: [1, 2, 3]);
+      backend.homework['h1'] = backend.hw(files: [
+        {'id': 'f1', 'name': 'Лекция.pdf', 'size': 3},
+      ]);
+      await _start(tester, prefs: profile, sharedApi: backend.api(), extraOverrides: [attachmentStoreProvider.overrideWithValue(store)]);
+
+      await tester.tap(find.text('ДЗ').last);
+      await _settle(tester);
+      await tester.tap(find.textContaining('От старосты'));
+      await _settle(tester);
+      expect(find.text('Лекция.pdf'), findsOneWidget);
+      expect(find.byIcon(Icons.download_rounded), findsOneWidget); // ещё не скачан
+
+      await tester.tap(find.text('Лекция.pdf'));
+      await _settle(tester);
+      expect(store.opened, ['Лекция.pdf']);
+      expect(backend.calls.where((c) => c == 'get_group_file'), hasLength(1));
+      expect(find.byIcon(Icons.download_rounded), findsNothing); // теперь лежит в телефоне
+
+      await tester.tap(find.text('Лекция.pdf'));
+      await _settle(tester);
+      expect(store.opened, ['Лекция.pdf', 'Лекция.pdf']);
+      expect(backend.calls.where((c) => c == 'get_group_file'), hasLength(1));
+    });
+
+    testWidgets('нет интернета при скачивании файла: понятное сообщение, файл можно скачать позже', (tester) async {
+      final store = FakeAttachmentStore();
+      addTearDown(() => store.dir.deleteSync(recursive: true));
+      final backend = FakeBackend(hash: groupHash());
+      backend.homework['h1'] = backend.hw(files: [
+        {'id': 'нет-на-сервере', 'name': 'Лекция.pdf', 'size': 3},
+      ]);
+      await _start(tester, prefs: profile, sharedApi: backend.api(), extraOverrides: [attachmentStoreProvider.overrideWithValue(store)]);
+
+      await tester.tap(find.text('ДЗ').last);
+      await _settle(tester);
+      await tester.tap(find.textContaining('От старосты'));
+      await _settle(tester);
+      await tester.tap(find.text('Лекция.pdf'));
+      await _settle(tester);
+      expect(find.textContaining('Файл не найден на сервере'), findsOneWidget);
+      expect(store.opened, isEmpty);
+      expect(find.byIcon(Icons.download_rounded), findsOneWidget); // осталась возможность повторить
+    });
+
     testWidgets('когда расписание обновилось (новый хеш), староста стирает устаревшие правки на сервере', (tester) async {
       final backend = FakeBackend(hash: 'старый-хеш');
       backend.overrides['o1'] = backend.override(); // привязана к «старому» расписанию

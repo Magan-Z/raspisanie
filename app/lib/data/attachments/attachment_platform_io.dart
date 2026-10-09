@@ -1,6 +1,7 @@
 // Вложения на телефоне: файлы копируются в память приложения.
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
@@ -74,6 +75,9 @@ class DiskAttachmentStore implements AttachmentStore {
 
   @override
   bool exists(Attachment attachment) => File(attachment.path).existsSync();
+
+  @override
+  Future<Uint8List?> readBytes(Attachment attachment) async => exists(attachment) ? File(attachment.path).readAsBytes() : null;
 
   @override
   Future<String?> open(Attachment attachment) async {

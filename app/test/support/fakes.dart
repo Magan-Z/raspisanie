@@ -94,7 +94,11 @@ class FakeAttachmentStore implements AttachmentStore {
   @override
   Future<Attachment> save(PickedFileInfo picked) async {
     final target = '${dir.path}/${DateTime.now().microsecondsSinceEpoch}_${picked.name}';
-    File(picked.path!).copySync(target);
+    if (picked.path != null) {
+      File(picked.path!).copySync(target);
+    } else {
+      File(target).writeAsBytesSync(await picked.readBytes!());
+    }
     return Attachment(name: picked.name, path: target, sizeBytes: picked.sizeBytes);
   }
 
@@ -107,6 +111,9 @@ class FakeAttachmentStore implements AttachmentStore {
 
   @override
   bool exists(Attachment a) => File(a.path).existsSync();
+
+  @override
+  Future<Uint8List?> readBytes(Attachment a) async => exists(a) ? File(a.path).readAsBytesSync() : null;
 
   @override
   Future<String?> open(Attachment a) async {
@@ -157,6 +164,7 @@ class FakeBackend {
   final String hash;
   final overrides = <String, Map<String, dynamic>>{};
   final homework = <String, Map<String, dynamic>>{};
+  final files = <String, ({String name, List<int> bytes})>{}; // загруженные файлы группы
   final calls = <String>[];
   var _clock = 0;
   final validCodes = {'GOODCODE': 'ofo-1-bi-25'};
@@ -170,8 +178,8 @@ class FakeBackend {
         'deleted': false, 'updated_at': _stamp(),
       };
 
-  Map<String, dynamic> hw({String id = 'h1', String subject = 'Философия', String text = 'Читать главу 3', String due = '2026-10-14'}) =>
-      {'id': id, 'subject': subject, 'body': text, 'due_date': due, 'kind': null, 'deleted': false, 'updated_at': _stamp()};
+  Map<String, dynamic> hw({String id = 'h1', String subject = 'Философия', String text = 'Читать главу 3', String due = '2026-10-14', List<Map<String, dynamic>> files = const []}) =>
+      {'id': id, 'subject': subject, 'body': text, 'due_date': due, 'kind': null, 'files': files, 'deleted': false, 'updated_at': _stamp()};
 
   SharedApi api() => SharedApi('https://fake.test', 'key', client: MockClient((request) async {
         final fn = request.url.pathSegments.last;
@@ -211,6 +219,14 @@ class FakeBackend {
             homework[args['p_id']]?['deleted'] = true;
             homework[args['p_id']]?['updated_at'] = '2026-10-09T13:30:${(_clock++).toString().padLeft(2, '0')}+00:00';
             return http.Response('', 204);
+          case 'put_group_file':
+            if (args['p_token'] == null) return fail('bad_token');
+            files[args['p_id'] as String] = (name: args['p_name'] as String, bytes: base64Decode(args['p_data'] as String));
+            return http.Response('', 204);
+          case 'get_group_file':
+            final f = files[args['p_id']];
+            if (f == null) return fail('no_file');
+            return ok({'name': f.name, 'data': base64Encode(f.bytes)});
           case 'clear_stale_group_overrides':
             var n = 0;
             for (final o in overrides.values) {

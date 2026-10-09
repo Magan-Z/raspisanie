@@ -3,6 +3,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -20,6 +21,10 @@ class SharedApiException implements Exception {
         'code_used' => 'Этот код уже использован. Попросите выдать новый',
         'bad_token' => 'Доступ старосты отозван. Введите код заново',
         'too_many' => 'Слишком много записей у группы. Удалите ненужные',
+        'file_too_big' => 'Файл слишком большой для общего сервера (не больше 8 МБ)',
+        'quota' => 'У группы закончилось место для файлов. Удалите старые ДЗ с файлами',
+        'too_many_files' => 'К одному ДЗ можно прикрепить не больше 5 файлов',
+        'no_file' => 'Файл не найден на сервере: возможно, староста удалил это ДЗ',
         'network' => 'Нет связи с сервером. Проверьте интернет и повторите',
         _ => 'Ошибка сервера${details == null ? '' : ': $details'}',
       };
@@ -36,8 +41,9 @@ class SharedApi {
   final http.Client _client;
 
   static const _timeout = Duration(seconds: 15);
+  static const _fileTimeout = Duration(seconds: 120); // файлы большие, на слабой сети грузятся долго
 
-  Future<dynamic> _rpc(String function, Map<String, dynamic> args) async {
+  Future<dynamic> _rpc(String function, Map<String, dynamic> args, {Duration timeout = _timeout}) async {
     final base = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
     final http.Response response;
     try {
@@ -47,7 +53,7 @@ class SharedApi {
             headers: {'apikey': key, 'Content-Type': 'application/json'},
             body: jsonEncode(args),
           )
-          .timeout(_timeout);
+          .timeout(timeout);
     } on TimeoutException {
       throw const SharedApiException('network');
     } on http.ClientException {
@@ -65,7 +71,7 @@ class SharedApi {
     try {
       message = (jsonDecode(text) as Map<String, dynamic>)['message'] as String?;
     } catch (_) {}
-    const known = {'bad_code', 'code_used', 'bad_token', 'too_many', 'bad_group'};
+    const known = {'bad_code', 'code_used', 'bad_token', 'too_many', 'bad_group', 'file_too_big', 'quota', 'too_many_files', 'no_file'};
     if (message != null && known.contains(message)) throw SharedApiException(message);
     throw SharedApiException('server', message ?? 'HTTP ${response.statusCode}');
   }
@@ -104,4 +110,14 @@ class SharedApi {
   Future<void> putHomework(String token, GroupHomeworkRow row) => _rpc('put_group_homework', {'p_token': token, 'p_row': row.toJson()});
 
   Future<void> deleteHomework(String token, String id) => _rpc('delete_group_homework', {'p_token': token, 'p_id': id});
+
+  /// Загружает файл староста: содержимое передаётся текстом base64 (так просто и работает с любым сервером).
+  Future<void> putFile(String token, String id, String name, Uint8List bytes) =>
+      _rpc('put_group_file', {'p_token': token, 'p_id': id, 'p_name': name, 'p_data': base64Encode(bytes)}, timeout: _fileTimeout);
+
+  /// Скачивает файл группы по номеру. Читать может любой студент группы.
+  Future<Uint8List> getFile(String group, String id) async {
+    final r = _asMap(await _rpc('get_group_file', {'p_group': group, 'p_id': id}, timeout: _fileTimeout));
+    return base64Decode(r['data'] as String);
+  }
 }

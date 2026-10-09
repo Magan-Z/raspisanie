@@ -4,6 +4,7 @@
 
 import 'dart:convert';
 
+import 'attachment.dart';
 import 'models.dart';
 
 /// Правка расписания, сделанная старостой.
@@ -86,15 +87,33 @@ class GroupOverrideRow {
       );
 }
 
+/// Файл или фото, прикреплённое старостой к ДЗ: на сервере лежит содержимое, в ДЗ — только это описание.
+class GroupFileRef {
+  const GroupFileRef({required this.id, required this.name, required this.size});
+
+  final String id;
+  final String name;
+  final int size;
+
+  factory GroupFileRef.fromJson(Map<String, dynamic> j) =>
+      GroupFileRef(id: j['id'] as String, name: j['name'] as String, size: (j['size'] as num?)?.toInt() ?? 0);
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'size': size};
+
+  /// Для показа: те же значки и «1,4 МБ», что у личных вложений.
+  Attachment get asAttachment => Attachment(name: name, path: '', sizeBytes: size);
+}
+
 /// ДЗ, которое задал староста для всей группы.
 class GroupHomeworkRow {
-  const GroupHomeworkRow({required this.id, required this.subject, required this.text, required this.dueDate, this.kind});
+  const GroupHomeworkRow({required this.id, required this.subject, required this.text, required this.dueDate, this.kind, this.files = const []});
 
   final String id;
   final String subject;
   final String text;
   final DateTime dueDate; // «только день», UTC
   final LessonKind? kind;
+  final List<GroupFileRef> files;
 
   factory GroupHomeworkRow.fromJson(Map<String, dynamic> j) => GroupHomeworkRow(
         id: j['id'] as String,
@@ -102,6 +121,7 @@ class GroupHomeworkRow {
         text: j['body'] as String,
         dueDate: parseDay(j['due_date'] as String),
         kind: j['kind'] == null ? null : LessonKind.parse(j['kind'] as String),
+        files: [for (final f in (j['files'] as List? ?? const [])) GroupFileRef.fromJson(f as Map<String, dynamic>)],
       );
 
   Map<String, dynamic> toJson() => {
@@ -110,6 +130,7 @@ class GroupHomeworkRow {
         'body': text,
         'due_date': dayText(dueDate),
         'kind': kind?.name,
+        'files': [for (final f in files) f.toJson()],
       };
 }
 

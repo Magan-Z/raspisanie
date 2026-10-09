@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_state.dart';
 import 'data/remote/shared_api.dart';
 import 'data/repositories/group_shared_repository.dart';
+import 'domain/attachment.dart';
 import 'domain/group_shared.dart';
 import 'domain/models.dart';
 
@@ -68,8 +69,28 @@ class GroupEditorActions {
   }
 
   /// Задать ДЗ для всей группы (или изменить существующее, если указан [id]).
-  Future<void> saveHomework({String? id, required String subject, required String text, required DateTime due, LessonKind? kind}) async {
-    await _api.putHomework(_session.token, GroupHomeworkRow(id: id ?? newUuid(), subject: subject, text: text, dueDate: due, kind: kind));
+  /// [files] — файлы и фото из окна «Добавить ДЗ»: сначала они уходят на сервер, потом сохраняется само ДЗ со списком файлов.
+  Future<void> saveHomework({
+    String? id,
+    required String subject,
+    required String text,
+    required DateTime due,
+    LessonKind? kind,
+    List<Attachment> files = const [],
+  }) async {
+    final filesService = container.read(groupFilesProvider);
+    var refs = <GroupFileRef>[];
+    var local = <String, Attachment>{};
+    if (files.isNotEmpty && filesService != null) {
+      final up = await filesService.upload(_session.token, files, newUuid);
+      refs = up.refs;
+      local = up.local;
+    }
+    await _api.putHomework(_session.token, GroupHomeworkRow(id: id ?? newUuid(), subject: subject, text: text, dueDate: due, kind: kind, files: refs));
+    // ДЗ сохранено: локальные копии становятся «скачанными» файлами старосты
+    for (final e in local.entries) {
+      await filesService!.remember(e.key, e.value);
+    }
     await _refresh();
   }
 

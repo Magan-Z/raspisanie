@@ -193,3 +193,89 @@ grant execute on function public.get_group_data(text, timestamptz), public.redee
                           public.clear_stale_group_overrides(text, text),
                           public.put_group_homework(text, jsonb), public.delete_group_homework(text, uuid)
   to anon, authenticated;
+
+-- ============================================================================
+-- Часть 2 (миграция group_homework_files): файлы и фото к ДЗ старосты.
+-- Содержимое файла хранится в таблице group_files, в ДЗ лежит только список (id, название, размер).
+-- Лимиты: файл до 8 МБ, до 5 файлов на ДЗ, до 150 МБ на группу. Файлы без ДЗ удаляются сами.
+-- ============================================================================
+alter table public.group_homework add column files jsonb not null default '[]'::jsonb
+  check (jsonb_typeof(files) = 'array' and jsonb_array_length(files) <= 5);
+
+create table public.group_files (
+  id          uuid primary key,
+  group_id    text not null check (group_id ~ '^[a-z0-9-]{3,40}$'),
+  name        text not null check (length(name) between 1 and 200),
+  size        int  not null check (size between 1 and 8388608),
+  data        bytea not null,
+  created_at  timestamptz not null default now()
+);
+create index group_files_group on public.group_files (group_id);
+alter table public.group_files enable row level security;
+revoke all on public.group_files from anon, authenticated;
+
+create function public.purge_group_files(p_group text) returns void
+language sql security definer set search_path = '' as $$
+  delete from public.group_files f
+   where f.group_id = p_group
+     and f.created_at < now() - interval '1 hour'
+     and not exists (
+       select 1 from public.group_homework h, jsonb_array_elements(h.files) e
+        where h.group_id = p_group and not h.deleted and e->>'id' = f.id::text);
+$$;
+
+create function public.put_group_file(p_token text, p_id uuid, p_name text, p_data text) returns void
+language plpgsql security definer set search_path = '' as $$
+declare g text := public.editor_group(p_token); bytes bytea; used bigint;
+begin
+  if length(p_data) > 11500000 then raise exception 'file_too_big'; end if;
+  bytes := decode(p_data, 'base64');
+  if octet_length(bytes) > 8388608 or octet_length(bytes) = 0 then raise exception 'file_too_big'; end if;
+  perform public.purge_group_files(g);
+  select coalesce(sum(size), 0) into used from public.group_files where group_id = g;
+  if used + octet_length(bytes) > 157286400 then raise exception 'quota'; end if;
+  insert into public.group_files (id, group_id, name, size, data)
+  values (p_id, g, left(p_name, 200), octet_length(bytes), bytes)
+  on conflict (id) do nothing;
+end $$;
+
+create function public.get_group_file(p_group text, p_id uuid) returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare r public.group_files%rowtype;
+begin
+  if p_group is null or p_group !~ '^[a-z0-9-]{3,40}$' then raise exception 'bad_group'; end if;
+  select * into r from public.group_files where id = p_id and group_id = p_group;
+  if not found then raise exception 'no_file'; end if;
+  return jsonb_build_object('name', r.name, 'data', encode(r.data, 'base64'));
+end $$;
+
+create or replace function public.put_group_homework(p_token text, p_row jsonb) returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare g text := public.editor_group(p_token); v_id uuid; n int; fl jsonb := coalesce(p_row->'files', '[]'::jsonb);
+begin
+  perform public.purge_tombstones();
+  if jsonb_typeof(fl) <> 'array' or jsonb_array_length(fl) > 5 then raise exception 'too_many_files'; end if;
+  v_id := coalesce((p_row->>'id')::uuid, gen_random_uuid());
+  if not exists (select 1 from public.group_homework where id = v_id) then
+    select count(*) into n from public.group_homework where group_id = g and not deleted;
+    if n >= 300 then raise exception 'too_many'; end if;
+  end if;
+  insert into public.group_homework (id, group_id, subject, body, due_date, kind, files, deleted, updated_at)
+  values (v_id, g, p_row->>'subject', p_row->>'body', (p_row->>'due_date')::date, nullif(p_row->>'kind',''), fl, false, now())
+  on conflict (id) do update set
+    subject = excluded.subject, body = excluded.body, due_date = excluded.due_date, kind = excluded.kind, files = excluded.files, deleted = false, updated_at = now()
+  where public.group_homework.group_id = g;
+  perform public.purge_group_files(g);
+  return v_id;
+end $$;
+
+create or replace function public.delete_group_homework(p_token text, p_id uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+declare g text := public.editor_group(p_token);
+begin
+  update public.group_homework set deleted = true, updated_at = now() where id = p_id and group_id = g;
+  perform public.purge_group_files(g);
+end $$;
+
+revoke execute on function public.purge_group_files(text) from public, anon, authenticated;
+grant execute on function public.put_group_file(text, uuid, text, text), public.get_group_file(text, uuid) to anon, authenticated;

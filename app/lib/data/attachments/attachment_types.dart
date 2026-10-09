@@ -41,6 +41,9 @@ abstract class AttachmentStore {
 
   bool exists(Attachment attachment);
 
+  /// Содержимое файла целиком (например, чтобы отправить его на общий сервер). Null, если файла уже нет.
+  Future<Uint8List?> readBytes(Attachment attachment);
+
   /// Открывает файл в подходящей программе. Текст ошибки, если не получилось, иначе null.
   Future<String?> open(Attachment attachment);
 
