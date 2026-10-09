@@ -53,6 +53,7 @@ class Settings {
     this.forcedWeek,
     this.notifyBeforeMin = 10,
     this.eveningHomeworkReminder = true,
+    this.useDynamicColor = false,
   });
 
   final UserProfile? profile; // null — первый запуск, профиль ещё не выбран
@@ -60,6 +61,7 @@ class Settings {
   final int? forcedWeek; // null — неделя считается автоматически
   final int notifyBeforeMin; // 0 — уведомления перед парой выключены
   final bool eveningHomeworkReminder;
+  final bool useDynamicColor; // цвета из обоев (Material You) вместо фирменных
 }
 
 class SettingsNotifier extends Notifier<Settings> {
@@ -82,6 +84,7 @@ class SettingsNotifier extends Notifier<Settings> {
       forcedWeek: prefs.getInt('forcedWeek'),
       notifyBeforeMin: prefs.getInt('notifyBeforeMin') ?? 10,
       eveningHomeworkReminder: prefs.getBool('eveningHomeworkReminder') ?? true,
+      useDynamicColor: prefs.getBool('useDynamicColor') ?? false,
     );
   }
 
@@ -109,6 +112,11 @@ class SettingsNotifier extends Notifier<Settings> {
 
   Future<void> setNotifyBeforeMin(int minutes) async {
     await _prefs.setInt('notifyBeforeMin', minutes);
+    ref.invalidateSelf();
+  }
+
+  Future<void> setUseDynamicColor(bool value) async {
+    await _prefs.setBool('useDynamicColor', value);
     ref.invalidateSelf();
   }
 

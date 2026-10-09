@@ -9,6 +9,8 @@ import '../../core/bells.dart';
 import '../../core/formatting.dart';
 import '../../domain/models.dart';
 import '../../domain/search.dart';
+import '../../theme/tokens.dart';
+import '../common/lesson_widgets.dart';
 
 enum _Mode { teacher, room, free }
 
@@ -41,9 +43,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         final dayLessons = campusLessons(day, index, schedules, forcedWeek: ref.watch(settingsProvider).forcedWeek);
 
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.lg, Gap.lg, Gap.xl),
           children: [
-            Text('Поиск', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: Gap.xs), child: Text('Поиск', style: Theme.of(context).textTheme.headlineMedium)),
             const SizedBox(height: 12),
             SegmentedButton<_Mode>(
               segments: const [
@@ -207,20 +209,27 @@ class _LessonList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (lessons.isEmpty) return Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(emptyText, style: theme.textTheme.bodyLarge));
+    if (lessons.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: Gap.lg),
+        child: Row(children: [
+          Icon(Icons.event_available_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          const SizedBox(width: Gap.sm),
+          Flexible(child: Text(emptyText, style: Theme.of(context).textTheme.bodyLarge)),
+        ]),
+      );
+    }
     return Column(children: [
       for (final l in lessons)
-        Card(
-          elevation: 0,
-          color: theme.colorScheme.surfaceContainerLow,
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: Text('${index.bells[l.pair - 1].startText}\n${index.bells[l.pair - 1].endText}', style: theme.textTheme.labelLarge),
-            title: Text(l.subject, style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text([if (l.teacher != null) l.teacher!, l.groups.join(', ')].join('\n')),
-            isThreeLine: l.teacher != null,
-            trailing: l.room == null ? null : Text(l.room!, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        Padding(
+          padding: const EdgeInsets.only(bottom: Gap.sm),
+          child: LessonTile(
+            timeLabel: '${index.bells[l.pair - 1].startText}–${index.bells[l.pair - 1].endText} · ${l.pair} пара',
+            subject: l.subject,
+            kind: l.kind,
+            teacher: l.teacher,
+            room: l.room,
+            footer: l.groups.join(', '),
           ),
         ),
     ]);

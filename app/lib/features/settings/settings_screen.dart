@@ -1,5 +1,5 @@
-// Настройки: группа, подгруппа, физ-ра, тема, ручной переключатель недели, «О приложении».
-// (Уведомления, короткие названия и экспорт ДЗ добавятся на этапах 4–5.)
+// Настройки: сгруппированы по смыслу — профиль, оформление, расписание, уведомления, данные, о приложении.
+// Значения выбираются в нижнем окне со списком (удобно пальцем и не ломается при крупном шрифте).
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +9,8 @@ import '../../app_state.dart';
 import '../../core/formatting.dart';
 import '../../domain/homework.dart';
 import '../../domain/models.dart';
+import '../../theme/tokens.dart';
+import '../common/brand_mark.dart';
 import '../onboarding/onboarding_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -22,181 +24,360 @@ class SettingsScreen extends ConsumerWidget {
     final index = ref.watch(indexProvider).value;
     final group = profile == null ? null : index?.findGroup(profile.groupId);
     final today = ref.watch(todayProvider);
+    final fetched = ref.watch(lastFetchedProvider).value;
+    final now = ref.watch(nowProvider).value ?? ref.read(clockProvider).now();
+    final theme = Theme.of(context);
+
+    final autoWeek = index == null ? null : (today.difference(index.weekAnchor).inDays / 7).floor() % 2 + 1;
 
     return ListView(
+      padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.lg, Gap.lg, Gap.xxl),
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-          child: Text('Настройки', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700)),
+          padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
+          child: Text('Настройки', style: theme.textTheme.headlineMedium),
         ),
-        ListTile(
-          leading: const Icon(Icons.groups_outlined),
-          title: Text(group?.title ?? 'Группа не выбрана'),
-          subtitle: const Text('Сменить группу'),
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OnboardingScreen(changing: true))),
-        ),
-        if (group != null && group.subgroups.length > 1 && profile != null)
-          ListTile(
-            leading: const Icon(Icons.person_outline),
-            title: const Text('Подгруппа'),
-            subtitle: DropdownButton<int>(
-              isExpanded: true,
-              value: profile.subgroup,
-              underline: const SizedBox(),
-              items: [for (final s in group.subgroups) DropdownMenuItem(value: s.n, child: Text(s.label))],
-              onChanged: (v) => v == null ? null : notifier.setProfile(profile.copyWith(subgroup: v)),
+        const SizedBox(height: Gap.lg),
+
+        _Section(title: 'Профиль', children: [
+          _Row(
+            icon: Icons.groups_rounded,
+            title: group?.title ?? 'Группа не выбрана',
+            subtitle: 'Сменить группу',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OnboardingScreen(changing: true))),
+          ),
+          if (group != null && group.subgroups.length > 1 && profile != null)
+            _Row(
+              icon: Icons.person_rounded,
+              title: 'Подгруппа',
+              value: group.subgroups.firstWhere((s) => s.n == profile.subgroup, orElse: () => group.subgroups.first).label,
+              onTap: () async {
+                final picked = await _choose<int>(context, 'Подгруппа', {for (final s in group.subgroups) s.n: s.label}, profile.subgroup);
+                if (picked != null) notifier.setProfile(profile.copyWith(subgroup: picked));
+              },
             ),
-          ),
-        if (group != null && group.hasGenderedPe && profile != null)
-          ListTile(
-            leading: const Icon(Icons.sports_outlined),
-            title: const Text('Физкультура'),
-            subtitle: DropdownButton<PeChoice>(
-              isExpanded: true,
-              value: profile.pe,
-              underline: const SizedBox(),
-              items: [for (final p in PeChoice.values) DropdownMenuItem(value: p, child: Text(p.title))],
-              onChanged: (v) => v == null ? null : notifier.setProfile(profile.copyWith(pe: v)),
+          if (group != null && group.hasGenderedPe && profile != null)
+            _Row(
+              icon: Icons.sports_rounded,
+              title: 'Физкультура',
+              value: profile.pe.title,
+              onTap: () async {
+                final picked = await _choose<PeChoice>(context, 'Физкультура', {for (final p in PeChoice.values) p: p.title}, profile.pe);
+                if (picked != null) notifier.setProfile(profile.copyWith(pe: picked));
+              },
             ),
-          ),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.brightness_6_outlined),
-          title: const Text('Тема'),
-          subtitle: DropdownButton<ThemeMode>(
-            isExpanded: true,
-            value: settings.themeMode,
-            underline: const SizedBox(),
-            items: const [
-              DropdownMenuItem(value: ThemeMode.system, child: Text('Системная')),
-              DropdownMenuItem(value: ThemeMode.light, child: Text('Светлая')),
-              DropdownMenuItem(value: ThemeMode.dark, child: Text('Тёмная')),
-            ],
-            onChanged: (v) => v == null ? null : notifier.setThemeMode(v),
-          ),
-        ),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.notifications_outlined),
-          title: const Text('Напоминание перед парой'),
-          subtitle: DropdownButton<int>(
-            isExpanded: true,
-            value: const [0, 5, 10, 15, 30].contains(settings.notifyBeforeMin) ? settings.notifyBeforeMin : 10,
-            underline: const SizedBox(),
-            items: const [
-              DropdownMenuItem(value: 0, child: Text('Выключено')),
-              DropdownMenuItem(value: 5, child: Text('За 5 минут')),
-              DropdownMenuItem(value: 10, child: Text('За 10 минут')),
-              DropdownMenuItem(value: 15, child: Text('За 15 минут')),
-              DropdownMenuItem(value: 30, child: Text('За 30 минут')),
-            ],
-            onChanged: (v) => v == null ? null : notifier.setNotifyBeforeMin(v),
-          ),
-        ),
-        SwitchListTile(
-          secondary: const Icon(Icons.assignment_late_outlined),
-          title: const Text('Вечером напоминать о ДЗ'),
-          subtitle: const Text('В 19:00, если на завтра есть невыполненные задания'),
-          value: settings.eveningHomeworkReminder,
-          onChanged: notifier.setEveningHomeworkReminder,
-        ),
-        Consumer(builder: (context, ref, _) {
-          return ListTile(
-            leading: const Icon(Icons.notifications_active_outlined),
-            title: const Text('Разрешить уведомления'),
-            subtitle: const Text('Если уведомления не приходят — нажмите, чтобы разрешить их в системе'),
+        ]),
+
+        _Section(title: 'Оформление', children: [
+          _Row(
+            icon: Icons.brightness_6_rounded,
+            title: 'Тема',
+            value: const {ThemeMode.system: 'Системная', ThemeMode.light: 'Светлая', ThemeMode.dark: 'Тёмная'}[settings.themeMode],
             onTap: () async {
-              var allowed = false;
-              try {
-                final gateway = ref.read(notificationGatewayProvider);
-                await gateway.init();
-                allowed = await gateway.requestPermission() || await gateway.areEnabled();
-              } catch (_) {}
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(allowed ? 'Уведомления разрешены' : 'Уведомления запрещены. Включите их в настройках телефона: Приложения → Расписание → Уведомления'),
-              ));
+              final picked = await _choose<ThemeMode>(
+                context,
+                'Тема',
+                const {ThemeMode.system: 'Системная', ThemeMode.light: 'Светлая', ThemeMode.dark: 'Тёмная'},
+                settings.themeMode,
+              );
+              if (picked != null) notifier.setThemeMode(picked);
             },
-          );
-        }),
-        ListTile(
-          leading: const Icon(Icons.swap_horiz),
-          title: const Text('Номер недели'),
-          subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(settings.forcedWeek == null
-                ? 'Считается автоматически (${index == null ? '—' : '${_autoWeek(index, today)} неделя'}). Переключите вручную, если в институте чередование сбилось.'
-                : 'Выбрана вручную: ${settings.forcedWeek} неделя'),
-            DropdownButton<int?>(
-              isExpanded: true,
-              value: settings.forcedWeek,
-              underline: const SizedBox(),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('Авто')),
-                DropdownMenuItem(value: 1, child: Text('1 неделя')),
-                DropdownMenuItem(value: 2, child: Text('2 неделя')),
-              ],
-              onChanged: notifier.setForcedWeek,
-            ),
-          ]),
-        ),
-        const Divider(),
-        Consumer(builder: (context, ref, _) {
-          final fetched = ref.watch(lastFetchedProvider).value;
-          final now = ref.watch(nowProvider).value ?? ref.read(clockProvider).now();
-          return ListTile(
-            leading: const Icon(Icons.sync),
-            title: const Text('Обновить расписание'),
-            subtitle: Text(fetched == null ? 'Сейчас используется встроенная копия' : 'Обновлено ${agoText(fetched, now)}'),
+          ),
+          _SwitchRow(
+            icon: Icons.palette_rounded,
+            title: 'Цвета из обоев',
+            subtitle: 'Material You, Android 12 и новее. Выключено — фирменные цвета приложения',
+            value: settings.useDynamicColor,
+            onChanged: notifier.setUseDynamicColor,
+          ),
+        ]),
+
+        _Section(title: 'Расписание', children: [
+          _Row(
+            icon: Icons.swap_horiz_rounded,
+            title: 'Номер недели',
+            subtitle: settings.forcedWeek == null
+                ? 'Считается автоматически${autoWeek == null ? '' : ' (сейчас $autoWeek неделя)'}. Переключите вручную, если в институте чередование сбилось'
+                : 'Выбрана вручную: ${settings.forcedWeek} неделя',
+            value: settings.forcedWeek == null ? 'Авто' : '${settings.forcedWeek} неделя',
+            onTap: () async {
+              final picked = await _choose<int>(context, 'Номер недели', const {0: 'Авто', 1: '1 неделя', 2: '2 неделя'}, settings.forcedWeek ?? 0);
+              if (picked != null) notifier.setForcedWeek(picked == 0 ? null : picked);
+            },
+          ),
+          _Row(
+            icon: Icons.sync_rounded,
+            title: 'Обновить расписание',
+            subtitle: fetched == null ? 'Сейчас используется встроенная копия' : 'Обновлено ${agoText(fetched, now)}',
             onTap: () async {
               final result = await syncSchedule(ProviderScope.containerOf(context));
               if (!context.mounted) return;
               final text = result.error != null ? 'Нет связи с сервером — работаем с сохранённым расписанием' : 'Расписание актуально';
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
             },
-          );
-        }),
-        ListTile(
-          leading: const Icon(Icons.upload_outlined),
-          title: const Text('Экспорт ДЗ'),
-          subtitle: const Text('Скопировать все ДЗ в буфер обмена — например, чтобы сохранить в заметках или отправить себе'),
-          onTap: () async {
-            final items = await ref.read(homeworkRepositoryProvider).all();
-            await Clipboard.setData(ClipboardData(text: exportHomework(items)));
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Скопировано ДЗ: ${items.length}')));
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.download_outlined),
-          title: const Text('Импорт ДЗ'),
-          subtitle: const Text('Вставить ДЗ, скопированные раньше (на новом телефоне)'),
-          onTap: () async {
-            final clip = await Clipboard.getData(Clipboard.kTextPlain);
-            String message;
-            try {
-              final added = await ref.read(homeworkRepositoryProvider).importItems(importHomework(clip?.text ?? ''));
-              ref.invalidate(homeworkProvider);
-              message = 'Добавлено ДЗ: $added';
-            } on FormatException catch (e) {
-              message = '${e.message}. Сначала скопируйте текст экспорта.';
-            }
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-          },
-        ),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.info_outline),
-          title: const Text('О приложении'),
-          subtitle: Text('Версия расписания: ${index?.version.substring(0, 10) ?? '—'}\nБез аккаунтов, рекламы и слежки.'),
-          isThreeLine: true,
-        ),
+          ),
+        ]),
+
+        _Section(title: 'Уведомления', children: [
+          _Row(
+            icon: Icons.notifications_rounded,
+            title: 'Напоминание перед парой',
+            value: settings.notifyBeforeMin == 0 ? 'Выключено' : 'За ${settings.notifyBeforeMin} мин',
+            onTap: () async {
+              final picked = await _choose<int>(
+                context,
+                'Напоминание перед парой',
+                const {0: 'Выключено', 5: 'За 5 минут', 10: 'За 10 минут', 15: 'За 15 минут', 30: 'За 30 минут'},
+                const [0, 5, 10, 15, 30].contains(settings.notifyBeforeMin) ? settings.notifyBeforeMin : 10,
+              );
+              if (picked != null) notifier.setNotifyBeforeMin(picked);
+            },
+          ),
+          _SwitchRow(
+            icon: Icons.assignment_late_rounded,
+            title: 'Вечером напоминать о ДЗ',
+            subtitle: 'В 19:00, если на завтра есть невыполненные задания',
+            value: settings.eveningHomeworkReminder,
+            onChanged: notifier.setEveningHomeworkReminder,
+          ),
+          Consumer(builder: (context, ref, _) {
+            return _Row(
+              icon: Icons.notifications_active_rounded,
+              title: 'Разрешить уведомления',
+              subtitle: 'Если уведомления не приходят — нажмите, чтобы разрешить их в системе',
+              onTap: () async {
+                var allowed = false;
+                try {
+                  final gateway = ref.read(notificationGatewayProvider);
+                  await gateway.init();
+                  allowed = await gateway.requestPermission() || await gateway.areEnabled();
+                } catch (_) {}
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(allowed ? 'Уведомления разрешены' : 'Уведомления запрещены. Включите их в настройках телефона: Приложения → Расписание → Уведомления'),
+                ));
+              },
+            );
+          }),
+        ]),
+
+        _Section(title: 'Данные', children: [
+          _Row(
+            icon: Icons.upload_rounded,
+            title: 'Экспорт ДЗ',
+            subtitle: 'Скопировать все ДЗ в буфер обмена — например, чтобы сохранить в заметках или отправить себе',
+            onTap: () async {
+              final items = await ref.read(homeworkRepositoryProvider).all();
+              await Clipboard.setData(ClipboardData(text: exportHomework(items)));
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Скопировано ДЗ: ${items.length}')));
+            },
+          ),
+          _Row(
+            icon: Icons.download_rounded,
+            title: 'Импорт ДЗ',
+            subtitle: 'Вставить ДЗ, скопированные раньше (на новом телефоне)',
+            onTap: () async {
+              final clip = await Clipboard.getData(Clipboard.kTextPlain);
+              String message;
+              try {
+                final added = await ref.read(homeworkRepositoryProvider).importItems(importHomework(clip?.text ?? ''));
+                ref.invalidate(homeworkProvider);
+                message = 'Добавлено ДЗ: $added';
+              } on FormatException catch (e) {
+                message = '${e.message}. Сначала скопируйте текст экспорта.';
+              }
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+            },
+          ),
+        ]),
+
+        _Section(title: 'О приложении', children: [
+          Padding(
+            padding: const EdgeInsets.all(Gap.lg),
+            child: Row(children: [
+              const BrandMark(size: 56),
+              const SizedBox(width: Gap.lg),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Расписание', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: Gap.xs),
+                  Text(
+                    'Версия расписания: ${index?.version.substring(0, 10) ?? '—'}\nБез аккаунтов, рекламы и слежки: домашка и правки хранятся только на вашем телефоне.',
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ]),
+              ),
+            ]),
+          ),
+        ]),
       ],
     );
   }
+}
 
-  int _autoWeek(ScheduleIndex index, DateTime today) {
-    final days = today.difference(index.weekAnchor).inDays;
-    return (days / 7).floor() % 2 + 1;
+/// Нижнее окно со списком вариантов (радиокнопки). Возвращает выбранное значение или null.
+Future<T?> _choose<T>(BuildContext context, String title, Map<T, String> options, T current) {
+  return showModalBottomSheet<T>(
+    context: context,
+    useSafeArea: true,
+    isScrollControlled: true,
+    builder: (sheetContext) => SafeArea(
+      child: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Gap.xl, 0, Gap.xl, Gap.sm),
+            child: Text(title, style: Theme.of(sheetContext).textTheme.titleLarge),
+          ),
+          RadioGroup<T>(
+            groupValue: current,
+            onChanged: (v) => Navigator.of(sheetContext).pop(v),
+            child: Column(children: [
+              for (final entry in options.entries) RadioListTile<T>(value: entry.key, title: Text(entry.value)),
+            ]),
+          ),
+          const SizedBox(height: Gap.sm),
+        ]),
+      ),
+    ),
+  );
+}
+
+/// Раздел настроек: подпись и скруглённая карточка со строками.
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.children});
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Gap.xl),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(Gap.sm, 0, Gap.sm, Gap.sm),
+          child: Text(title.toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(color: scheme.primary, letterSpacing: 1.2)),
+        ),
+        Material(
+          color: scheme.surfaceContainerLow,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.lg)),
+          clipBehavior: Clip.antiAlias,
+          child: Column(children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) Divider(indent: Gap.lg + 40 + Gap.lg, color: scheme.outlineVariant.withValues(alpha: 0.6)),
+              children[i],
+            ],
+          ]),
+        ),
+      ]),
+    );
+  }
+}
+
+/// Круглая плашка со значком слева — единый «ключ» всех строк.
+class _IconBadge extends StatelessWidget {
+  const _IconBadge(this.icon);
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ExcludeSemantics(
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(color: scheme.primaryContainer, shape: BoxShape.circle),
+        child: Icon(icon, size: 22, color: scheme.onPrimaryContainer),
+      ),
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row({required this.icon, required this.title, this.subtitle, this.value, this.onTap});
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final String? value;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 64),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Gap.lg, vertical: Gap.md),
+          child: Row(children: [
+            _IconBadge(icon),
+            const SizedBox(width: Gap.lg),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(title, style: theme.textTheme.titleSmall?.copyWith(fontSize: 16)),
+                // Текущее значение — отдельной цветной строкой под названием: не сжимает название и читается при любом шрифте
+                if (value != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(value!, style: theme.textTheme.labelLarge?.copyWith(color: scheme.primary)),
+                  ),
+                if (subtitle != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(subtitle!, style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                  ),
+              ]),
+            ),
+            if (onTap != null) Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({required this.icon, required this.title, this.subtitle, required this.value, required this.onChanged});
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return MergeSemantics(
+      child: InkWell(
+        onTap: () => onChanged(!value),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 64),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Gap.lg, vertical: Gap.md),
+            child: Row(children: [
+              _IconBadge(icon),
+              const SizedBox(width: Gap.lg),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(title, style: theme.textTheme.titleSmall?.copyWith(fontSize: 16)),
+                  if (subtitle != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(subtitle!, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    ),
+                ]),
+              ),
+              const SizedBox(width: Gap.sm),
+              Switch(value: value, onChanged: onChanged),
+            ]),
+          ),
+        ),
+      ),
+    );
   }
 }

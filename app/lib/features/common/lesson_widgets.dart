@@ -1,59 +1,52 @@
-// Общие кусочки интерфейса: цвет предмета, значок типа занятия, строка пары.
+// Карточка пары: название, тип, преподаватель и «табличка» с аудиторией. Цвета — по предмету.
 
 import 'package:flutter/material.dart';
 
 import '../../domain/models.dart';
+import '../../theme/subject_palette.dart';
+import '../../theme/tokens.dart';
+import 'room_plate.dart';
 
-/// Постоянный цвет предмета — по хешу названия (одно и то же название всегда даёт один цвет).
-Color subjectColor(String subject, Brightness brightness) {
-  var hash = 0;
-  for (final unit in subject.codeUnits) {
-    hash = (hash * 31 + unit) & 0x7fffffff;
-  }
-  final hue = (hash % 360).toDouble();
-  return HSLColor.fromAHSL(1, hue, 0.55, brightness == Brightness.dark ? 0.68 : 0.40).toColor();
-}
-
-/// Бейдж «Лекция» / «Практика» / «Физ-ра».
+/// Подпись типа занятия («Лекция» / «Практика»). Смысл несёт слово, а не цвет.
 class KindBadge extends StatelessWidget {
-  const KindBadge(this.kind, {super.key});
+  const KindBadge(this.kind, {super.key, this.tone});
   final LessonKind kind;
+  final SubjectTone? tone;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final (bg, fg) = switch (kind) {
-      LessonKind.lecture => (scheme.tertiaryContainer, scheme.onTertiaryContainer),
-      LessonKind.practice => (scheme.secondaryContainer, scheme.onSecondaryContainer),
-      _ => (scheme.surfaceContainerHighest, scheme.onSurfaceVariant),
-    };
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final (bg, fg) = tone != null
+        ? (tone!.accent.withValues(alpha: 0.16), tone!.onContainer)
+        : (scheme.secondaryContainer, scheme.onSecondaryContainer);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
-      child: Text(kind.title, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: fg, fontWeight: FontWeight.w600)),
+      padding: const EdgeInsets.symmetric(horizontal: Gap.sm, vertical: 3),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(Radii.sm - 4)),
+      child: Text(kind.title, style: theme.textTheme.labelMedium?.copyWith(color: fg)),
     );
   }
 }
 
-/// Одна строка пары: время, предмет, преподаватель, аудитория крупно.
+/// Одна пара. [timeLabel] — подпись со временем (в списке «Неделя»); в ленте «Сегодня» время стоит слева, там null.
 class LessonTile extends StatelessWidget {
   const LessonTile({
     super.key,
-    required this.start,
-    required this.end,
     required this.subject,
     required this.kind,
+    this.timeLabel,
     this.teacher,
     this.room,
     this.highlighted = false,
     this.dimmed = false,
     this.note,
     this.hasHomework = false,
+    this.footer,
     this.onLongPress,
+    this.onTap,
   });
 
-  final String start;
-  final String end;
+  final String? timeLabel;
   final String subject;
   final LessonKind kind;
   final String? teacher;
@@ -61,68 +54,107 @@ class LessonTile extends StatelessWidget {
   final bool highlighted;
   final bool dimmed;
   final String? note;
-  final bool hasHomework; // есть невыполненное ДЗ на этот день
+  final bool hasHomework;
+  final String? footer; // дополнительная строка внизу (например, список групп в поиске)
   final VoidCallback? onLongPress;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = subjectColor(subject, theme.brightness);
-    // Крупный системный шрифт: колонка времени шире, аудитория уезжает под название (иначе строка не помещается)
-    final scale = MediaQuery.textScalerOf(context).scale(1);
-    final roomBelow = scale > 1.3;
-    final tile = Container(
-      decoration: BoxDecoration(
-        color: highlighted ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+    final scheme = theme.colorScheme;
+    final tone = subjectTone(subject, theme.brightness);
+    final textColor = scheme.onSurface;
+
+    final card = Material(
+      color: tone.container,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Radii.lg),
+        side: highlighted ? BorderSide(color: tone.accent, width: 2.5) : BorderSide.none,
       ),
-      padding: const EdgeInsets.fromLTRB(0, 12, 14, 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(width: 5, height: 52, margin: const EdgeInsets.only(right: 10), decoration: BoxDecoration(color: color, borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)))),
-          SizedBox(
-            width: 52 * scale.clamp(1.0, 2.0),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(start, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-              Text(end, style: theme.textTheme.bodySmall),
-            ]),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text.rich(TextSpan(children: [
-                TextSpan(text: subject),
-                if (hasHomework)
-                  WidgetSpan(
-                    alignment: PlaceholderAlignment.middle,
-                    child: Padding(padding: const EdgeInsets.only(left: 6), child: Icon(Icons.assignment_late_outlined, size: 18, color: theme.colorScheme.error)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: IntrinsicHeight(
+          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Container(width: 6, color: tone.accent),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.md, Gap.md, Gap.md),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                  if (timeLabel != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: Gap.xs),
+                      child: Text(timeLabel!, style: theme.textTheme.labelMedium?.copyWith(color: tone.onContainer)),
+                    ),
+                  Text.rich(
+                    TextSpan(children: [
+                      TextSpan(text: subject),
+                      if (hasHomework)
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: Gap.sm),
+                            child: Icon(Icons.assignment_late_rounded, size: 18, color: scheme.error, semanticLabel: 'Есть домашнее задание'),
+                          ),
+                        ),
+                    ]),
+                    style: theme.textTheme.titleMedium?.copyWith(color: textColor),
                   ),
-              ]), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 4),
-              Wrap(spacing: 8, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                KindBadge(kind),
-                if (teacher != null) Text(teacher!, style: theme.textTheme.bodyMedium),
-              ]),
-              if (roomBelow && room != null)
-                Text(room!, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-              if (note != null) Padding(padding: const EdgeInsets.only(top: 4), child: Text(note!, style: theme.textTheme.bodySmall)),
-            ]),
-          ),
-          if (!roomBelow && room != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Text(room!, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: Gap.sm),
+                  // Нижняя строка: тип и преподаватель слева, «табличка» с аудиторией справа
+                  Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                    Expanded(
+                      child: Wrap(spacing: Gap.sm, runSpacing: Gap.xs, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                        KindBadge(kind, tone: tone),
+                        if (teacher != null) Text(teacher!, style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                      ]),
+                    ),
+                    if (room != null) ...[
+                      const SizedBox(width: Gap.sm),
+                      RoomPlate(room: room!, tone: tone),
+                    ],
+                  ]),
+                  if (note != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: Gap.sm),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(Icons.edit_note_rounded, size: 16, color: tone.onContainer),
+                        const SizedBox(width: Gap.xs),
+                        Flexible(child: Text(note!, style: theme.textTheme.bodySmall?.copyWith(color: tone.onContainer))),
+                      ]),
+                    ),
+                  if (footer != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: Gap.sm),
+                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Icon(Icons.groups_rounded, size: 16, color: scheme.onSurfaceVariant),
+                        const SizedBox(width: Gap.xs),
+                        Flexible(child: Text(footer!, style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant))),
+                      ]),
+                    ),
+                ]),
+              ),
             ),
-        ],
+          ]),
+        ),
       ),
     );
+
     return Semantics(
-      label: '${hasHomework ? 'Есть домашнее задание. ' : ''}$start–$end, $subject, ${kind.title}${room != null ? ', аудитория $room' : ''}${teacher != null ? ', $teacher' : ''}',
+      container: true,
+      label: '${timeLabel != null ? '$timeLabel, ' : ''}$subject, ${kind.title}'
+          '${room != null ? ', аудитория $room' : ''}${teacher != null ? ', $teacher' : ''}'
+          '${hasHomework ? '. Есть домашнее задание' : ''}${note != null ? '. $note' : ''}${footer != null ? '. $footer' : ''}',
+      onTap: onTap,
+      onLongPress: onLongPress,
+      onLongPressHint: onLongPress == null ? null : 'Действия с парой',
       child: ExcludeSemantics(
-        child: Opacity(
+        child: AnimatedOpacity(
           opacity: dimmed ? 0.55 : 1,
-          child: onLongPress == null ? tile : GestureDetector(behavior: HitTestBehavior.opaque, onLongPress: onLongPress, child: tile),
+          duration: Motion.of(context, Motion.base),
+          child: card,
         ),
       ),
     );

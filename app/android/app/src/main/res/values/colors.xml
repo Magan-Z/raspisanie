@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Цвета виджетов (светлая тема). Тёмные — в values-night/colors.xml -->
+<!-- Цвета виджетов (светлая тема) — те же, что в приложении: «бумага + петроль + янтарь». Тёмные — в values-night/colors.xml -->
 <resources>
-    <color name="widget_bg">#FFF6F5F2</color>
-    <color name="widget_text">#FF1C1D20</color>
-    <color name="widget_text_secondary">#FF64666D</color>
-    <color name="widget_accent">#FF2F5BD3</color>
-    <color name="widget_highlight">#FFDCE5FA</color>
-    <color name="widget_badge_bg">#FFE4EBFB</color>
+    <color name="widget_bg">#FFFBF8F3</color>
+    <color name="widget_text">#FF1B1C1A</color>
+    <color name="widget_text_secondary">#FF51565A</color>
+    <color name="widget_accent">#FF0B5563</color>
+    <color name="widget_highlight">#FFCDEBF0</color>
+    <color name="widget_badge_bg">#FFFFDDA8</color>
+    <color name="widget_badge_text">#FF2B1A00</color>
+    <color name="ic_launcher_background">#0B5563</color>
 </resources>

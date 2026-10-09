@@ -43,7 +43,7 @@
             android:paddingHorizontal="10dp"
             android:paddingVertical="3dp"
             android:text="@string/widget_add_homework"
-            android:textColor="@color/widget_accent"
+            android:textColor="@color/widget_badge_text"
             android:textSize="12sp"
             android:textStyle="bold" />
     </LinearLayout>

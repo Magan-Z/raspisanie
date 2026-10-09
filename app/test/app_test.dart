@@ -2,8 +2,11 @@
 // Расписание берётся из встроенной копии assets/schedule, база — в памяти.
 
 
+import 'dart:io';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:raspisanie/app_state.dart';
@@ -54,7 +57,7 @@ void main() {
 
   testWidgets('Первый запуск: выбор группы 1 БИ-25 → подгруппа → физ-ра → экран «Сегодня»', (tester) async {
     await _start(tester);
-    expect(find.text('Форма обучения'), findsOneWidget);
+    expect(find.text('ФОРМА ОБУЧЕНИЯ'), findsOneWidget);
 
     await tester.tap(find.text('Очная'));
     await tester.pump();
@@ -62,16 +65,16 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('1 БИ-25'));
     await tester.pump();
-    expect(find.text('Подгруппа'), findsOneWidget);
+    expect(find.text('ПОДГРУППА'), findsOneWidget);
 
     await tester.tap(find.text('БИ-25-1'));
     await tester.pump();
-    expect(find.text('Физкультура'), findsOneWidget);
+    expect(find.text('ФИЗКУЛЬТУРА'), findsOneWidget);
 
     await tester.tap(find.text('Юноши'));
     await _settle(tester);
     expect(find.text('Сегодня'), findsWidgets); // нижняя панель
-    expect(find.text('Форма обучения'), findsNothing);
+    expect(find.text('ФОРМА ОБУЧЕНИЯ'), findsNothing);
   });
 
   testWidgets('«Сегодня» 07.10.2026 13:30: идёт ТП в 2-05, дальше ЧТК практика 2-15', (tester) async {
@@ -164,6 +167,11 @@ void main() {
   });
 
   testWidgets('Крупный шрифт (×2) и узкий экран: ни на одной вкладке нет переполнения', (tester) async {
+    // Настоящий шрифт приложения: тестовый шрифт Ahem намного шире и дал бы ложные переполнения
+    await tester.runAsync(() async {
+      final loader = FontLoader('Onest')..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Onest.ttf').readAsBytesSync())));
+      await loader.load();
+    });
     await _start(tester, prefs: profile);
     tester.view.physicalSize = const Size(320, 640); // узкий телефон
     tester.platformDispatcher.textScaleFactorTestValue = 2.0;

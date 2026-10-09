@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_state.dart';
 import '../../domain/models.dart';
+import '../../theme/tokens.dart';
+import '../common/brand_mark.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key, this.changing = false});
@@ -59,13 +61,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final group = _group;
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(Gap.xl),
       children: [
         if (!widget.changing) ...[
-          Text('Расписание', style: theme.textTheme.headlineLarge),
-          const SizedBox(height: 4),
-          Text('Выберите свою группу — это займёт несколько секунд.', style: theme.textTheme.bodyLarge),
-          const SizedBox(height: 24),
+          const Align(alignment: Alignment.centerLeft, child: BrandMark(size: 72)),
+          const SizedBox(height: Gap.xl),
+          Text('Расписание', style: theme.textTheme.displaySmall),
+          const SizedBox(height: Gap.sm),
+          Text(
+            'Расписание всего института в телефоне: пары, аудитории, домашка и напоминания. Без регистрации.',
+            style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: Gap.xl),
+          Text('Выберите свою группу — это займёт несколько секунд', style: theme.textTheme.titleMedium),
+          const SizedBox(height: Gap.lg),
         ],
         _Step(
           title: 'Форма обучения',
@@ -143,28 +152,44 @@ class _Step extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final c in choices)
-                ChoiceChip(
-                  label: Text(c.label),
-                  selected: c.selected,
-                  onSelected: (_) => c.onTap(),
-                  materialTapTargetSize: MaterialTapTargetSize.padded,
-                ),
-            ],
-          ),
-          if (hint != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(hint!, style: theme.textTheme.bodySmall)),
-        ],
+      padding: const EdgeInsets.only(bottom: Gap.md),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(Gap.lg),
+        decoration: BoxDecoration(color: scheme.surfaceContainerLow, borderRadius: BorderRadius.circular(Radii.lg)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title.toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(color: scheme.primary, letterSpacing: 1.2)),
+            const SizedBox(height: Gap.md),
+            Wrap(
+              spacing: Gap.sm,
+              runSpacing: Gap.sm,
+              children: [
+                for (final c in choices)
+                  ChoiceChip(
+                    label: Text(c.label),
+                    selected: c.selected,
+                    onSelected: (_) => c.onTap(),
+                    materialTapTargetSize: MaterialTapTargetSize.padded,
+                    showCheckmark: false,
+                    padding: const EdgeInsets.symmetric(horizontal: Gap.sm, vertical: Gap.sm),
+                  ),
+              ],
+            ),
+            if (hint != null)
+              Padding(
+                padding: const EdgeInsets.only(top: Gap.md),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Icon(Icons.info_outline_rounded, size: 16, color: scheme.onSurfaceVariant),
+                  const SizedBox(width: Gap.sm),
+                  Expanded(child: Text(hint!, style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant))),
+                ]),
+              ),
+          ],
+        ),
       ),
     );
   }

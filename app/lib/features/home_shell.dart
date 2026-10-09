@@ -101,7 +101,10 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
     const pages = [TodayScreen(), WeekScreen(), HomeworkScreen(), SearchScreen(), SettingsScreen()];
     return Scaffold(
       body: SafeArea(child: IndexedStack(index: _tab, children: pages)),
-      bottomNavigationBar: NavigationBar(
+      // Подписи нижней панели не растут выше 1.15× — иначе слова переносятся и панель разваливается
+      bottomNavigationBar: MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.15)),
+        child: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) => setState(() => _tab = i),
         destinations: const [
@@ -112,6 +115,7 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
           NavigationDestination(icon: Icon(Icons.search), selectedIcon: Icon(Icons.search), label: 'Поиск'),
           NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Настройки'),
         ],
+        ),
       ),
     );
   }
