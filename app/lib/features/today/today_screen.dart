@@ -18,6 +18,7 @@ import '../common/day_strip.dart';
 import '../common/empty_state.dart';
 import '../common/illustrations.dart';
 import '../common/lesson_widgets.dart';
+import '../common/reveal.dart';
 import '../common/room_plate.dart';
 import '../common/word_fit_text.dart';
 import '../overrides/day_edits.dart';
@@ -96,9 +97,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             resolve(monday.add(Duration(days: i)), data.index, data.schedule, data.profile, overrides: data.overrides, forcedWeek: data.forcedWeek).length,
         ];
 
+        final shownLessons =
+            resolve(shownDay, data.index, data.schedule, data.profile, overrides: data.overrides, forcedWeek: data.forcedWeek);
+        final summary = shownLessons.isEmpty
+            ? 'Свободный день'
+            : '${shownLessons.length} ${plural(shownLessons.length, 'пара', 'пары', 'пар')} · ${moscowTimeText(shownLessons.first.startAt)}–${moscowTimeText(shownLessons.last.endAt)}';
+
         return Column(
           children: [
             _Header(
+              summary: summary,
               day: shownDay,
               week: data.weekFor(shownDay),
               isToday: shownDay == today,
@@ -132,6 +140,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
 class _Header extends StatelessWidget {
   const _Header({
+    required this.summary,
     required this.day,
     required this.week,
     required this.isToday,
@@ -139,6 +148,7 @@ class _Header extends StatelessWidget {
     required this.onPrevious,
     required this.onNext,
   });
+  final String summary; // «3 пары · 09:00–14:30»
   final DateTime day;
   final int week;
   final bool isToday;
@@ -180,6 +190,7 @@ class _Header extends StatelessWidget {
                   child: Text(dayTitle(day), maxLines: 1, style: theme.textTheme.headlineSmall),
                 ),
               ),
+              Text(summary, style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
             ]),
           ),
           IconButton(tooltip: 'Предыдущий день', onPressed: onPrevious, icon: const Icon(Icons.chevron_left_rounded, size: 28)),
@@ -281,7 +292,9 @@ class _DayPage extends ConsumerWidget {
       final phase = !isToday
           ? _Phase.future
           : (!now.isBefore(l.endAt) ? _Phase.past : (l == current ? _Phase.current : _Phase.future));
-      children.add(_TimelineRow(
+      children.add(Reveal(
+        index: i + 1,
+        child: _TimelineRow(
         start: moscowTimeText(l.startAt),
         end: moscowTimeText(l.endAt),
         phase: phase,
@@ -298,6 +311,7 @@ class _DayPage extends ConsumerWidget {
           onLongPress: () => showLessonActions(context, l),
           onTap: () => showLessonActions(context, l),
         ),
+      ),
       ));
     }
 
