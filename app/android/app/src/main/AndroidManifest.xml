@@ -55,6 +55,15 @@
             </intent-filter>
         </receiver>
 
+        <!-- Меню действий, которое открывается одиночным нажатием на виджет -->
+        <activity
+            android:name=".widget.WidgetMenuActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/WidgetMenuTheme"/>
+
         <!-- Виджеты главного экрана -->
         <receiver
             android:name=".widget.NowNextWidget"

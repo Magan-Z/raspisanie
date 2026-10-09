@@ -50,6 +50,19 @@ object WidgetRenderer {
     }
 
 
+    /**
+     * Нажатие на сам виджет открывает меню действий (открыть приложение, добавить ДЗ, завтра, неделя, поиск).
+     * Удержание остаётся системным (перемещение и удаление виджета).
+     */
+    private fun openMenu(context: Context, request: Int): PendingIntent {
+        val intent = Intent(context, WidgetMenuActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        return PendingIntent.getActivity(
+            context, 100 + request, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
     // ---------- цвета выбранной темы ----------
 
     /** Цвета темы приложения для текущего режима (светлый/тёмный). Только Android 12+: там можно перекрашивать фон. */
@@ -116,7 +129,7 @@ object WidgetRenderer {
 
     fun nowNext(context: Context, snapshot: WidgetSnapshot?, nowMs: Long): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_now_next)
-        views.setOnClickPendingIntent(R.id.widget_root, openApp(context, 1))
+        views.setOnClickPendingIntent(R.id.widget_root, openMenu(context, 1))
 
         val colors = colorsFor(context, snapshot)
         paint(views, colors, text = listOf(R.id.subject, R.id.room), secondary = listOf(R.id.countdown, R.id.status), accent = listOf(R.id.label), badges = listOf(R.id.badge))
@@ -149,7 +162,7 @@ object WidgetRenderer {
 
     fun today(context: Context, snapshot: WidgetSnapshot?, nowMs: Long): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_today)
-        views.setOnClickPendingIntent(R.id.widget_root, openApp(context, 2))
+        views.setOnClickPendingIntent(R.id.widget_root, openMenu(context, 2))
         val colors = colorsFor(context, snapshot)
         paint(views, colors, text = listOf(R.id.title) + rowIds.flatMap { listOf(it.third.first, it.third.second) },
             secondary = rowIds.map { it.second }, accent = listOf(R.id.week), badges = listOf(R.id.add_homework))
@@ -180,7 +193,7 @@ object WidgetRenderer {
     /** «Завтра»: пары завтрашнего дня (в той же вёрстке, что «Сегодня»). */
     fun tomorrow(context: Context, snapshot: WidgetSnapshot?, nowMs: Long): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_today)
-        views.setOnClickPendingIntent(R.id.widget_root, openApp(context, 4))
+        views.setOnClickPendingIntent(R.id.widget_root, openMenu(context, 4))
         val colors = colorsFor(context, snapshot)
         paint(views, colors, text = listOf(R.id.title) + rowIds.flatMap { listOf(it.third.first, it.third.second) },
             secondary = rowIds.map { it.second }, accent = listOf(R.id.week), badges = listOf(R.id.add_homework))
@@ -228,7 +241,7 @@ object WidgetRenderer {
 
     fun strip(context: Context, snapshot: WidgetSnapshot?, nowMs: Long): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_strip)
-        views.setOnClickPendingIntent(R.id.widget_root, openApp(context, 6))
+        views.setOnClickPendingIntent(R.id.widget_root, openMenu(context, 6))
         paint(views, colorsFor(context, snapshot), text = listOf(R.id.subject, R.id.room),
             secondary = listOf(R.id.teacher, R.id.countdown, R.id.status), accent = listOf(R.id.label), plates = listOf(R.id.room))
 
@@ -256,7 +269,7 @@ object WidgetRenderer {
 
     fun room(context: Context, snapshot: WidgetSnapshot?, nowMs: Long): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_room)
-        views.setOnClickPendingIntent(R.id.widget_root, openApp(context, 7))
+        views.setOnClickPendingIntent(R.id.widget_root, openMenu(context, 7))
         paint(views, colorsFor(context, snapshot), text = listOf(R.id.room, R.id.subject),
             secondary = listOf(R.id.countdown, R.id.status), accent = listOf(R.id.label), plates = listOf(R.id.room))
 
@@ -286,7 +299,7 @@ object WidgetRenderer {
     fun week(context: Context, snapshot: WidgetSnapshot?, nowMs: Long): RemoteViews {
         appContext = context.applicationContext
         val views = RemoteViews(context.packageName, R.layout.widget_week)
-        views.setOnClickPendingIntent(R.id.widget_root, openApp(context, 8))
+        views.setOnClickPendingIntent(R.id.widget_root, openMenu(context, 8))
         val ids = (1..7).map { Triple(idByName("week_row_$it"), idByName("week_day_$it"), idByName("week_info_$it")) }
         val colors = colorsFor(context, snapshot)
         paint(views, colors, text = listOf(R.id.title) + ids.map { it.second }, secondary = ids.map { it.third }, accent = listOf(R.id.week))
@@ -314,7 +327,7 @@ object WidgetRenderer {
     fun homework(context: Context, snapshot: WidgetSnapshot?, nowMs: Long): RemoteViews {
         appContext = context.applicationContext
         val views = RemoteViews(context.packageName, R.layout.widget_homework)
-        views.setOnClickPendingIntent(R.id.widget_root, openApp(context, 9, "raspisanie://homework"))
+        views.setOnClickPendingIntent(R.id.widget_root, openMenu(context, 9))
         views.setOnClickPendingIntent(R.id.add_homework, openApp(context, 10, "raspisanie://homework/new"))
         val ids = (1..4).map { Triple(idByName("hw_row_$it"), idByName("hw_title_$it"), idByName("hw_due_$it")) }
         paint(views, colorsFor(context, snapshot), text = listOf(R.id.title) + ids.map { it.second },
