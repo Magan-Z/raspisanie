@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_outputs.dart';
 import '../app_state.dart';
+import '../domain/notification_plan.dart';
 import '../widget_bridge/deep_links.dart';
 import 'homework/add_homework_sheet.dart';
 import 'homework/homework_screen.dart';
@@ -51,6 +52,25 @@ class _HomeShellState extends ConsumerState<HomeShell>
     final links = ref.read(linkChannelProvider);
     links.listen(_openLink);
     links.initialLink().then(_openLink);
+
+    // Нажатие на уведомление: пара → её день на «Сегодня», напоминание о ДЗ → вкладка «ДЗ»
+    final gateway = ref.read(notificationGatewayProvider);
+    _tapSub = gateway.taps.listen(_openNotification);
+    gateway.launchPayload().then(_openNotification).catchError((_) {});
+  }
+
+  StreamSubscription<String>? _tapSub;
+
+  void _openNotification(String? payload) {
+    if (payload == null || !mounted) return;
+    if (payload == homeworkPayload) {
+      setState(() => _tab = 2);
+      return;
+    }
+    final day = parseDayPayload(payload);
+    if (day == null) return;
+    setState(() => _tab = 0);
+    ref.read(requestedDayProvider.notifier).request(day);
   }
 
   void _openLink(String? link) {
@@ -93,6 +113,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
   @override
   void dispose() {
     _debounce?.cancel();
+    _tapSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

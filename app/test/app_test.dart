@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:raspisanie/domain/notification_plan.dart';
 import 'package:raspisanie/app_state.dart';
 import 'package:raspisanie/core/clock.dart';
 import 'package:raspisanie/data/local/database.dart';
@@ -186,6 +187,32 @@ void main() {
     }
   });
 
+  testWidgets('Крупный шрифт (×2): поиск преподавателя с длинным полным ФИО и режимы поиска не ломаются', (tester) async {
+    await tester.runAsync(() async {
+      final loader = FontLoader('Onest')..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Onest.ttf').readAsBytesSync())));
+      await loader.load();
+    });
+    await _start(tester, prefs: profile);
+    tester.view.physicalSize = const Size(320, 640);
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await _settle(tester);
+
+    await tester.tap(find.text('Поиск').last);
+    await _settle(tester);
+    await tester.enterText(find.byType(TextField).first, 'Сайд-Усман');
+    await _settle(tester);
+    await tester.tap(find.text('Халиев Магомед Сайд-Усманович').last);
+    await _settle(tester);
+    expect(tester.takeException(), isNull);
+
+    for (final mode in ['Аудитория', 'Свободные', 'Преподаватель']) {
+      await tester.tap(find.text(mode));
+      await _settle(tester);
+      expect(tester.takeException(), isNull, reason: 'режим «$mode»');
+    }
+  });
+
   testWidgets('Уведомления: план строится из расписания, разрешение спрашивается один раз', (tester) async {
     final gateway = FakeGateway();
     await _start(tester, prefs: profile, gateway: gateway); // среда 07.10.2026 13:30 МСК
@@ -196,6 +223,22 @@ void main() {
     final titles = gateway.lastPlan.map((n) => n.title).toList();
     expect(titles.first, 'ЧТК и этика → 2-15'); // пара в 14:40, напоминание в 14:30
     expect(titles, isNot(contains('Технологическое предпринимательство → 2-05'))); // уже идёт
+  });
+
+  testWidgets('Уведомления: нажатие открывает нужный день или вкладку «ДЗ»', (tester) async {
+    final gateway = FakeGateway();
+    await _start(tester, prefs: profile, gateway: gateway); // среда 07.10.2026
+    expect(gateway.lastPlan.first.payload, 'day:2026-10-07');
+    expect(find.textContaining('7 октября'), findsWidgets);
+
+    gateway.tapController.add('day:2026-10-09'); // пятница
+    await _settle(tester);
+    expect(find.textContaining('9 октября'), findsWidgets);
+    expect(find.textContaining('7 октября'), findsNothing);
+
+    gateway.tapController.add(homeworkPayload);
+    await _settle(tester);
+    expect(find.text('Добавить ДЗ'), findsOneWidget);
   });
 
   testWidgets('Личные правки: отмена пары убирает её с экрана и из уведомлений, «Мои правки» возвращает', (tester) async {

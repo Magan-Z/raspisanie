@@ -49,6 +49,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   @override
   Widget build(BuildContext context) {
     final my = ref.watch(myScheduleProvider);
+    ref.watch(requestedDayProvider); // перестроиться, когда пришёл запрос на день
     return my.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => EmptyState(
@@ -74,6 +75,16 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               WidgetsBinding.instance.addPostFrameCallback((_) => _controller.jumpToPage(_page));
             }
           }
+        }
+
+        // Нажали на уведомление — открываем день из него (и если экран только что построился, и если уже был открыт)
+        final requested = ref.read(requestedDayProvider);
+        if (requested != null) {
+          _page = _firstPage + requested.difference(_baseDay!).inDays;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_controller.hasClients) _controller.jumpToPage(_page);
+            ref.read(requestedDayProvider.notifier).clear();
+          });
         }
 
         final shownDay = _dayFor(_page);

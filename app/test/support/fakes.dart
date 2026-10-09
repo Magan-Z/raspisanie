@@ -1,3 +1,5 @@
+import 'dart:async';
+
 // Общие заглушки для тестов: ассеты с диска, «сервер» с расписанием, запись уведомлений.
 
 import 'dart:convert';
@@ -46,6 +48,14 @@ class FakeGateway implements NotificationGateway {
   final plans = <List<PlannedNotification>>[];
   final shown = <String>[];
   int permissionRequests = 0;
+  final tapController = StreamController<String>.broadcast();
+  String? startPayload;
+
+  @override
+  Stream<String> get taps => tapController.stream;
+
+  @override
+  Future<String?> launchPayload() async => startPayload;
 
   List<PlannedNotification> get lastPlan => plans.isEmpty ? const [] : plans.last;
 

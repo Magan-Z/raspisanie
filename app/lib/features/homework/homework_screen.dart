@@ -4,6 +4,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_state.dart';
@@ -96,6 +97,8 @@ class _HomeworkTile extends ConsumerWidget {
     final tone = subjectTone(item.subject, theme.brightness);
 
     Future<void> toggle() async {
+      // лёгкая вибрация: при отметке «сделано» — щелчок, при возврате — слабее
+      item.done ? HapticFeedback.selectionClick() : HapticFeedback.lightImpact();
       await repo.setDone(item.id!, !item.done);
       ref.invalidate(homeworkProvider);
     }

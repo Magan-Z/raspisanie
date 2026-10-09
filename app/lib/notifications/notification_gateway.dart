@@ -1,6 +1,8 @@
 // Показ уведомлений на телефоне. Что и когда показывать, считает domain/notification_plan.dart;
 // здесь — только «поставить в расписание Android» (АРХИТЕКТУРА.md, §7.7).
 
+import 'dart:async';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -30,6 +32,12 @@ abstract class NotificationGateway {
   /// Заменяет все запланированные уведомления новым планом.
   Future<void> replaceAll(List<PlannedNotification> plan);
 
+  /// Нажатия на уведомления, пока приложение открыто или в фоне (значение — payload уведомления).
+  Stream<String> get taps;
+
+  /// Payload уведомления, по нажатию на которое приложение было запущено (null — запущено значком).
+  Future<String?> launchPayload();
+
   /// Показать уведомление сразу (например, «Расписание обновилось»).
   Future<void> showNow({
     required int id,
@@ -44,6 +52,16 @@ class LocalNotificationGateway implements NotificationGateway {
 
   final FlutterLocalNotificationsPlugin _plugin;
   bool _ready = false;
+  final _taps = StreamController<String>.broadcast();
+
+  @override
+  Stream<String> get taps => _taps.stream;
+
+  @override
+  Future<String?> launchPayload() async {
+    final details = await _plugin.getNotificationAppLaunchDetails();
+    return details?.didNotificationLaunchApp == true ? details?.notificationResponse?.payload : null;
+  }
   late final tz.Location _moscow;
 
   AndroidFlutterLocalNotificationsPlugin? get _android =>
@@ -56,6 +74,10 @@ class LocalNotificationGateway implements NotificationGateway {
     _moscow = tz.getLocation('Europe/Moscow');
     await _plugin.initialize(
       settings: const InitializationSettings(android: AndroidInitializationSettings('ic_notification')),
+      onDidReceiveNotificationResponse: (response) {
+        final payload = response.payload;
+        if (payload != null) _taps.add(payload);
+      },
     );
     for (final channel in NotificationChannel.values) {
       await _android?.createNotificationChannel(AndroidNotificationChannel(
@@ -101,6 +123,7 @@ class LocalNotificationGateway implements NotificationGateway {
         body: n.body,
         notificationDetails: _details(n.homework ? NotificationChannel.homework : NotificationChannel.lessons),
         androidScheduleMode: mode,
+        payload: n.payload,
       );
     }
   }

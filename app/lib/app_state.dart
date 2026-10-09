@@ -263,6 +263,16 @@ final updateBannerProvider = NotifierProvider<UpdateBannerNotifier, List<String>
 final widgetBridgeProvider = Provider<WidgetBridge>((ref) => const WidgetBridge());
 final linkChannelProvider = Provider<LinkChannel>((ref) => LinkChannel());
 
+/// День, который нужно показать на экране «Сегодня» (после нажатия на уведомление). Экран сам его забирает.
+class RequestedDayNotifier extends Notifier<DateTime?> {
+  @override
+  DateTime? build() => null;
+  void request(DateTime day) => state = day;
+  void clear() => state = null;
+}
+
+final requestedDayProvider = NotifierProvider<RequestedDayNotifier, DateTime?>(RequestedDayNotifier.new);
+
 // ---------- личные правки ----------
 
 final overridesRepositoryProvider = Provider<OverridesRepository>((ref) => OverridesRepository(ref.watch(databaseProvider)));

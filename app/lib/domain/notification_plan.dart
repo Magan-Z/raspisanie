@@ -14,6 +14,7 @@ class PlannedNotification {
     required this.title,
     required this.body,
     this.homework = false,
+    this.payload,
   });
 
   /// Стабильный номер: одно и то же уведомление при перепланировании заменяется, а не дублируется.
@@ -22,9 +23,23 @@ class PlannedNotification {
   final String title;
   final String body;
   final bool homework; // вечернее напоминание о ДЗ (другой канал уведомлений)
+
+  /// Что открыть по нажатию: «day:2026-10-07» — этот день на экране «Сегодня», «homework» — вкладку «ДЗ».
+  final String? payload;
 }
 
 const planDays = 7;
+const homeworkPayload = 'homework';
+
+String dayPayload(DateTime day) =>
+    'day:${day.year.toString().padLeft(4, '0')}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+
+/// Разбор «day:2026-10-07». Не наш формат — null.
+DateTime? parseDayPayload(String? payload) {
+  if (payload == null || !payload.startsWith('day:')) return null;
+  final d = DateTime.tryParse(payload.substring(4));
+  return d == null ? null : DateTime.utc(d.year, d.month, d.day);
+}
 const eveningReminderHour = 19; // по Москве
 
 /// [notifyBeforeMin] = 0 — уведомления перед парой выключены.
@@ -52,6 +67,7 @@ List<PlannedNotification> planNotifications({
         if (!fireAt.isAfter(now)) continue;
         result.add(PlannedNotification(
           id: _id(day, l.pair, 0),
+          payload: dayPayload(day),
           fireAt: fireAt,
           title: l.room == null ? l.subject : '${l.subject} → ${l.room}',
           body: [if (l.teacher != null) l.teacher!, 'через $notifyBeforeMin мин'].join(' · '),
@@ -71,6 +87,7 @@ List<PlannedNotification> planNotifications({
           title: 'На завтра ${due.length} ДЗ',
           body: subjects.join(', '),
           homework: true,
+          payload: homeworkPayload,
         ));
       }
     }
