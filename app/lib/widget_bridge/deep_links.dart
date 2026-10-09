@@ -8,6 +8,22 @@ class AddHomeworkLink {
   final String? subject;
 }
 
+/// Открыть вкладку «ДЗ» (нажатие на виджет «Домашка»).
+class OpenHomeworkLink {
+  const OpenHomeworkLink();
+}
+
+/// Разбор любой нашей ссылки: «+ ДЗ» или «открыть вкладку ДЗ». Остальное — null.
+Object? parseAnyLink(String? link) {
+  final add = parseLink(link);
+  if (add != null) return add;
+  final uri = link == null ? null : Uri.tryParse(link);
+  if (uri != null && uri.scheme == 'raspisanie' && uri.host == 'homework' && (uri.path.isEmpty || uri.path == '/')) {
+    return const OpenHomeworkLink();
+  }
+  return null;
+}
+
 /// Разбор ссылки. Незнакомые ссылки (и мусор) дают null — их просто игнорируем.
 AddHomeworkLink? parseLink(String? link) {
   if (link == null) return null;

@@ -136,4 +136,101 @@ class WidgetLogicTest {
         assertEquals("1 ч 30 мин", WidgetLogic.minutesText(90 * 60_000L))
         assertEquals("0 мин", WidgetLogic.minutesText(-5))
     }
+
+    // ---------- новые виджеты ----------
+
+    private val richJson = """
+    {"generatedAt":"2026-10-07T08:00+03:00","weekLabel":"2 неделя","homeworkCount":3,
+     "homework":[
+       {"subject":"Физика","short":"Физика","text":"Задачи 4–9","due":"2026-10-08","files":1},
+       {"subject":"Философия","short":"Философия","text":"Конспект","due":"2026-10-14","files":0}],
+     "colors":{
+       "light":{"bg":"#FBF8F3","text":"#1B1C1A","textSecondary":"#51565A","accent":"#0B5563","highlight":"#CDEBF0","badgeBg":"#FFDDA8","badgeText":"#2B1A00"},
+       "dark":{"bg":"#172023","text":"#E3E7E8","textSecondary":"#B5BEC0","accent":"#7FD3E0","highlight":"#0F4A55","badgeBg":"#5E4100","badgeText":"#FFDDA8"}},
+     "days":[
+      {"date":"2026-10-07","lessons":[
+        ${lesson("2026-10-07T13:00+03:00", "2026-10-07T14:30+03:00", 3, "Технол. предпр.", "2-05", "lecture")},
+        ${lesson("2026-10-07T14:40+03:00", "2026-10-07T16:10+03:00", 4, "ЧТК и этика", "2-15", "practice")}]},
+      {"date":"2026-10-08","lessons":[
+        ${lesson("2026-10-08T09:00+03:00", "2026-10-08T10:30+03:00", 1, "Управ. проектами", "2-21", "practice")}]},
+      {"date":"2026-10-09","lessons":[]}]}"""
+    private val rich = WidgetLogic.parse(richJson)
+
+    @Test
+    fun parsesHomeworkAndColors() {
+        assertEquals(3, rich.homeworkCount)
+        assertEquals(2, rich.homework.size)
+        assertEquals("Физика", rich.homework[0].short)
+        assertEquals(1, rich.homework[0].files)
+        assertEquals(0xFF0B5563.toInt(), rich.lightColors?.accent)
+        assertEquals(0xFF7FD3E0.toInt(), rich.darkColors?.accent)
+    }
+
+    @Test
+    fun oldSnapshotWithoutNewFieldsStillWorks() {
+        assertEquals(0, snapshot.homeworkCount)
+        assertTrue(snapshot.homework.isEmpty())
+        assertNull(snapshot.lightColors)
+    }
+
+    @Test
+    fun brokenColorsAreIgnored() {
+        val broken = WidgetLogic.parse("""{"weekLabel":"","days":[],"colors":{"light":{"bg":"zzz"}}}""")
+        assertNull(broken.lightColors)
+    }
+
+    @Test
+    fun tomorrowShowsNextDayLessons() {
+        val view = WidgetLogic.tomorrowView(rich, t("2026-10-07T15:00+03:00"))
+        assertEquals("2026-10-08", view.date)
+        assertEquals(1, view.lessons.size)
+        assertEquals("2-21", view.lessons[0].room)
+    }
+
+    @Test
+    fun tomorrowWithoutLessonsIsEmpty() {
+        assertTrue(WidgetLogic.tomorrowView(rich, t("2026-10-08T12:00+03:00")).lessons.isEmpty())
+    }
+
+    @Test
+    fun weekRowsSummarizeEachDay() {
+        val rows = WidgetLogic.weekRows(rich, t("2026-10-07T15:00+03:00"))
+        assertEquals(3, rows.size)
+        assertEquals("Ср 7", rows[0].dayLabel)
+        assertEquals(2, rows[0].count)
+        assertEquals("13:00–16:10", rows[0].range)
+        assertTrue(rows[0].isToday)
+        assertFalse(rows[1].isToday)
+        assertEquals("Пт 9", rows[2].dayLabel)
+        assertEquals(0, rows[2].count)
+        assertEquals("", rows[2].range)
+    }
+
+    @Test
+    fun russianPlurals() {
+        assertEquals("1 пара", WidgetLogic.pairsText(1))
+        assertEquals("2 пары", WidgetLogic.pairsText(2))
+        assertEquals("5 пар", WidgetLogic.pairsText(5))
+        assertEquals("11 пар", WidgetLogic.pairsText(11))
+        assertEquals("1 задание", WidgetLogic.tasksText(1))
+        assertEquals("3 задания", WidgetLogic.tasksText(3))
+        assertEquals("12 заданий", WidgetLogic.tasksText(12))
+    }
+
+    @Test
+    fun homeworkDueLabels() {
+        val today = "2026-10-07"
+        assertEquals("просрочено", WidgetLogic.dueLabel("2026-10-06", today))
+        assertEquals("сегодня", WidgetLogic.dueLabel("2026-10-07", today))
+        assertEquals("завтра", WidgetLogic.dueLabel("2026-10-08", today))
+        assertEquals("Ср 14", WidgetLogic.dueLabel("2026-10-14", today))
+        // переход через конец месяца: завтра после 30 сентября — 1 октября
+        assertEquals("завтра", WidgetLogic.dueLabel("2026-10-01", "2026-09-30"))
+    }
+
+    @Test
+    fun hexColorsParse() {
+        assertEquals(0xFF0B5563.toInt(), WidgetLogic.parseHex("#0B5563"))
+        assertEquals(0xFFFFFFFF.toInt(), WidgetLogic.parseHex("FFFFFF"))
+    }
 }

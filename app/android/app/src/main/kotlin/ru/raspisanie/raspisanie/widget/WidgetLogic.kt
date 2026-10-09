@@ -36,9 +36,33 @@ data class WidgetLesson(
 
 data class WidgetDay(val date: String, val lessons: List<WidgetLesson>)
 
-data class WidgetSnapshot(val weekLabel: String, val days: List<WidgetDay>) {
+/** Цвета виджета (ARGB). Приложение присылает их по выбранной цветовой теме; если не прислало — виджет берёт цвета из ресурсов. */
+data class WidgetColors(
+    val bg: Int,
+    val text: Int,
+    val textSecondary: Int,
+    val accent: Int,
+    val highlight: Int,
+    val badgeBg: Int,
+    val badgeText: Int,
+)
+
+/** Одно невыполненное домашнее задание для виджета «Домашка». */
+data class HomeworkEntry(val subject: String, val short: String, val text: String, val due: String, val files: Int)
+
+data class WidgetSnapshot(
+    val weekLabel: String,
+    val days: List<WidgetDay>,
+    val homeworkCount: Int = 0,
+    val homework: List<HomeworkEntry> = emptyList(),
+    val lightColors: WidgetColors? = null,
+    val darkColors: WidgetColors? = null,
+) {
     val allLessons: List<WidgetLesson> get() = days.flatMap { it.lessons }
 }
+
+/** Строка виджета «Неделя»: день, сколько пар и во сколько начало/конец. */
+data class WeekRow(val date: String, val dayLabel: String, val count: Int, val range: String, val isToday: Boolean)
 
 object WidgetLogic {
     private const val MOSCOW_OFFSET_MS = 3 * 3600_000L
@@ -74,7 +98,48 @@ object WidgetLogic {
                 },
             )
         }
-        return WidgetSnapshot(root.optString("weekLabel", ""), days)
+        return WidgetSnapshot(
+            weekLabel = root.optString("weekLabel", ""),
+            days = days,
+            homeworkCount = root.optInt("homeworkCount", 0),
+            homework = parseHomework(root),
+            lightColors = parseColors(root.optJSONObject("colors")?.optJSONObject("light")),
+            darkColors = parseColors(root.optJSONObject("colors")?.optJSONObject("dark")),
+        )
+    }
+
+    private fun parseHomework(root: JSONObject): List<HomeworkEntry> {
+        val array = root.optJSONArray("homework") ?: return emptyList()
+        return (0 until array.length()).map { i ->
+            val h = array.getJSONObject(i)
+            HomeworkEntry(
+                subject = h.getString("subject"),
+                short = h.optString("short", h.getString("subject")),
+                text = h.optString("text", ""),
+                due = h.getString("due"),
+                files = h.optInt("files", 0),
+            )
+        }
+    }
+
+    /** «#RRGGBB» → ARGB. Без android.graphics.Color, чтобы проверять обычными тестами. */
+    fun parseHex(hex: String): Int = ("FF" + hex.removePrefix("#")).toLong(16).toInt()
+
+    private fun parseColors(json: JSONObject?): WidgetColors? {
+        if (json == null) return null
+        return try {
+            WidgetColors(
+                bg = parseHex(json.getString("bg")),
+                text = parseHex(json.getString("text")),
+                textSecondary = parseHex(json.getString("textSecondary")),
+                accent = parseHex(json.getString("accent")),
+                highlight = parseHex(json.getString("highlight")),
+                badgeBg = parseHex(json.getString("badgeBg")),
+                badgeText = parseHex(json.getString("badgeText")),
+            )
+        } catch (e: Exception) {
+            null // повреждённые цвета — просто стандартное оформление
+        }
     }
 
     /** Пара, которая идёт прямо сейчас. */
@@ -139,5 +204,88 @@ object WidgetLogic {
             java.util.Calendar.SATURDAY -> "Суббота"
             else -> "Воскресенье"
         }
+    }
+
+    /** Время по Москве «09:00» из момента. */
+    fun timeText(ms: Long): String {
+        val format = SimpleDateFormat("HH:mm", Locale.US)
+        format.timeZone = TimeZone.getTimeZone("GMT+03:00")
+        return format.format(ms)
+    }
+
+    fun weekdayShort(date: String): String = when (weekdayName(date)) {
+        "Понедельник" -> "Пн"
+        "Вторник" -> "Вт"
+        "Среда" -> "Ср"
+        "Четверг" -> "Чт"
+        "Пятница" -> "Пт"
+        "Суббота" -> "Сб"
+        else -> "Вс"
+    }
+
+    /** «7» из «2026-10-07». */
+    fun dayNumber(date: String): String = date.substring(8).trimStart('0')
+
+    /** Завтрашний день снимка: пары завтрашнего дня (пустой список, если их нет). */
+    fun tomorrowView(snapshot: WidgetSnapshot, nowMs: Long): TodayView {
+        val tomorrow = moscowDate(nowMs + 24 * 3600_000L)
+        return TodayView(tomorrow, snapshot.days.firstOrNull { it.date == tomorrow }?.lessons.orEmpty(), false)
+    }
+
+    /** Строки виджета «Неделя» — все дни снимка. */
+    fun weekRows(snapshot: WidgetSnapshot, nowMs: Long): List<WeekRow> {
+        val today = moscowDate(nowMs)
+        return snapshot.days.map { day ->
+            val first = day.lessons.firstOrNull()
+            val last = day.lessons.lastOrNull()
+            WeekRow(
+                date = day.date,
+                dayLabel = weekdayShort(day.date) + " " + dayNumber(day.date),
+                count = day.lessons.size,
+                range = if (first == null || last == null) "" else timeText(first.startMs) + "–" + timeText(last.endMs),
+                isToday = day.date == today,
+            )
+        }
+    }
+
+    /** «1 пара», «2 пары», «5 пар». */
+    fun pairsText(count: Int): String {
+        val mod10 = count % 10
+        val mod100 = count % 100
+        val word = if (mod100 in 11..14) "пар" else when (mod10) {
+            1 -> "пара"
+            2, 3, 4 -> "пары"
+            else -> "пар"
+        }
+        return "$count $word"
+    }
+
+    /** «1 задание», «2 задания», «5 заданий». */
+    fun tasksText(count: Int): String {
+        val mod10 = count % 10
+        val mod100 = count % 100
+        val word = if (mod100 in 11..14) "заданий" else when (mod10) {
+            1 -> "задание"
+            2, 3, 4 -> "задания"
+            else -> "заданий"
+        }
+        return "$count $word"
+    }
+
+    /** Срок ДЗ человеческими словами: «сегодня», «завтра», «Пт 9», «просрочено». */
+    fun dueLabel(due: String, today: String): String {
+        val tomorrow = moscowDateFrom(today, 1)
+        return when {
+            due < today -> "просрочено"
+            due == today -> "сегодня"
+            due == tomorrow -> "завтра"
+            else -> weekdayShort(due) + " " + dayNumber(due)
+        }
+    }
+
+    private fun moscowDateFrom(date: String, plusDays: Int): String {
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        format.timeZone = TimeZone.getTimeZone("UTC")
+        return format.format(format.parse(date)!!.time + plusDays * 24 * 3600_000L)
     }
 }

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
 
 import '../domain/homework.dart';
+import '../theme/brand_colors.dart';
 import '../domain/models.dart';
 import '../domain/widget_snapshot.dart';
 
@@ -15,6 +16,11 @@ const snapshotKey = 'snapshot';
 const _providers = [
   'ru.raspisanie.raspisanie.widget.NowNextWidget',
   'ru.raspisanie.raspisanie.widget.TodayWidget',
+  'ru.raspisanie.raspisanie.widget.TomorrowWidget',
+  'ru.raspisanie.raspisanie.widget.StripWidget',
+  'ru.raspisanie.raspisanie.widget.RoomWidget',
+  'ru.raspisanie.raspisanie.widget.WeekWidget',
+  'ru.raspisanie.raspisanie.widget.HomeworkWidget',
 ];
 
 class WidgetBridge {
@@ -29,6 +35,8 @@ class WidgetBridge {
     required List<HomeworkItem> homework,
     List<Override> overrides = const [],
     int? forcedWeek,
+    AppPalette? palette,
+    bool amoled = false,
   }) async {
     final snapshot = buildWidgetSnapshot(
       now: now,
@@ -38,6 +46,8 @@ class WidgetBridge {
       homework: homework,
       overrides: overrides,
       forcedWeek: forcedWeek,
+      palette: palette,
+      amoled: amoled,
     );
     try {
       await HomeWidget.saveWidgetData<String>(snapshotKey, encodeWidgetSnapshot(snapshot));

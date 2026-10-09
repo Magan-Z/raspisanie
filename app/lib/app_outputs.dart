@@ -20,6 +20,9 @@ Future<void> pushWidgets(ProviderContainer c) async {
         homework: homework,
         overrides: my.overrides,
         forcedWeek: my.forcedWeek,
+        // Цвета из обоев виджету недоступны — тогда он остаётся в стандартных цветах
+        palette: c.read(settingsProvider).useDynamicColor ? null : c.read(settingsProvider).palette,
+        amoled: c.read(settingsProvider).amoled,
       );
 }
 

@@ -24,12 +24,16 @@ object WidgetUpdater {
         val snapshot = SnapshotStore.load(context)
         val now = System.currentTimeMillis()
 
-        for (id in manager.getAppWidgetIds(ComponentName(context, NowNextWidget::class.java))) {
-            manager.updateAppWidget(id, WidgetRenderer.nowNext(context, snapshot, now))
+        fun <T> refresh(provider: Class<T>, render: () -> android.widget.RemoteViews) {
+            for (id in manager.getAppWidgetIds(ComponentName(context, provider))) manager.updateAppWidget(id, render())
         }
-        for (id in manager.getAppWidgetIds(ComponentName(context, TodayWidget::class.java))) {
-            manager.updateAppWidget(id, WidgetRenderer.today(context, snapshot, now))
-        }
+        refresh(NowNextWidget::class.java) { WidgetRenderer.nowNext(context, snapshot, now) }
+        refresh(TodayWidget::class.java) { WidgetRenderer.today(context, snapshot, now) }
+        refresh(TomorrowWidget::class.java) { WidgetRenderer.tomorrow(context, snapshot, now) }
+        refresh(StripWidget::class.java) { WidgetRenderer.strip(context, snapshot, now) }
+        refresh(RoomWidget::class.java) { WidgetRenderer.room(context, snapshot, now) }
+        refresh(WeekWidget::class.java) { WidgetRenderer.week(context, snapshot, now) }
+        refresh(HomeworkWidget::class.java) { WidgetRenderer.homework(context, snapshot, now) }
         scheduleNext(context, snapshot, now)
     }
 

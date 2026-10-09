@@ -5,4 +5,14 @@
     <string name="widget_today_name">Сегодня</string>
     <string name="widget_today_description">Все пары дня</string>
     <string name="widget_add_homework">+ ДЗ</string>
+    <string name="widget_tomorrow_name">Завтра</string>
+    <string name="widget_tomorrow_description">Все пары завтрашнего дня</string>
+    <string name="widget_strip_name">Ближайшая пара (строка)</string>
+    <string name="widget_strip_description">Следующая пара одной узкой строкой с отсчётом</string>
+    <string name="widget_room_name">Аудитория</string>
+    <string name="widget_room_description">Номер аудитории крупно</string>
+    <string name="widget_week_name">Неделя</string>
+    <string name="widget_week_description">Неделя целиком: сколько пар в каждый день</string>
+    <string name="widget_homework_name">Домашка</string>
+    <string name="widget_homework_description">Ближайшие невыполненные задания</string>
 </resources>

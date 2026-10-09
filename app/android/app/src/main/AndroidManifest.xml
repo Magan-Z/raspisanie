@@ -74,6 +74,61 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/today_widget_info"/>
         </receiver>
+        <receiver
+            android:name=".widget.TomorrowWidget"
+            android:exported="true"
+            android:label="@string/widget_tomorrow_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/tomorrow_widget_info"/>
+        </receiver>
+        <receiver
+            android:name=".widget.StripWidget"
+            android:exported="true"
+            android:label="@string/widget_strip_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/strip_widget_info"/>
+        </receiver>
+        <receiver
+            android:name=".widget.RoomWidget"
+            android:exported="true"
+            android:label="@string/widget_room_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/room_widget_info"/>
+        </receiver>
+        <receiver
+            android:name=".widget.WeekWidget"
+            android:exported="true"
+            android:label="@string/widget_week_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/week_widget_info"/>
+        </receiver>
+        <receiver
+            android:name=".widget.HomeworkWidget"
+            android:exported="true"
+            android:label="@string/widget_homework_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/homework_widget_info"/>
+        </receiver>
         <receiver android:name=".widget.WidgetAlarmReceiver" android:exported="false"/>
         <receiver android:name=".widget.WidgetBootReceiver" android:exported="true">
             <intent-filter>

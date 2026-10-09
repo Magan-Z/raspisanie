@@ -74,10 +74,10 @@ class _HomeShellState extends ConsumerState<HomeShell>
   }
 
   void _openLink(String? link) {
-    final action = parseLink(link);
+    final action = parseAnyLink(link);
     if (action == null || !mounted) return;
     setState(() => _tab = 2); // вкладка «ДЗ»
-    showAddHomework(context, subject: action.subject);
+    if (action is AddHomeworkLink) showAddHomework(context, subject: action.subject);
   }
 
   Timer? _debounce;
