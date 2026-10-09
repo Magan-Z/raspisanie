@@ -416,7 +416,7 @@ class _CodeDialogState extends State<_CodeDialog> {
           textCapitalization: TextCapitalization.characters,
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _submit(),
-          decoration: InputDecoration(labelText: 'Код', errorText: _error),
+          decoration: InputDecoration(labelText: 'Код', errorText: _error, errorMaxLines: 3),
         ),
       ]),
       actions: [
