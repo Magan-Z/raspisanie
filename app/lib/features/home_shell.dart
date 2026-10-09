@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_outputs.dart';
 import '../app_state.dart';
+import '../core/bells.dart' show moscowToday;
 import '../domain/notification_plan.dart';
 import '../widget_bridge/deep_links.dart';
 import 'homework/add_homework_sheet.dart';
@@ -77,8 +78,18 @@ class _HomeShellState extends ConsumerState<HomeShell>
   void _openLink(String? link) {
     final action = parseAnyLink(link);
     if (action == null || !mounted) return;
-    setState(() => _tab = 2); // вкладка «ДЗ»
-    if (action is AddHomeworkLink) showAddHomework(context, subject: action.subject);
+    switch (action) {
+      case AddHomeworkLink():
+        setState(() => _tab = 2); // вкладка «ДЗ»
+        showAddHomework(context, subject: action.subject);
+      case OpenHomeworkLink():
+        setState(() => _tab = 2);
+      case OpenTabLink():
+        setState(() => _tab = action.tab);
+      case OpenTomorrowLink():
+        setState(() => _tab = 0);
+        ref.read(requestedDayProvider.notifier).request(moscowToday(ref.read(clockProvider).now()).add(const Duration(days: 1)));
+    }
   }
 
   Timer? _debounce;

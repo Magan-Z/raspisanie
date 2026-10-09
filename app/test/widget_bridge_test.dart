@@ -35,6 +35,13 @@ void main() {
       expect(parseAnyLink('raspisanie://homework/new?subject=X'), isA<AddHomeworkLink>());
       expect(parseAnyLink('raspisanie://settings'), isNull);
     });
+    test('быстрые действия на значке: Завтра, Неделя, Поиск', () {
+      expect(parseAnyLink('raspisanie://day/tomorrow'), isA<OpenTomorrowLink>());
+      expect((parseAnyLink('raspisanie://week') as OpenTabLink).tab, 1);
+      expect((parseAnyLink('raspisanie://search') as OpenTabLink).tab, 3);
+      expect(parseAnyLink('raspisanie://day/yesterday'), isNull);
+      expect(parseAnyLink('raspisanie://week/extra'), isNull);
+    });
     test('чужие и неправильные ссылки игнорируются', () {
       expect(parseLink(null), isNull);
       expect(parseLink('https://example.com/homework/new'), isNull);

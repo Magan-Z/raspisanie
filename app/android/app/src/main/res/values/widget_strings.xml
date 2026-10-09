@@ -15,4 +15,12 @@
     <string name="widget_week_description">Неделя целиком: сколько пар в каждый день</string>
     <string name="widget_homework_name">Домашка</string>
     <string name="widget_homework_description">Ближайшие невыполненные задания</string>
+    <string name="shortcut_add_homework_short">Добавить ДЗ</string>
+    <string name="shortcut_add_homework_long">Новое ДЗ</string>
+    <string name="shortcut_tomorrow_short">Завтра</string>
+    <string name="shortcut_tomorrow_long">Пары на завтра</string>
+    <string name="shortcut_week_short">Неделя</string>
+    <string name="shortcut_week_long">Неделя</string>
+    <string name="shortcut_search_short">Поиск</string>
+    <string name="shortcut_search_long">Поиск аудиторий и преподавателей</string>
 </resources>

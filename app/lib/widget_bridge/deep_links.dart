@@ -13,15 +13,31 @@ class OpenHomeworkLink {
   const OpenHomeworkLink();
 }
 
-/// Разбор любой нашей ссылки: «+ ДЗ» или «открыть вкладку ДЗ». Остальное — null.
+/// Открыть вкладку приложения: «Неделя» (1) или «Поиск» (3) — быстрые действия на значке.
+class OpenTabLink {
+  const OpenTabLink(this.tab);
+  final int tab;
+}
+
+/// Открыть «Сегодня» на завтрашнем дне (быстрое действие «Завтра»).
+class OpenTomorrowLink {
+  const OpenTomorrowLink();
+}
+
+/// Разбор любой нашей ссылки: «+ ДЗ», «открыть ДЗ», «Неделя», «Поиск», «Завтра». Остальное — null.
 Object? parseAnyLink(String? link) {
   final add = parseLink(link);
   if (add != null) return add;
   final uri = link == null ? null : Uri.tryParse(link);
-  if (uri != null && uri.scheme == 'raspisanie' && uri.host == 'homework' && (uri.path.isEmpty || uri.path == '/')) {
-    return const OpenHomeworkLink();
-  }
-  return null;
+  if (uri == null || uri.scheme != 'raspisanie') return null;
+  final bare = uri.path.isEmpty || uri.path == '/';
+  return switch (uri.host) {
+    'homework' when bare => const OpenHomeworkLink(),
+    'week' when bare => const OpenTabLink(1),
+    'search' when bare => const OpenTabLink(3),
+    'day' when uri.path == '/tomorrow' => const OpenTomorrowLink(),
+    _ => null,
+  };
 }
 
 /// Разбор ссылки. Незнакомые ссылки (и мусор) дают null — их просто игнорируем.

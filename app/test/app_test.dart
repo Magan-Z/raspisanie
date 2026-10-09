@@ -258,6 +258,24 @@ void main() {
     expect(gateway.lastPlan.map((n) => n.title), contains('ЧТК и этика → 2-15'));
   });
 
+  testWidgets('Быстрые действия на значке: ссылки открывают «Завтра», «Неделю» и «Поиск»', (tester) async {
+    final links = FakeLinks();
+    await _start(tester, prefs: profile, extraOverrides: [linkChannelProvider.overrideWithValue(links)]); // среда 7 октября
+    expect(find.textContaining('среда, 7 октября'), findsWidgets);
+
+    links.send('raspisanie://day/tomorrow');
+    await _settle(tester);
+    expect(find.textContaining('четверг, 8 октября'), findsWidgets);
+
+    links.send('raspisanie://week');
+    await _settle(tester);
+    expect(find.text('1 неделя'), findsWidgets); // вкладка «Неделя»
+
+    links.send('raspisanie://search');
+    await _settle(tester);
+    expect(find.text('Свободные'), findsOneWidget); // вкладка «Поиск»
+  });
+
   testWidgets('Поиск: свободные аудитории и расписание преподавателя', (tester) async {
     await _start(tester, prefs: profile); // среда 07.10.2026 13:30 МСК, 3 пара идёт
 

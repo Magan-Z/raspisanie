@@ -31,6 +31,10 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Быстрые действия на значке: «+ ДЗ», «Завтра», «Неделя», «Поиск» -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts"/>
             <!-- Ссылки raspisanie://… (например, кнопка «+ ДЗ» на виджете) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
