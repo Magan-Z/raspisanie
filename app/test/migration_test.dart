@@ -23,6 +23,19 @@ void main() {
           note TEXT NULL
         );
       ''');
+      // В настоящей базе версии 1 таблица ДЗ тоже была (миграция до версии 3 читает из неё старые фото)
+      raw.execute('''
+        CREATE TABLE homework (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          subject TEXT NOT NULL,
+          text TEXT NOT NULL,
+          due_date INTEGER NOT NULL,
+          kind_hint TEXT NULL,
+          done INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          photo_path TEXT NULL
+        );
+      ''');
       raw.execute("INSERT INTO overrides (date, pair, type, room) VALUES (${DateTime.utc(2026, 10, 7).millisecondsSinceEpoch ~/ 1000}, 4, 'replace', '3-01');");
       raw.execute('PRAGMA user_version = 1;');
     });
