@@ -1,7 +1,6 @@
 // Экран «ДЗ»: разделы «Просрочено / На сегодня / На завтра / На этой неделе / Позже / Выполнено».
 // Свайп вправо — выполнено, влево — удалить (то же есть кнопками: флажок слева и меню действий).
 
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +12,7 @@ import '../../domain/homework.dart';
 import '../../theme/subject_palette.dart';
 import '../../theme/tokens.dart';
 import '../common/word_fit_text.dart';
+import 'attachment_widgets.dart';
 import '../common/empty_state.dart';
 import 'add_homework_sheet.dart';
 
@@ -168,20 +168,7 @@ class _HomeworkTile extends ConsumerWidget {
                         ),
                       ),
                     ]),
-                    if (item.photoPath != null && File(item.photoPath!).existsSync())
-                      Padding(
-                        padding: const EdgeInsets.only(top: Gap.sm),
-                        child: GestureDetector(
-                          onTap: () => showDialog<void>(
-                            context: context,
-                            builder: (_) => Dialog(child: InteractiveViewer(child: Image.file(File(item.photoPath!)))),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(Radii.sm),
-                            child: Image.file(File(item.photoPath!), height: 88, fit: BoxFit.cover, semanticLabel: 'Фото к заданию'),
-                          ),
-                        ),
-                      ),
+                    AttachmentStrip(attachments: item.attachments, color: tone.accent),
                   ]),
                 ),
               ),

@@ -42,7 +42,18 @@ class Homework extends Table {
   TextColumn get kindHint => text().nullable()(); // lecture / practice
   BoolColumn get done => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
+  // Устарело: раньше хранило одно фото. С версии базы 3 вложения лежат в HomeworkAttachments (старые фото перенесены туда)
   TextColumn get photoPath => text().nullable()();
+}
+
+/// Вложения к домашним заданиям (фото, PDF, документы). Сами файлы лежат в памяти приложения.
+@DataClassName('AttachmentRow')
+class HomeworkAttachments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get homeworkId => integer()();
+  TextColumn get name => text()();
+  TextColumn get path => text()();
+  IntColumn get sizeBytes => integer().nullable()();
 }
 
 /// Личные правки расписания на конкретную дату.
@@ -91,12 +102,12 @@ class Deadlines extends Table {
   TextColumn get subject => text().nullable()();
 }
 
-@DriftDatabase(tables: [ScheduleCache, IndexCache, Homework, Overrides, SubjectAliases, Notes, Deadlines])
+@DriftDatabase(tables: [ScheduleCache, IndexCache, Homework, HomeworkAttachments, Overrides, SubjectAliases, Notes, Deadlines])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'raspisanie'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -107,6 +118,14 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(overrides, overrides.kind);
             await m.addColumn(overrides, overrides.repeatWeekly);
             await m.addColumn(overrides, overrides.matchSubject);
+          }
+          // v2 → v3: несколько вложений к заданию. Старое «фото доски» становится первым вложением.
+          if (from < 3) {
+            await m.createTable(homeworkAttachments);
+            await customStatement(
+              "INSERT INTO homework_attachments (homework_id, name, path) "
+              "SELECT id, 'Фото.jpg', photo_path FROM homework WHERE photo_path IS NOT NULL",
+            );
           }
         },
       );

@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:raspisanie/domain/notification_plan.dart';
 import 'package:raspisanie/app_state.dart';
 import 'package:raspisanie/core/clock.dart';
+import 'package:raspisanie/data/attachments/attachment_store.dart';
 import 'package:raspisanie/data/local/database.dart';
 import 'package:raspisanie/data/repositories/schedule_repository.dart';
 import 'package:raspisanie/main.dart';
@@ -19,7 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fakes.dart';
 
-Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, DateTime? now, FakeGateway? gateway}) async {
+Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, DateTime? now, FakeGateway? gateway, List extraOverrides = const []}) async {
   // Высокий «экран», чтобы весь список строился сразу (ListView строит только видимое)
   tester.view.physicalSize = const Size(900, 2600);
   tester.view.devicePixelRatio = 1;
@@ -39,6 +40,7 @@ Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, 
       repositoryProvider.overrideWithValue(ScheduleRepository(db: db, assets: DiskAssets())),
       notificationGatewayProvider.overrideWithValue(gateway ?? FakeGateway()),
       clockProvider.overrideWithValue(FixedClock(now ?? DateTime.utc(2026, 10, 7, 10, 30))), // 13:30 по Москве
+      ...extraOverrides,
     ],
     child: const RaspisanieApp(),
   ));
@@ -132,6 +134,69 @@ void main() {
     await _settle(tester);
     expect(find.text('Прочитать главу 3'), findsOneWidget);
     expect(find.text('Позже'), findsOneWidget); // 14 октября — уже следующая неделя
+  });
+
+  testWidgets('ДЗ: прикрепить файл → он виден на карточке задания и открывается', (tester) async {
+    final dir = Directory.systemTemp.createTempSync('hw_files');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final source = File('${dir.path}/Задачи.pdf')..writeAsBytesSync(List.filled(2048, 1));
+    final store = FakeAttachmentStore();
+    addTearDown(() => store.dir.deleteSync(recursive: true));
+
+    await _start(tester, prefs: profile, extraOverrides: [
+      attachmentStoreProvider.overrideWithValue(store),
+      attachmentPickerProvider.overrideWithValue(FakeAttachmentPicker([PickedFileInfo(name: 'Задачи.pdf', path: source.path, sizeBytes: 2048)])),
+    ]);
+
+    await tester.longPress(find.text('ЧТК и этика').last);
+    await _settle(tester);
+    await tester.tap(find.text('Добавить ДЗ'));
+    await _settle(tester);
+    await tester.enterText(find.byType(TextField).last, 'Решить задачи');
+    await tester.pump();
+
+    await tester.tap(find.text('Прикрепить'));
+    await _settle(tester);
+    await tester.tap(find.text('Файл'));
+    await _settle(tester);
+    expect(find.text('Задачи.pdf'), findsOneWidget); // плитка в окне добавления
+    expect(find.text('2 КБ'), findsOneWidget);
+
+    await tester.tap(find.text('Добавить'));
+    await _settle(tester);
+
+    await tester.tap(find.text('ДЗ').last);
+    await _settle(tester);
+    expect(find.text('Решить задачи'), findsOneWidget);
+    await tester.tap(find.text('Задачи.pdf'));
+    await _settle(tester);
+    expect(store.opened, ['Задачи.pdf']);
+  });
+
+  testWidgets('ДЗ: закрыли окно без сохранения — скопированные файлы удаляются', (tester) async {
+    final dir = Directory.systemTemp.createTempSync('hw_files');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final source = File('${dir.path}/Фото.jpg')..writeAsBytesSync([1, 2, 3]);
+    final store = FakeAttachmentStore();
+    addTearDown(() => store.dir.deleteSync(recursive: true));
+
+    await _start(tester, prefs: profile, extraOverrides: [
+      attachmentStoreProvider.overrideWithValue(store),
+      attachmentPickerProvider.overrideWithValue(FakeAttachmentPicker([PickedFileInfo(name: 'Фото.jpg', path: source.path, sizeBytes: 3)])),
+    ]);
+    await tester.longPress(find.text('ЧТК и этика').last);
+    await _settle(tester);
+    await tester.tap(find.text('Добавить ДЗ'));
+    await _settle(tester);
+    await tester.tap(find.text('Прикрепить'));
+    await _settle(tester);
+    await tester.tap(find.text('Файл'));
+    await _settle(tester);
+    expect(find.text('Фото.jpg'), findsOneWidget);
+
+    await tester.tapAt(const Offset(10, 10)); // закрыть окно
+    await _settle(tester);
+    expect(store.deleted, ['Фото.jpg']);
   });
 
   testWidgets('Поиск: свободные аудитории и расписание преподавателя', (tester) async {

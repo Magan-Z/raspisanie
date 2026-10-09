@@ -12,6 +12,7 @@ import 'config.dart';
 import 'core/bells.dart';
 import 'core/clock.dart';
 import 'core/week.dart';
+import 'data/attachments/attachment_store.dart';
 import 'data/local/database.dart';
 import 'data/remote/schedule_api.dart';
 import 'data/repositories/homework_repository.dart';
@@ -223,7 +224,14 @@ Future<SyncResult> syncSchedule(ProviderContainer ref) async {
 
 // ---------- домашние задания ----------
 
-final homeworkRepositoryProvider = Provider<HomeworkRepository>((ref) => HomeworkRepository(ref.watch(databaseProvider)));
+/// Файлы вложений к ДЗ (в тестах подменяется).
+final attachmentStoreProvider = Provider<AttachmentStore>((ref) => DiskAttachmentStore());
+
+/// Окна выбора файлов и камеры (в тестах подменяется).
+final attachmentPickerProvider = Provider<AttachmentPicker>((ref) => SystemAttachmentPicker());
+
+final homeworkRepositoryProvider =
+    Provider<HomeworkRepository>((ref) => HomeworkRepository(ref.watch(databaseProvider), ref.watch(attachmentStoreProvider)));
 
 /// Все ДЗ. После любого изменения вызываем ref.invalidate(homeworkProvider).
 final homeworkProvider = FutureProvider<List<HomeworkItem>>((ref) => ref.watch(homeworkRepositoryProvider).all());

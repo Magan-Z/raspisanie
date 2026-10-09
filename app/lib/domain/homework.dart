@@ -4,6 +4,7 @@
 import 'dart:convert';
 
 import '../core/week.dart';
+import 'attachment.dart';
 import 'models.dart';
 
 class HomeworkItem {
@@ -15,7 +16,7 @@ class HomeworkItem {
     this.kind,
     this.done = false,
     required this.createdAt,
-    this.photoPath,
+    this.attachments = const [],
   });
 
   final int? id; // null — ещё не сохранено в базу
@@ -25,9 +26,9 @@ class HomeworkItem {
   final LessonKind? kind; // к лекции / к практике (null — любое занятие)
   final bool done;
   final DateTime createdAt;
-  final String? photoPath;
+  final List<Attachment> attachments; // фото и файлы к заданию
 
-  HomeworkItem copyWith({bool? done}) => HomeworkItem(
+  HomeworkItem copyWith({bool? done, List<Attachment>? attachments}) => HomeworkItem(
         id: id,
         subject: subject,
         text: text,
@@ -35,7 +36,7 @@ class HomeworkItem {
         kind: kind,
         done: done ?? this.done,
         createdAt: createdAt,
-        photoPath: photoPath,
+        attachments: attachments ?? this.attachments,
       );
 
   /// Одинаковое ДЗ (предмет, текст, срок) — нужно, чтобы импорт не плодил дубликаты.

@@ -8,6 +8,8 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:raspisanie/data/attachments/attachment_store.dart';
+import 'package:raspisanie/domain/attachment.dart';
 import 'package:raspisanie/domain/notification_plan.dart';
 import 'package:raspisanie/notifications/notification_gateway.dart';
 
@@ -77,4 +79,50 @@ class FakeGateway implements NotificationGateway {
   @override
   Future<void> showNow({required int id, required String title, required String body, NotificationChannel channel = NotificationChannel.updates}) async =>
       shown.add(title);
+}
+
+/// Поддельное хранилище вложений: файлы копируются во временную папку теста.
+class FakeAttachmentStore implements AttachmentStore {
+  FakeAttachmentStore() : dir = Directory.systemTemp.createTempSync('attachments_test');
+  final Directory dir;
+  final deleted = <String>[];
+  final opened = <String>[];
+
+  @override
+  Future<Attachment> save(PickedFileInfo picked) async {
+    final target = '${dir.path}/${DateTime.now().microsecondsSinceEpoch}_${picked.name}';
+    File(picked.path).copySync(target);
+    return Attachment(name: picked.name, path: target, sizeBytes: picked.sizeBytes);
+  }
+
+  @override
+  Future<void> delete(Attachment a) async {
+    deleted.add(a.name);
+    final f = File(a.path);
+    if (f.existsSync()) f.deleteSync();
+  }
+
+  @override
+  bool exists(Attachment a) => File(a.path).existsSync();
+
+  @override
+  Future<String?> open(Attachment a) async {
+    opened.add(a.name);
+    return null;
+  }
+}
+
+/// Поддельное окно выбора: возвращает заранее заданные файлы.
+class FakeAttachmentPicker implements AttachmentPicker {
+  FakeAttachmentPicker(this.files);
+  final List<PickedFileInfo> files;
+
+  @override
+  Future<List<PickedFileInfo>> pickFiles() async => files;
+
+  @override
+  Future<List<PickedFileInfo>> pickImages() async => files;
+
+  @override
+  Future<PickedFileInfo?> takePhoto() async => files.isEmpty ? null : files.first;
 }

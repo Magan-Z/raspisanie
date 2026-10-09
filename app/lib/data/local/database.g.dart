@@ -1252,6 +1252,351 @@ class HomeworkCompanion extends UpdateCompanion<HomeworkRow> {
   }
 }
 
+class $HomeworkAttachmentsTable extends HomeworkAttachments
+    with TableInfo<$HomeworkAttachmentsTable, AttachmentRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HomeworkAttachmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _homeworkIdMeta = const VerificationMeta(
+    'homeworkId',
+  );
+  @override
+  late final GeneratedColumn<int> homeworkId = GeneratedColumn<int>(
+    'homework_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pathMeta = const VerificationMeta('path');
+  @override
+  late final GeneratedColumn<String> path = GeneratedColumn<String>(
+    'path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sizeBytesMeta = const VerificationMeta(
+    'sizeBytes',
+  );
+  @override
+  late final GeneratedColumn<int> sizeBytes = GeneratedColumn<int>(
+    'size_bytes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, homeworkId, name, path, sizeBytes];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'homework_attachments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AttachmentRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('homework_id')) {
+      context.handle(
+        _homeworkIdMeta,
+        homeworkId.isAcceptableOrUnknown(data['homework_id']!, _homeworkIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_homeworkIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('path')) {
+      context.handle(
+        _pathMeta,
+        path.isAcceptableOrUnknown(data['path']!, _pathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pathMeta);
+    }
+    if (data.containsKey('size_bytes')) {
+      context.handle(
+        _sizeBytesMeta,
+        sizeBytes.isAcceptableOrUnknown(data['size_bytes']!, _sizeBytesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AttachmentRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AttachmentRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      homeworkId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}homework_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      path: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}path'],
+      )!,
+      sizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}size_bytes'],
+      ),
+    );
+  }
+
+  @override
+  $HomeworkAttachmentsTable createAlias(String alias) {
+    return $HomeworkAttachmentsTable(attachedDatabase, alias);
+  }
+}
+
+class AttachmentRow extends DataClass implements Insertable<AttachmentRow> {
+  final int id;
+  final int homeworkId;
+  final String name;
+  final String path;
+  final int? sizeBytes;
+  const AttachmentRow({
+    required this.id,
+    required this.homeworkId,
+    required this.name,
+    required this.path,
+    this.sizeBytes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['homework_id'] = Variable<int>(homeworkId);
+    map['name'] = Variable<String>(name);
+    map['path'] = Variable<String>(path);
+    if (!nullToAbsent || sizeBytes != null) {
+      map['size_bytes'] = Variable<int>(sizeBytes);
+    }
+    return map;
+  }
+
+  HomeworkAttachmentsCompanion toCompanion(bool nullToAbsent) {
+    return HomeworkAttachmentsCompanion(
+      id: Value(id),
+      homeworkId: Value(homeworkId),
+      name: Value(name),
+      path: Value(path),
+      sizeBytes: sizeBytes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sizeBytes),
+    );
+  }
+
+  factory AttachmentRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AttachmentRow(
+      id: serializer.fromJson<int>(json['id']),
+      homeworkId: serializer.fromJson<int>(json['homeworkId']),
+      name: serializer.fromJson<String>(json['name']),
+      path: serializer.fromJson<String>(json['path']),
+      sizeBytes: serializer.fromJson<int?>(json['sizeBytes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'homeworkId': serializer.toJson<int>(homeworkId),
+      'name': serializer.toJson<String>(name),
+      'path': serializer.toJson<String>(path),
+      'sizeBytes': serializer.toJson<int?>(sizeBytes),
+    };
+  }
+
+  AttachmentRow copyWith({
+    int? id,
+    int? homeworkId,
+    String? name,
+    String? path,
+    Value<int?> sizeBytes = const Value.absent(),
+  }) => AttachmentRow(
+    id: id ?? this.id,
+    homeworkId: homeworkId ?? this.homeworkId,
+    name: name ?? this.name,
+    path: path ?? this.path,
+    sizeBytes: sizeBytes.present ? sizeBytes.value : this.sizeBytes,
+  );
+  AttachmentRow copyWithCompanion(HomeworkAttachmentsCompanion data) {
+    return AttachmentRow(
+      id: data.id.present ? data.id.value : this.id,
+      homeworkId: data.homeworkId.present
+          ? data.homeworkId.value
+          : this.homeworkId,
+      name: data.name.present ? data.name.value : this.name,
+      path: data.path.present ? data.path.value : this.path,
+      sizeBytes: data.sizeBytes.present ? data.sizeBytes.value : this.sizeBytes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AttachmentRow(')
+          ..write('id: $id, ')
+          ..write('homeworkId: $homeworkId, ')
+          ..write('name: $name, ')
+          ..write('path: $path, ')
+          ..write('sizeBytes: $sizeBytes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, homeworkId, name, path, sizeBytes);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AttachmentRow &&
+          other.id == this.id &&
+          other.homeworkId == this.homeworkId &&
+          other.name == this.name &&
+          other.path == this.path &&
+          other.sizeBytes == this.sizeBytes);
+}
+
+class HomeworkAttachmentsCompanion extends UpdateCompanion<AttachmentRow> {
+  final Value<int> id;
+  final Value<int> homeworkId;
+  final Value<String> name;
+  final Value<String> path;
+  final Value<int?> sizeBytes;
+  const HomeworkAttachmentsCompanion({
+    this.id = const Value.absent(),
+    this.homeworkId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.path = const Value.absent(),
+    this.sizeBytes = const Value.absent(),
+  });
+  HomeworkAttachmentsCompanion.insert({
+    this.id = const Value.absent(),
+    required int homeworkId,
+    required String name,
+    required String path,
+    this.sizeBytes = const Value.absent(),
+  }) : homeworkId = Value(homeworkId),
+       name = Value(name),
+       path = Value(path);
+  static Insertable<AttachmentRow> custom({
+    Expression<int>? id,
+    Expression<int>? homeworkId,
+    Expression<String>? name,
+    Expression<String>? path,
+    Expression<int>? sizeBytes,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (homeworkId != null) 'homework_id': homeworkId,
+      if (name != null) 'name': name,
+      if (path != null) 'path': path,
+      if (sizeBytes != null) 'size_bytes': sizeBytes,
+    });
+  }
+
+  HomeworkAttachmentsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? homeworkId,
+    Value<String>? name,
+    Value<String>? path,
+    Value<int?>? sizeBytes,
+  }) {
+    return HomeworkAttachmentsCompanion(
+      id: id ?? this.id,
+      homeworkId: homeworkId ?? this.homeworkId,
+      name: name ?? this.name,
+      path: path ?? this.path,
+      sizeBytes: sizeBytes ?? this.sizeBytes,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (homeworkId.present) {
+      map['homework_id'] = Variable<int>(homeworkId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (path.present) {
+      map['path'] = Variable<String>(path.value);
+    }
+    if (sizeBytes.present) {
+      map['size_bytes'] = Variable<int>(sizeBytes.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HomeworkAttachmentsCompanion(')
+          ..write('id: $id, ')
+          ..write('homeworkId: $homeworkId, ')
+          ..write('name: $name, ')
+          ..write('path: $path, ')
+          ..write('sizeBytes: $sizeBytes')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $OverridesTable extends Overrides
     with TableInfo<$OverridesTable, OverrideRow> {
   @override
@@ -2765,6 +3110,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ScheduleCacheTable scheduleCache = $ScheduleCacheTable(this);
   late final $IndexCacheTable indexCache = $IndexCacheTable(this);
   late final $HomeworkTable homework = $HomeworkTable(this);
+  late final $HomeworkAttachmentsTable homeworkAttachments =
+      $HomeworkAttachmentsTable(this);
   late final $OverridesTable overrides = $OverridesTable(this);
   late final $SubjectAliasesTable subjectAliases = $SubjectAliasesTable(this);
   late final $NotesTable notes = $NotesTable(this);
@@ -2777,6 +3124,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     scheduleCache,
     indexCache,
     homework,
+    homeworkAttachments,
     overrides,
     subjectAliases,
     notes,
@@ -3470,6 +3818,223 @@ typedef $$HomeworkTableProcessedTableManager =
       $$HomeworkTableUpdateCompanionBuilder,
       (HomeworkRow, BaseReferences<_$AppDatabase, $HomeworkTable, HomeworkRow>),
       HomeworkRow,
+      PrefetchHooks Function()
+    >;
+typedef $$HomeworkAttachmentsTableCreateCompanionBuilder =
+    HomeworkAttachmentsCompanion Function({
+      Value<int> id,
+      required int homeworkId,
+      required String name,
+      required String path,
+      Value<int?> sizeBytes,
+    });
+typedef $$HomeworkAttachmentsTableUpdateCompanionBuilder =
+    HomeworkAttachmentsCompanion Function({
+      Value<int> id,
+      Value<int> homeworkId,
+      Value<String> name,
+      Value<String> path,
+      Value<int?> sizeBytes,
+    });
+
+class $$HomeworkAttachmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $HomeworkAttachmentsTable> {
+  $$HomeworkAttachmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get homeworkId => $composableBuilder(
+    column: $table.homeworkId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get path => $composableBuilder(
+    column: $table.path,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HomeworkAttachmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $HomeworkAttachmentsTable> {
+  $$HomeworkAttachmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get homeworkId => $composableBuilder(
+    column: $table.homeworkId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get path => $composableBuilder(
+    column: $table.path,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sizeBytes => $composableBuilder(
+    column: $table.sizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HomeworkAttachmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HomeworkAttachmentsTable> {
+  $$HomeworkAttachmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get homeworkId => $composableBuilder(
+    column: $table.homeworkId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get path =>
+      $composableBuilder(column: $table.path, builder: (column) => column);
+
+  GeneratedColumn<int> get sizeBytes =>
+      $composableBuilder(column: $table.sizeBytes, builder: (column) => column);
+}
+
+class $$HomeworkAttachmentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HomeworkAttachmentsTable,
+          AttachmentRow,
+          $$HomeworkAttachmentsTableFilterComposer,
+          $$HomeworkAttachmentsTableOrderingComposer,
+          $$HomeworkAttachmentsTableAnnotationComposer,
+          $$HomeworkAttachmentsTableCreateCompanionBuilder,
+          $$HomeworkAttachmentsTableUpdateCompanionBuilder,
+          (
+            AttachmentRow,
+            BaseReferences<
+              _$AppDatabase,
+              $HomeworkAttachmentsTable,
+              AttachmentRow
+            >,
+          ),
+          AttachmentRow,
+          PrefetchHooks Function()
+        > {
+  $$HomeworkAttachmentsTableTableManager(
+    _$AppDatabase db,
+    $HomeworkAttachmentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HomeworkAttachmentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HomeworkAttachmentsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HomeworkAttachmentsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> homeworkId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> path = const Value.absent(),
+                Value<int?> sizeBytes = const Value.absent(),
+              }) => HomeworkAttachmentsCompanion(
+                id: id,
+                homeworkId: homeworkId,
+                name: name,
+                path: path,
+                sizeBytes: sizeBytes,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int homeworkId,
+                required String name,
+                required String path,
+                Value<int?> sizeBytes = const Value.absent(),
+              }) => HomeworkAttachmentsCompanion.insert(
+                id: id,
+                homeworkId: homeworkId,
+                name: name,
+                path: path,
+                sizeBytes: sizeBytes,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$HomeworkAttachmentsTable, AttachmentRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $HomeworkAttachmentsTable,
+                    AttachmentRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HomeworkAttachmentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HomeworkAttachmentsTable,
+      AttachmentRow,
+      $$HomeworkAttachmentsTableFilterComposer,
+      $$HomeworkAttachmentsTableOrderingComposer,
+      $$HomeworkAttachmentsTableAnnotationComposer,
+      $$HomeworkAttachmentsTableCreateCompanionBuilder,
+      $$HomeworkAttachmentsTableUpdateCompanionBuilder,
+      (
+        AttachmentRow,
+        BaseReferences<_$AppDatabase, $HomeworkAttachmentsTable, AttachmentRow>,
+      ),
+      AttachmentRow,
       PrefetchHooks Function()
     >;
 typedef $$OverridesTableCreateCompanionBuilder = OverridesCompanion Function({
@@ -4332,6 +4897,8 @@ class $AppDatabaseManager {
       $$IndexCacheTableTableManager(_db, _db.indexCache);
   $$HomeworkTableTableManager get homework =>
       $$HomeworkTableTableManager(_db, _db.homework);
+  $$HomeworkAttachmentsTableTableManager get homeworkAttachments =>
+      $$HomeworkAttachmentsTableTableManager(_db, _db.homeworkAttachments);
   $$OverridesTableTableManager get overrides =>
       $$OverridesTableTableManager(_db, _db.overrides);
   $$SubjectAliasesTableTableManager get subjectAliases =>

@@ -2,9 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../app_state.dart';
+import '../../data/attachments/attachment_store.dart';
+import '../../domain/attachment.dart';
+import 'attachment_widgets.dart';
 import '../../core/formatting.dart';
 import '../../domain/homework.dart';
 import '../../domain/homework_due.dart';
@@ -34,16 +36,25 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
   String? _subject;
   LessonKind? _kind; // null — к любому занятию
   DateTime? _manualDue; // выбранный вручную срок
-  String? _photoPath;
+  final List<Attachment> _files = []; // уже скопированные в память приложения
+  bool _saved = false;
+  late final AttachmentStore _store; // запоминаем заранее: в dispose() ref уже читать нельзя
 
   @override
   void initState() {
     super.initState();
     _subject = widget.initialSubject;
+    _store = ref.read(attachmentStoreProvider);
   }
 
   @override
   void dispose() {
+    // Закрыли окно, не сохранив: скопированные файлы больше никому не нужны
+    if (!_saved) {
+      for (final f in _files) {
+        _store.delete(f);
+      }
+    }
     _text.dispose();
     super.dispose();
   }
@@ -56,9 +67,62 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
     return nextOccurrence(subject, today, data.index, data.schedule, data.profile, kind: _kind);
   }
 
-  Future<void> _pickPhoto() async {
-    final file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1600, imageQuality: 85);
-    if (file != null) setState(() => _photoPath = file.path);
+  /// Меню «Прикрепить»: камера, галерея или любой файл.
+  Future<void> _attach() async {
+    final picker = ref.read(attachmentPickerProvider);
+    final source = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(leading: const Icon(Icons.photo_camera_outlined), title: const Text('Сфотографировать'), onTap: () => Navigator.pop(context, 'camera')),
+          ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Фото из галереи'), onTap: () => Navigator.pop(context, 'gallery')),
+          ListTile(
+            leading: const Icon(Icons.attach_file_rounded),
+            title: const Text('Файл'),
+            subtitle: const Text('PDF, документ, презентация, таблица…'),
+            onTap: () => Navigator.pop(context, 'file'),
+          ),
+        ]),
+      ),
+    );
+    if (source == null) return;
+
+    try {
+      final picked = switch (source) {
+        'camera' => [?await picker.takePhoto()],
+        'gallery' => await picker.pickImages(),
+        _ => await picker.pickFiles(),
+      };
+      await _addPicked(picked);
+    } catch (_) {
+      _say('Не удалось выбрать файл. Проверьте разрешения приложения в настройках телефона.');
+    }
+  }
+
+  Future<void> _addPicked(List<PickedFileInfo> picked) async {
+    final store = ref.read(attachmentStoreProvider);
+    var skippedBig = 0;
+    var skippedMany = 0;
+    for (final p in picked) {
+      if (_files.length >= maxAttachmentsPerHomework) {
+        skippedMany++;
+        continue;
+      }
+      if ((p.sizeBytes ?? 0) > maxAttachmentBytes) {
+        skippedBig++;
+        continue;
+      }
+      final saved = await store.save(p);
+      if (!mounted) return;
+      setState(() => _files.add(saved));
+    }
+    if (skippedBig > 0) _say('Файл больше ${maxAttachmentBytes ~/ (1024 * 1024)} МБ не прикреплён');
+    if (skippedMany > 0) _say('К одному заданию можно прикрепить не больше $maxAttachmentsPerHomework файлов');
+  }
+
+  void _say(String text) {
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   Future<void> _save(DateTime due) async {
@@ -68,8 +132,9 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
           dueDate: due,
           kind: _kind,
           createdAt: DateTime.now().toUtc(),
-          photoPath: _photoPath,
+          attachments: _files,
         ));
+    _saved = true;
     ref.invalidate(homeworkProvider);
     if (mounted) Navigator.of(context).pop();
   }
@@ -141,11 +206,25 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
                 },
               ),
             ),
+            if (_files.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Wrap(spacing: 8, runSpacing: 8, children: [
+                  for (final f in _files)
+                    AttachmentTile(
+                      attachment: f,
+                      onRemove: () {
+                        ref.read(attachmentStoreProvider).delete(f);
+                        setState(() => _files.remove(f));
+                      },
+                    ),
+                ]),
+              ),
             Row(children: [
               OutlinedButton.icon(
-                onPressed: _pickPhoto,
-                icon: const Icon(Icons.photo_outlined),
-                label: Text(_photoPath == null ? 'Фото доски' : 'Фото прикреплено'),
+                onPressed: _files.length >= maxAttachmentsPerHomework ? null : _attach,
+                icon: const Icon(Icons.attach_file_rounded),
+                label: Text(_files.isEmpty ? 'Прикрепить' : 'Ещё (${_files.length})'),
               ),
               const Spacer(),
               FilledButton(onPressed: canSave ? () => _save(due) : null, child: const Text('Добавить')),
