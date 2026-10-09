@@ -169,6 +169,27 @@ void main() {
     });
   }
 
+  // Все цветовые темы: «Сегодня» светлая и тёмная, настройки с выбором темы
+  for (final id in ['ocean', 'forest', 'plum', 'sunset', 'graphite']) {
+    for (final dark in [false, true]) {
+      testWidgets('palette $id ${dark ? 'dark' : 'light'}', (tester) async {
+        await tester.runAsync(loadFonts);
+        await shoot(tester, 'A-palette-$id-${dark ? 'dark' : 'light'}', dark: dark, prefs: {'palette': id});
+      });
+    }
+  }
+  testWidgets('amoled', (tester) async {
+    await tester.runAsync(loadFonts);
+    await shoot(tester, 'A-amoled', dark: true, prefs: {'amoled': true, 'palette': 'ocean'});
+  });
+  testWidgets('settings palettes', (tester) async {
+    await tester.runAsync(loadFonts);
+    await shoot(tester, 'A-settings-themes', dark: false, act: () async {
+      await tester.tap(find.text('Настройки').last);
+      await tester.pumpAndSettle();
+    });
+  });
+
   testWidgets('today large font', (tester) async {
     await tester.runAsync(loadFonts);
     await shoot(tester, '7-today-bigfont', dark: false, textScale: 1.6);

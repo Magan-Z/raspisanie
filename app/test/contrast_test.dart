@@ -21,7 +21,15 @@ double contrast(Color fg, Color bg) {
 }
 
 void main() {
-  for (final (name, scheme) in [('светлая', BrandColors.light()), ('тёмная', BrandColors.dark())]) {
+  // Все цветовые темы: светлая, тёмная и тёмная с чёрным фоном
+  final schemes = <(String, ColorScheme)>[
+    for (final p in AppPalette.values) ...[
+      ('${p.title}, светлая', BrandColors.scheme(p, Brightness.light)),
+      ('${p.title}, тёмная', BrandColors.scheme(p, Brightness.dark)),
+      ('${p.title}, чёрный фон', BrandColors.scheme(p, Brightness.dark, amoled: true)),
+    ],
+  ];
+  for (final (name, scheme) in schemes) {
     group('Тема: $name', () {
       void expectAa(String what, Color fg, Color bg, {double min = 4.5}) {
         final ratio = contrast(fg, bg);

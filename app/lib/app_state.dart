@@ -22,6 +22,7 @@ import 'domain/diff_summary.dart';
 import 'domain/homework.dart';
 import 'domain/models.dart';
 import 'notifications/notification_gateway.dart';
+import 'theme/brand_colors.dart';
 import 'widget_bridge/deep_links.dart';
 import 'widget_bridge/widget_sync.dart';
 
@@ -55,6 +56,8 @@ class Settings {
     this.notifyBeforeMin = 10,
     this.eveningHomeworkReminder = true,
     this.useDynamicColor = false,
+    this.palette = AppPalette.petrol,
+    this.amoled = false,
   });
 
   final UserProfile? profile; // null — первый запуск, профиль ещё не выбран
@@ -63,6 +66,8 @@ class Settings {
   final int notifyBeforeMin; // 0 — уведомления перед парой выключены
   final bool eveningHomeworkReminder;
   final bool useDynamicColor; // цвета из обоев (Material You) вместо фирменных
+  final AppPalette palette; // цветовая тема
+  final bool amoled; // чёрный фон в тёмной теме
 }
 
 class SettingsNotifier extends Notifier<Settings> {
@@ -86,6 +91,8 @@ class SettingsNotifier extends Notifier<Settings> {
       notifyBeforeMin: prefs.getInt('notifyBeforeMin') ?? 10,
       eveningHomeworkReminder: prefs.getBool('eveningHomeworkReminder') ?? true,
       useDynamicColor: prefs.getBool('useDynamicColor') ?? false,
+      palette: AppPalette.parse(prefs.getString('palette')),
+      amoled: prefs.getBool('amoled') ?? false,
     );
   }
 
@@ -113,6 +120,16 @@ class SettingsNotifier extends Notifier<Settings> {
 
   Future<void> setNotifyBeforeMin(int minutes) async {
     await _prefs.setInt('notifyBeforeMin', minutes);
+    ref.invalidateSelf();
+  }
+
+  Future<void> setPalette(AppPalette palette) async {
+    await _prefs.setString('palette', palette.id);
+    ref.invalidateSelf();
+  }
+
+  Future<void> setAmoled(bool value) async {
+    await _prefs.setBool('amoled', value);
     ref.invalidateSelf();
   }
 

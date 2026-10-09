@@ -34,7 +34,12 @@ class RaspisanieApp extends ConsumerWidget {
     return DynamicColorBuilder(
       builder: (lightDynamic, darkDynamic) {
         ThemeData theme(Brightness b, ColorScheme? dynamic) => buildTheme(
-              resolveScheme(brightness: b, dynamicScheme: settings.useDynamicColor ? dynamic : null),
+              resolveScheme(
+                brightness: b,
+                dynamicScheme: settings.useDynamicColor ? dynamic : null,
+                palette: settings.palette,
+                amoled: settings.amoled,
+              ),
             );
         return MaterialApp(
           title: 'Расписание',

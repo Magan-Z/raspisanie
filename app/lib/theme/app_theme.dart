@@ -171,8 +171,17 @@ ThemeData buildTheme(ColorScheme scheme) {
   );
 }
 
-/// Схема цветов: фирменная или из обоев (Material You), если пользователь так выбрал.
-ColorScheme resolveScheme({required Brightness brightness, ColorScheme? dynamicScheme}) {
-  if (dynamicScheme != null) return dynamicScheme.harmonized();
-  return brightness == Brightness.dark ? BrandColors.dark() : BrandColors.light();
+/// Схема цветов: выбранная цветовая тема или цвета из обоев (Material You), если пользователь так выбрал.
+/// [amoled] — чёрный фон в тёмной теме.
+ColorScheme resolveScheme({
+  required Brightness brightness,
+  ColorScheme? dynamicScheme,
+  AppPalette palette = AppPalette.petrol,
+  bool amoled = false,
+}) {
+  if (dynamicScheme != null) {
+    final scheme = dynamicScheme.harmonized();
+    return brightness == Brightness.dark && amoled ? BrandColors.toAmoled(scheme) : scheme;
+  }
+  return BrandColors.scheme(palette, brightness, amoled: amoled);
 }

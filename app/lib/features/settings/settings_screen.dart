@@ -10,6 +10,7 @@ import '../../core/formatting.dart';
 import '../../domain/homework.dart';
 import '../../domain/models.dart';
 import '../../theme/tokens.dart';
+import 'palette_picker.dart';
 import '../common/brand_mark.dart';
 import '../onboarding/onboarding_screen.dart';
 
@@ -82,6 +83,15 @@ class SettingsScreen extends ConsumerWidget {
               );
               if (picked != null) notifier.setThemeMode(picked);
             },
+          ),
+          // Цветовая тема: наглядные карточки. Если включены цвета из обоев, они главнее
+          if (!settings.useDynamicColor) PalettePicker(selected: settings.palette, amoled: settings.amoled, onSelected: notifier.setPalette),
+          _SwitchRow(
+            icon: Icons.contrast_rounded,
+            title: 'Чёрный фон',
+            subtitle: 'Для тёмной темы: экран OLED экономит заряд, а карточки ярче выделяются',
+            value: settings.amoled,
+            onChanged: notifier.setAmoled,
           ),
           _SwitchRow(
             icon: Icons.palette_rounded,

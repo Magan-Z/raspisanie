@@ -16,6 +16,7 @@ import 'package:raspisanie/data/attachments/attachment_store.dart';
 import 'package:raspisanie/data/local/database.dart';
 import 'package:raspisanie/data/repositories/schedule_repository.dart';
 import 'package:raspisanie/main.dart';
+import 'package:raspisanie/theme/brand_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fakes.dart';
@@ -197,6 +198,30 @@ void main() {
     await tester.tapAt(const Offset(10, 10)); // закрыть окно
     await _settle(tester);
     expect(store.deleted, ['Фото.jpg']);
+  });
+
+  testWidgets('Настройки: выбор цветовой темы меняет цвета и запоминается; «Чёрный фон» работает в тёмной теме', (tester) async {
+    await _start(tester, prefs: {...profile, 'theme': 'light'});
+    await tester.tap(find.text('Настройки').last);
+    await _settle(tester);
+
+    Color primary() => Theme.of(tester.element(find.byType(Scaffold).first)).colorScheme.primary;
+    expect(primary(), BrandColors.scheme(AppPalette.petrol, Brightness.light).primary);
+
+    await tester.tap(find.text('Океан'));
+    await _settle(tester);
+    expect(primary(), BrandColors.scheme(AppPalette.ocean, Brightness.light).primary);
+    expect((await SharedPreferences.getInstance()).getString('palette'), 'ocean');
+
+    // Тёмная тема + чёрный фон
+    await tester.tap(find.text('Тема').first);
+    await _settle(tester);
+    await tester.tap(find.text('Тёмная'));
+    await _settle(tester);
+    await tester.tap(find.text('Чёрный фон'));
+    await _settle(tester);
+    final surface = Theme.of(tester.element(find.byType(Scaffold).first)).colorScheme.surface;
+    expect(surface, Colors.black);
   });
 
   testWidgets('Поиск: свободные аудитории и расписание преподавателя', (tester) async {
