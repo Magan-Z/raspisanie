@@ -1,0 +1,24 @@
+# Поддержка общего сервера старост (Supabase) «бодрым».
+# Бесплатные проекты Supabase ставятся на паузу после недели без обращений. Студенты пользуются приложением каждый день,
+# но на каникулах обращений может не быть — поэтому раз в три дня делаем безобидный запрос (читаем данные одной группы).
+name: Поддержка сервера старост
+
+on:
+  schedule:
+    - cron: "17 6 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Запрос к серверу
+        env:
+          # Публичные значения проекта (они же вшиты в приложение), не секреты
+          URL: https://ktavbvmeohtwzdoptueq.supabase.co
+          KEY: sb_publishable_dYboAghNJ7NXFp6lF5prSA_GspY9-p7
+        run: |
+          code=$(curl -s -o /tmp/answer.json -w "%{http_code}" -X POST "$URL/rest/v1/rpc/get_group_data" \
+            -H "apikey: $KEY" -H "Content-Type: application/json" -d '{"p_group":"ofo-1-bi-25"}')
+          cat /tmp/answer.json; echo
+          test "$code" = "200"

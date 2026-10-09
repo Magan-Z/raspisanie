@@ -3,6 +3,7 @@
 //   flutter test tool/screenshots_test.dart
 // Картинки появятся в /tmp/claude-shots/design/. Шрифт значков берётся из установленного Flutter.
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -15,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:raspisanie/app_state.dart';
 import 'package:raspisanie/core/clock.dart';
 import 'package:raspisanie/data/local/database.dart';
+import 'package:raspisanie/data/remote/shared_api.dart';
 import 'package:raspisanie/data/repositories/schedule_repository.dart';
 import 'package:raspisanie/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,8 +34,17 @@ Future<void> loadFonts() async {
   await icons.load();
 }
 
+Map<String, dynamic> backend0(String hash) => {
+      'id': 'o1', 'base_hash': hash, 'date': '2026-10-07', 'pair': 4, 'type': 'replace', 'subject': null, 'room': '3-33',
+      'teacher': null, 'note': null, 'kind': null, 'repeat_weekly': false, 'match_subject': null, 'deleted': false,
+      'updated_at': '2026-10-09T12:00:00+00:00',
+    };
+
+Map<String, dynamic> backend0hw(String subject, String text, String due) =>
+    {'id': '$subject$due', 'subject': subject, 'body': text, 'due_date': due, 'kind': null, 'deleted': false, 'updated_at': '2026-10-09T12:00:00+00:00'};
+
 void main() {
-  Future<void> shoot(WidgetTester tester, String name, {required bool dark, DateTime? now, double textScale = 1, Future<void> Function()? act, Map<String, Object> prefs = const {}, bool noProfile = false, Size size = const Size(1080, 2340)}) async {
+  Future<void> shoot(WidgetTester tester, String name, {required bool dark, DateTime? now, double textScale = 1, Future<void> Function()? act, Map<String, Object> prefs = const {}, bool noProfile = false, Size size = const Size(1080, 2340), SharedApi? sharedApi}) async {
     tester.view.physicalSize = size;
     // Как на настоящем телефоне: строка состояния сверху и жестовая полоса снизу
     tester.view.padding = const FakeViewPadding(top: 72, bottom: 66);
@@ -65,6 +76,7 @@ void main() {
           databaseProvider.overrideWithValue(db),
           repositoryProvider.overrideWithValue(ScheduleRepository(db: db, assets: DiskAssets())),
           notificationGatewayProvider.overrideWithValue(FakeGateway()),
+          sharedApiProvider.overrideWithValue(sharedApi),
           clockProvider.overrideWithValue(FixedClock(now ?? DateTime.utc(2026, 10, 7, 10, 30))), // ср 13:30 МСК
         ],
         child: const RaspisanieApp(),
@@ -190,6 +202,44 @@ void main() {
     });
   });
 
+  // Староста и группа: правки видны студенту, вкладка ДЗ, настройки старосты
+  String hashOfGroup() {
+    final index = jsonDecode(File('assets/schedule/index.json').readAsStringSync()) as Map<String, dynamic>;
+    for (final form in index['forms'] as List) {
+      for (final g in (form as Map)['groups'] as List) {
+        if ((g as Map)['id'] == 'ofo-1-bi-25') return g['hash'] as String;
+      }
+    }
+    return '';
+  }
+
+  testWidgets('starosta student today', (tester) async {
+    await tester.runAsync(loadFonts);
+    final backend = FakeBackend(hash: hashOfGroup())..overrides['o1'] = backend0(hashOfGroup());
+    await shoot(tester, 'B-starosta-today', dark: false, sharedApi: backend.api());
+  });
+  testWidgets('starosta homework tab', (tester) async {
+    await tester.runAsync(loadFonts);
+    final backend = FakeBackend(hash: hashOfGroup())
+      ..homework['h1'] = backend0hw('Философия', 'Прочитать главу 3 и подготовить конспект', '2026-10-14')
+      ..homework['h2'] = backend0hw('ЧТК и этика', 'Эссе на одну страницу', '2026-10-09');
+    await shoot(tester, 'B-starosta-homework', dark: false, sharedApi: backend.api(), act: () async {
+      await tester.tap(find.text('ДЗ').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('От старосты'));
+      await tester.pumpAndSettle();
+    });
+  });
+  testWidgets('starosta settings editor', (tester) async {
+    await tester.runAsync(loadFonts);
+    final backend = FakeBackend(hash: hashOfGroup());
+    await shoot(tester, 'B-starosta-settings', dark: false, sharedApi: backend.api(), prefs: {'editorToken': 't', 'editorGroup': 'ofo-1-bi-25'}, act: () async {
+      await tester.tap(find.text('Настройки').last);
+      await tester.pumpAndSettle();
+      await tester.dragUntilVisible(find.text('Изменения для группы'), find.byType(Scrollable).first, const Offset(0, -200));
+      await tester.pumpAndSettle();
+    });
+  });
   testWidgets('today large font', (tester) async {
     await tester.runAsync(loadFonts);
     await shoot(tester, '7-today-bigfont', dark: false, textScale: 1.6);
