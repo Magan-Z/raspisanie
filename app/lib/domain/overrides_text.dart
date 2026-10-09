@@ -3,10 +3,15 @@
 import 'models.dart';
 
 String describeOverride(Override o) {
+  final base = _describeBase(o);
+  return o.repeatWeekly ? '$base · каждую неделю' : base;
+}
+
+String _describeBase(Override o) {
   final pair = '${o.pair} пара';
   switch (o.type) {
     case OverrideType.cancel:
-      return 'Отменена: $pair';
+      return o.matchSubject == null ? 'Отменена: $pair' : 'Отменена: $pair (${o.matchSubject})';
     case OverrideType.replace:
       final changes = [
         if (o.subject != null) 'предмет: ${o.subject}',

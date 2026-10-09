@@ -1338,6 +1338,41 @@ class $OverridesTable extends Overrides
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _repeatWeeklyMeta = const VerificationMeta(
+    'repeatWeekly',
+  );
+  @override
+  late final GeneratedColumn<bool> repeatWeekly = GeneratedColumn<bool>(
+    'repeat_weekly',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("repeat_weekly" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _matchSubjectMeta = const VerificationMeta(
+    'matchSubject',
+  );
+  @override
+  late final GeneratedColumn<String> matchSubject = GeneratedColumn<String>(
+    'match_subject',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1348,6 +1383,9 @@ class $OverridesTable extends Overrides
     room,
     teacher,
     note,
+    kind,
+    repeatWeekly,
+    matchSubject,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1412,6 +1450,30 @@ class $OverridesTable extends Overrides
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
       );
     }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('repeat_weekly')) {
+      context.handle(
+        _repeatWeeklyMeta,
+        repeatWeekly.isAcceptableOrUnknown(
+          data['repeat_weekly']!,
+          _repeatWeeklyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('match_subject')) {
+      context.handle(
+        _matchSubjectMeta,
+        matchSubject.isAcceptableOrUnknown(
+          data['match_subject']!,
+          _matchSubjectMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1453,6 +1515,18 @@ class $OverridesTable extends Overrides
         DriftSqlType.string,
         data['${effectivePrefix}note'],
       ),
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      ),
+      repeatWeekly: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}repeat_weekly'],
+      )!,
+      matchSubject: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}match_subject'],
+      ),
     );
   }
 
@@ -1471,6 +1545,9 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
   final String? room;
   final String? teacher;
   final String? note;
+  final String? kind;
+  final bool repeatWeekly;
+  final String? matchSubject;
   const OverrideRow({
     required this.id,
     required this.date,
@@ -1480,6 +1557,9 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
     this.room,
     this.teacher,
     this.note,
+    this.kind,
+    required this.repeatWeekly,
+    this.matchSubject,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1500,6 +1580,13 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
+    if (!nullToAbsent || kind != null) {
+      map['kind'] = Variable<String>(kind);
+    }
+    map['repeat_weekly'] = Variable<bool>(repeatWeekly);
+    if (!nullToAbsent || matchSubject != null) {
+      map['match_subject'] = Variable<String>(matchSubject);
+    }
     return map;
   }
 
@@ -1517,6 +1604,11 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
           ? const Value.absent()
           : Value(teacher),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      kind: kind == null && nullToAbsent ? const Value.absent() : Value(kind),
+      repeatWeekly: Value(repeatWeekly),
+      matchSubject: matchSubject == null && nullToAbsent
+          ? const Value.absent()
+          : Value(matchSubject),
     );
   }
 
@@ -1534,6 +1626,9 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
       room: serializer.fromJson<String?>(json['room']),
       teacher: serializer.fromJson<String?>(json['teacher']),
       note: serializer.fromJson<String?>(json['note']),
+      kind: serializer.fromJson<String?>(json['kind']),
+      repeatWeekly: serializer.fromJson<bool>(json['repeatWeekly']),
+      matchSubject: serializer.fromJson<String?>(json['matchSubject']),
     );
   }
   @override
@@ -1548,6 +1643,9 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
       'room': serializer.toJson<String?>(room),
       'teacher': serializer.toJson<String?>(teacher),
       'note': serializer.toJson<String?>(note),
+      'kind': serializer.toJson<String?>(kind),
+      'repeatWeekly': serializer.toJson<bool>(repeatWeekly),
+      'matchSubject': serializer.toJson<String?>(matchSubject),
     };
   }
 
@@ -1560,6 +1658,9 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
     Value<String?> room = const Value.absent(),
     Value<String?> teacher = const Value.absent(),
     Value<String?> note = const Value.absent(),
+    Value<String?> kind = const Value.absent(),
+    bool? repeatWeekly,
+    Value<String?> matchSubject = const Value.absent(),
   }) => OverrideRow(
     id: id ?? this.id,
     date: date ?? this.date,
@@ -1569,6 +1670,9 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
     room: room.present ? room.value : this.room,
     teacher: teacher.present ? teacher.value : this.teacher,
     note: note.present ? note.value : this.note,
+    kind: kind.present ? kind.value : this.kind,
+    repeatWeekly: repeatWeekly ?? this.repeatWeekly,
+    matchSubject: matchSubject.present ? matchSubject.value : this.matchSubject,
   );
   OverrideRow copyWithCompanion(OverridesCompanion data) {
     return OverrideRow(
@@ -1580,6 +1684,13 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
       room: data.room.present ? data.room.value : this.room,
       teacher: data.teacher.present ? data.teacher.value : this.teacher,
       note: data.note.present ? data.note.value : this.note,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      repeatWeekly: data.repeatWeekly.present
+          ? data.repeatWeekly.value
+          : this.repeatWeekly,
+      matchSubject: data.matchSubject.present
+          ? data.matchSubject.value
+          : this.matchSubject,
     );
   }
 
@@ -1593,14 +1704,28 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
           ..write('subject: $subject, ')
           ..write('room: $room, ')
           ..write('teacher: $teacher, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('kind: $kind, ')
+          ..write('repeatWeekly: $repeatWeekly, ')
+          ..write('matchSubject: $matchSubject')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, date, pair, type, subject, room, teacher, note);
+  int get hashCode => Object.hash(
+    id,
+    date,
+    pair,
+    type,
+    subject,
+    room,
+    teacher,
+    note,
+    kind,
+    repeatWeekly,
+    matchSubject,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1612,7 +1737,10 @@ class OverrideRow extends DataClass implements Insertable<OverrideRow> {
           other.subject == this.subject &&
           other.room == this.room &&
           other.teacher == this.teacher &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.kind == this.kind &&
+          other.repeatWeekly == this.repeatWeekly &&
+          other.matchSubject == this.matchSubject);
 }
 
 class OverridesCompanion extends UpdateCompanion<OverrideRow> {
@@ -1624,6 +1752,9 @@ class OverridesCompanion extends UpdateCompanion<OverrideRow> {
   final Value<String?> room;
   final Value<String?> teacher;
   final Value<String?> note;
+  final Value<String?> kind;
+  final Value<bool> repeatWeekly;
+  final Value<String?> matchSubject;
   const OverridesCompanion({
     this.id = const Value.absent(),
     this.date = const Value.absent(),
@@ -1633,6 +1764,9 @@ class OverridesCompanion extends UpdateCompanion<OverrideRow> {
     this.room = const Value.absent(),
     this.teacher = const Value.absent(),
     this.note = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.repeatWeekly = const Value.absent(),
+    this.matchSubject = const Value.absent(),
   });
   OverridesCompanion.insert({
     this.id = const Value.absent(),
@@ -1643,6 +1777,9 @@ class OverridesCompanion extends UpdateCompanion<OverrideRow> {
     this.room = const Value.absent(),
     this.teacher = const Value.absent(),
     this.note = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.repeatWeekly = const Value.absent(),
+    this.matchSubject = const Value.absent(),
   }) : date = Value(date),
        pair = Value(pair),
        type = Value(type);
@@ -1655,6 +1792,9 @@ class OverridesCompanion extends UpdateCompanion<OverrideRow> {
     Expression<String>? room,
     Expression<String>? teacher,
     Expression<String>? note,
+    Expression<String>? kind,
+    Expression<bool>? repeatWeekly,
+    Expression<String>? matchSubject,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1665,6 +1805,9 @@ class OverridesCompanion extends UpdateCompanion<OverrideRow> {
       if (room != null) 'room': room,
       if (teacher != null) 'teacher': teacher,
       if (note != null) 'note': note,
+      if (kind != null) 'kind': kind,
+      if (repeatWeekly != null) 'repeat_weekly': repeatWeekly,
+      if (matchSubject != null) 'match_subject': matchSubject,
     });
   }
 
@@ -1677,6 +1820,9 @@ class OverridesCompanion extends UpdateCompanion<OverrideRow> {
     Value<String?>? room,
     Value<String?>? teacher,
     Value<String?>? note,
+    Value<String?>? kind,
+    Value<bool>? repeatWeekly,
+    Value<String?>? matchSubject,
   }) {
     return OverridesCompanion(
       id: id ?? this.id,
@@ -1687,6 +1833,9 @@ class OverridesCompanion extends UpdateCompanion<OverrideRow> {
       room: room ?? this.room,
       teacher: teacher ?? this.teacher,
       note: note ?? this.note,
+      kind: kind ?? this.kind,
+      repeatWeekly: repeatWeekly ?? this.repeatWeekly,
+      matchSubject: matchSubject ?? this.matchSubject,
     );
   }
 
@@ -1717,6 +1866,15 @@ class OverridesCompanion extends UpdateCompanion<OverrideRow> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (repeatWeekly.present) {
+      map['repeat_weekly'] = Variable<bool>(repeatWeekly.value);
+    }
+    if (matchSubject.present) {
+      map['match_subject'] = Variable<String>(matchSubject.value);
+    }
     return map;
   }
 
@@ -1730,7 +1888,10 @@ class OverridesCompanion extends UpdateCompanion<OverrideRow> {
           ..write('subject: $subject, ')
           ..write('room: $room, ')
           ..write('teacher: $teacher, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('kind: $kind, ')
+          ..write('repeatWeekly: $repeatWeekly, ')
+          ..write('matchSubject: $matchSubject')
           ..write(')'))
         .toString();
   }
@@ -3320,6 +3481,9 @@ typedef $$OverridesTableCreateCompanionBuilder = OverridesCompanion Function({
   Value<String?> room,
   Value<String?> teacher,
   Value<String?> note,
+  Value<String?> kind,
+  Value<bool> repeatWeekly,
+  Value<String?> matchSubject,
 });
 typedef $$OverridesTableUpdateCompanionBuilder = OverridesCompanion Function({
   Value<int> id,
@@ -3330,6 +3494,9 @@ typedef $$OverridesTableUpdateCompanionBuilder = OverridesCompanion Function({
   Value<String?> room,
   Value<String?> teacher,
   Value<String?> note,
+  Value<String?> kind,
+  Value<bool> repeatWeekly,
+  Value<String?> matchSubject,
 });
 
 class $$OverridesTableFilterComposer
@@ -3378,6 +3545,21 @@ class $$OverridesTableFilterComposer
 
   ColumnFilters<String> get note => $composableBuilder(
     column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get repeatWeekly => $composableBuilder(
+    column: $table.repeatWeekly,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchSubject => $composableBuilder(
+    column: $table.matchSubject,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3430,6 +3612,21 @@ class $$OverridesTableOrderingComposer
     column: $table.note,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get repeatWeekly => $composableBuilder(
+    column: $table.repeatWeekly,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get matchSubject => $composableBuilder(
+    column: $table.matchSubject,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$OverridesTableAnnotationComposer
@@ -3464,6 +3661,19 @@ class $$OverridesTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<bool> get repeatWeekly => $composableBuilder(
+    column: $table.repeatWeekly,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get matchSubject => $composableBuilder(
+    column: $table.matchSubject,
+    builder: (column) => column,
+  );
 }
 
 class $$OverridesTableTableManager
@@ -3505,6 +3715,9 @@ class $$OverridesTableTableManager
                 Value<String?> room = const Value.absent(),
                 Value<String?> teacher = const Value.absent(),
                 Value<String?> note = const Value.absent(),
+                Value<String?> kind = const Value.absent(),
+                Value<bool> repeatWeekly = const Value.absent(),
+                Value<String?> matchSubject = const Value.absent(),
               }) => OverridesCompanion(
                 id: id,
                 date: date,
@@ -3514,6 +3727,9 @@ class $$OverridesTableTableManager
                 room: room,
                 teacher: teacher,
                 note: note,
+                kind: kind,
+                repeatWeekly: repeatWeekly,
+                matchSubject: matchSubject,
               ),
           createCompanionCallback:
               ({
@@ -3525,6 +3741,9 @@ class $$OverridesTableTableManager
                 Value<String?> room = const Value.absent(),
                 Value<String?> teacher = const Value.absent(),
                 Value<String?> note = const Value.absent(),
+                Value<String?> kind = const Value.absent(),
+                Value<bool> repeatWeekly = const Value.absent(),
+                Value<String?> matchSubject = const Value.absent(),
               }) => OverridesCompanion.insert(
                 id: id,
                 date: date,
@@ -3534,6 +3753,9 @@ class $$OverridesTableTableManager
                 room: room,
                 teacher: teacher,
                 note: note,
+                kind: kind,
+                repeatWeekly: repeatWeekly,
+                matchSubject: matchSubject,
               ),
           withReferenceMapper: (p0) => p0
               .map(

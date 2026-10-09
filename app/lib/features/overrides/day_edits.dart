@@ -1,5 +1,7 @@
-// Личные правки расписания: действия над парой (долгое нажатие) и список «Мои правки на этот день».
-// Правки живут только на телефоне. Они учитываются в «Сегодня», виджетах и уведомлениях.
+// Личные правки расписания: действия над парой (нажатие на пару) и список «Мои правки на этот день».
+// Объявили небольшое изменение — аудитория другая, пару переставили, отменили — не нужно ждать нового
+// файла расписания: можно поправить самому, на один день или на каждую неделю.
+// Правки живут только на телефоне. Они учитываются в «Сегодня», «Неделе», виджетах и уведомлениях.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,69 +10,127 @@ import '../../app_state.dart';
 import '../../core/formatting.dart';
 import '../../domain/models.dart';
 import '../../domain/overrides_text.dart';
+import '../../theme/tokens.dart';
 import '../homework/add_homework_sheet.dart';
 
-/// Долгое нажатие на пару: что с ней можно сделать.
+/// Нажатие на пару: что с ней можно сделать.
 Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
   // Меню закрывается раньше, чем заканчивается действие, поэтому всё нужное берём заранее у внешнего контекста
   final container = ProviderScope.containerOf(context);
   final repo = container.read(overridesRepositoryProvider);
+  final overrides = container.read(overridesProvider).value ?? const <Override>[];
+  final rulesForThisPair = [for (final o in overrides) if (o.appliesOn(lesson.date) && o.pair == lesson.pair) o];
+  final hasRepeatingRule = rulesForThisPair.any((o) => o.repeatWeekly);
 
-  Future<void> save(Override o) async {
-    await repo.save(o);
+  Future<void> save(List<Override> items) async {
+    for (final o in items) {
+      await repo.save(o);
+    }
     container.invalidate(overridesProvider);
   }
 
   return showModalBottomSheet<void>(
     context: context,
     useSafeArea: true,
+    isScrollControlled: true,
     builder: (sheetContext) {
       void close() => Navigator.of(sheetContext).pop();
+      final theme = Theme.of(sheetContext);
 
       return SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          ListTile(
-            title: Text(lesson.subject, style: Theme.of(sheetContext).textTheme.titleMedium),
-            subtitle: Text('${dayTitle(lesson.date)}, ${lesson.pair} пара'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.assignment_add),
-            title: const Text('Добавить ДЗ'),
-            onTap: () {
-              close();
-              showAddHomework(context, subject: lesson.subject);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.edit_outlined),
-            title: const Text('Изменить на этот день'),
-            subtitle: const Text('Другая аудитория, преподаватель или заметка'),
-            onTap: () async {
-              close();
-              final changed = await showDialog<Override>(context: context, builder: (_) => _ReplaceDialog(lesson: lesson));
-              if (changed != null) await save(changed);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.event_busy_outlined),
-            title: const Text('Отменить пару'),
-            subtitle: const Text('Только у вас, на этот день'),
-            onTap: () async {
-              close();
-              await save(Override(date: lesson.date, pair: lesson.pair, type: OverrideType.cancel));
-            },
-          ),
-          if (lesson.isPersonal)
+        child: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
             ListTile(
-              leading: const Icon(Icons.undo),
-              title: const Text('Вернуть как было'),
-              onTap: () async {
+              title: Text(lesson.subject, style: theme.textTheme.titleMedium),
+              subtitle: Text('${dayTitle(lesson.date)}, ${lesson.pair} пара'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.assignment_add),
+              title: const Text('Добавить ДЗ'),
+              onTap: () {
                 close();
-                await repo.clearPair(lesson.date, lesson.pair);
-                container.invalidate(overridesProvider);
+                showAddHomework(context, subject: lesson.subject);
               },
             ),
-        ]),
+            ListTile(
+              leading: const Icon(Icons.edit_rounded),
+              title: const Text('Изменить'),
+              subtitle: const Text('Другая аудитория, преподаватель или заметка'),
+              onTap: () async {
+                close();
+                final changed = await showDialog<Override>(context: context, builder: (_) => _ReplaceDialog(lesson: lesson));
+                if (changed != null) await save([changed]);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.drive_file_move_rounded),
+              title: const Text('Перенести'),
+              subtitle: const Text('На другую пару или в другой день'),
+              onTap: () async {
+                close();
+                final move = await showDialog<_Move>(context: context, builder: (_) => _MoveDialog(lesson: lesson));
+                if (move == null) return;
+                // Если пара уже была изменена вами, сначала убираем эти правки (новое место получит её текущие данные)
+                await repo.clearPair(lesson.date, lesson.pair);
+                await save([
+                  Override(
+                    date: lesson.date,
+                    pair: lesson.pair,
+                    type: OverrideType.cancel,
+                    repeatWeekly: move.repeat,
+                    matchSubject: move.repeat ? lesson.subject : null,
+                  ),
+                  Override(
+                    date: move.date,
+                    pair: move.pair,
+                    type: OverrideType.add,
+                    subject: lesson.subject,
+                    teacher: lesson.teacher,
+                    room: lesson.room,
+                    kind: lesson.kind,
+                    note: 'перенесено',
+                    repeatWeekly: move.repeat,
+                  ),
+                ]);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.event_busy_rounded),
+              title: const Text('Отменить пару'),
+              subtitle: const Text('Только у вас, на этот день'),
+              onTap: () async {
+                close();
+                await save([Override(date: lesson.date, pair: lesson.pair, type: OverrideType.cancel)]);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.event_repeat_rounded),
+              title: const Text('Отменить каждую неделю'),
+              subtitle: Text('С ${dateText(lesson.date)} и далее по каждому дню недели «${weekdayNames[lesson.date.weekday]}»'),
+              onTap: () async {
+                close();
+                await save([
+                  Override(date: lesson.date, pair: lesson.pair, type: OverrideType.cancel, repeatWeekly: true, matchSubject: lesson.subject),
+                ]);
+              },
+            ),
+            if (lesson.isPersonal || rulesForThisPair.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.undo_rounded),
+                title: const Text('Вернуть как было'),
+                subtitle: hasRepeatingRule ? const Text('Правка действует каждую неделю — она будет убрана для всех недель') : null,
+                onTap: () async {
+                  close();
+                  await repo.clearPair(lesson.date, lesson.pair);
+                  for (final rule in rulesForThisPair.where((o) => o.repeatWeekly)) {
+                    await repo.delete(rule.id!);
+                  }
+                  container.invalidate(overridesProvider);
+                },
+              ),
+            const SizedBox(height: Gap.sm),
+          ]),
+        ),
       );
     },
   );
@@ -93,45 +153,71 @@ class _DayEditsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final all = ref.watch(overridesProvider).value ?? const [];
-    final mine = [for (final o in all) if (o.date == day) o];
+    final mine = [for (final o in all) if (o.appliesOn(day)) o];
     final repo = ref.read(overridesRepositoryProvider);
+    final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Мои правки · ${dayTitle(day)}', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
-        if (mine.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Text('На этот день правок нет. Изменить или отменить пару можно долгим нажатием на неё.'),
-          ),
-        for (final o in mine)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(describeOverride(o)),
-            trailing: IconButton(
-              tooltip: 'Убрать правку',
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () async {
-                await repo.delete(o.id!);
-                ref.invalidate(overridesProvider);
-              },
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(Gap.xl, 0, Gap.xl, Gap.xl),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Мои правки · ${dayTitle(day)}', style: theme.textTheme.titleLarge),
+          const SizedBox(height: Gap.sm),
+          if (mine.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: Gap.md),
+              child: Text(
+                'На этот день правок нет. Изменить, перенести или отменить пару можно нажатием на неё.',
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
             ),
+          for (final o in mine)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(describeOverride(o)),
+              subtitle: o.repeatWeekly ? const Text('Действует каждую неделю — при удалении уберётся для всех недель') : null,
+              trailing: IconButton(
+                tooltip: 'Убрать правку',
+                icon: const Icon(Icons.delete_outline_rounded),
+                onPressed: () async {
+                  await repo.delete(o.id!);
+                  ref.invalidate(overridesProvider);
+                },
+              ),
+            ),
+          const SizedBox(height: Gap.md),
+          FilledButton.tonalIcon(
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Добавить свою пару'),
+            onPressed: () async {
+              final added = await showDialog<Override>(context: context, builder: (_) => _AddPairDialog(day: day));
+              if (added != null) {
+                await repo.save(added);
+                ref.invalidate(overridesProvider);
+              }
+            },
           ),
-        const SizedBox(height: 8),
-        FilledButton.tonalIcon(
-          icon: const Icon(Icons.add),
-          label: const Text('Добавить свою пару'),
-          onPressed: () async {
-            final added = await showDialog<Override>(context: context, builder: (_) => _AddPairDialog(day: day));
-            if (added != null) {
-              await repo.save(added);
-              ref.invalidate(overridesProvider);
-            }
-          },
-        ),
-      ]),
+        ]),
+      ),
+    );
+  }
+}
+
+/// Переключатель «Каждую неделю» с пояснением.
+class _RepeatSwitch extends StatelessWidget {
+  const _RepeatSwitch({required this.day, required this.value, required this.onChanged});
+  final DateTime day;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: const Text('Каждую неделю'),
+      subtitle: Text('С ${dateText(day)} и далее по каждому дню недели «${weekdayNames[day.weekday]}», пока идёт семестр'),
+      value: value,
+      onChanged: onChanged,
     );
   }
 }
@@ -148,6 +234,7 @@ class _ReplaceDialogState extends State<_ReplaceDialog> {
   late final _room = TextEditingController(text: widget.lesson.room ?? '');
   late final _teacher = TextEditingController(text: widget.lesson.teacher ?? '');
   late final _note = TextEditingController(text: widget.lesson.isPersonal ? (widget.lesson.note ?? '') : '');
+  bool _repeat = false;
 
   @override
   void dispose() {
@@ -161,12 +248,16 @@ class _ReplaceDialogState extends State<_ReplaceDialog> {
   Widget build(BuildContext context) {
     final l = widget.lesson;
     return AlertDialog(
-      title: const Text('Изменить на этот день'),
+      title: const Text('Изменить пару'),
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(controller: _room, decoration: const InputDecoration(labelText: 'Аудитория')),
+          const SizedBox(height: Gap.md),
           TextField(controller: _teacher, decoration: const InputDecoration(labelText: 'Преподаватель')),
-          TextField(controller: _note, decoration: const InputDecoration(labelText: 'Заметка (например, «перенесли с 3 пары»)')),
+          const SizedBox(height: Gap.md),
+          TextField(controller: _note, decoration: const InputDecoration(labelText: 'Заметка (например, «объявили в чате»)')),
+          const SizedBox(height: Gap.sm),
+          _RepeatSwitch(day: l.date, value: _repeat, onChanged: (v) => setState(() => _repeat = v)),
         ]),
       ),
       actions: [
@@ -182,9 +273,79 @@ class _ReplaceDialogState extends State<_ReplaceDialog> {
               room: _room.text.trim() == (l.room ?? '') ? null : blankToNull(_room.text),
               teacher: _teacher.text.trim() == (l.teacher ?? '') ? null : blankToNull(_teacher.text),
               note: blankToNull(_note.text),
+              repeatWeekly: _repeat,
+              matchSubject: _repeat ? l.subject : null,
             ),
           ),
           child: const Text('Сохранить'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Куда перенести пару.
+class _Move {
+  const _Move({required this.date, required this.pair, required this.repeat});
+  final DateTime date;
+  final int pair;
+  final bool repeat;
+}
+
+class _MoveDialog extends StatefulWidget {
+  const _MoveDialog({required this.lesson});
+  final ResolvedLesson lesson;
+
+  @override
+  State<_MoveDialog> createState() => _MoveDialogState();
+}
+
+class _MoveDialogState extends State<_MoveDialog> {
+  late DateTime _date = widget.lesson.date;
+  late int _pair = widget.lesson.pair;
+  bool _repeat = false;
+
+  bool get _unchanged => _date == widget.lesson.date && _pair == widget.lesson.pair;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.lesson;
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: const Text('Перенести пару'),
+      content: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(l.subject, style: theme.textTheme.titleSmall),
+          Text('Сейчас: ${dayTitle(l.date)}, ${l.pair} пара', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: Gap.lg),
+          Text('Куда', style: theme.textTheme.labelLarge),
+          const SizedBox(height: Gap.sm),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.event_rounded),
+            label: Text(dayTitle(_date)),
+            onPressed: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _date,
+                firstDate: l.date.subtract(const Duration(days: 60)),
+                lastDate: l.date.add(const Duration(days: 180)),
+              );
+              if (picked != null) setState(() => _date = DateTime.utc(picked.year, picked.month, picked.day));
+            },
+          ),
+          const SizedBox(height: Gap.md),
+          Wrap(spacing: Gap.sm, children: [
+            for (var p = 1; p <= 5; p++) ChoiceChip(label: Text('$p пара'), selected: _pair == p, onSelected: (_) => setState(() => _pair = p)),
+          ]),
+          const SizedBox(height: Gap.sm),
+          _RepeatSwitch(day: _date, value: _repeat, onChanged: (v) => setState(() => _repeat = v)),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+        FilledButton(
+          onPressed: _unchanged ? null : () => Navigator.pop(context, _Move(date: _date, pair: _pair, repeat: _repeat)),
+          child: const Text('Перенести'),
         ),
       ],
     );
@@ -205,6 +366,8 @@ class _AddPairDialogState extends State<_AddPairDialog> {
   final _teacher = TextEditingController();
   final _note = TextEditingController();
   int _pair = 1;
+  LessonKind _kind = LessonKind.practice;
+  bool _repeat = false;
 
   @override
   void dispose() {
@@ -222,13 +385,25 @@ class _AddPairDialogState extends State<_AddPairDialog> {
       content: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Номер пары'),
-          Wrap(spacing: 8, children: [
+          const SizedBox(height: Gap.sm),
+          Wrap(spacing: Gap.sm, children: [
             for (var p = 1; p <= 5; p++) ChoiceChip(label: Text('$p'), selected: _pair == p, onSelected: (_) => setState(() => _pair = p)),
           ]),
+          const SizedBox(height: Gap.md),
+          Wrap(spacing: Gap.sm, children: [
+            for (final k in [LessonKind.lecture, LessonKind.practice])
+              ChoiceChip(label: Text(k.title), selected: _kind == k, onSelected: (_) => setState(() => _kind = k)),
+          ]),
+          const SizedBox(height: Gap.md),
           TextField(controller: _subject, onChanged: (_) => setState(() {}), decoration: const InputDecoration(labelText: 'Название')),
+          const SizedBox(height: Gap.md),
           TextField(controller: _room, decoration: const InputDecoration(labelText: 'Аудитория')),
+          const SizedBox(height: Gap.md),
           TextField(controller: _teacher, decoration: const InputDecoration(labelText: 'Преподаватель')),
+          const SizedBox(height: Gap.md),
           TextField(controller: _note, decoration: const InputDecoration(labelText: 'Заметка')),
+          const SizedBox(height: Gap.sm),
+          _RepeatSwitch(day: widget.day, value: _repeat, onChanged: (v) => setState(() => _repeat = v)),
         ]),
       ),
       actions: [
@@ -246,6 +421,8 @@ class _AddPairDialogState extends State<_AddPairDialog> {
                       room: blankToNull(_room.text),
                       teacher: blankToNull(_teacher.text),
                       note: blankToNull(_note.text),
+                      kind: _kind,
+                      repeatWeekly: _repeat,
                     ),
                   ),
           child: const Text('Добавить'),

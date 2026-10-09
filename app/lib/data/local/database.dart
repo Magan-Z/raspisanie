@@ -56,6 +56,10 @@ class Overrides extends Table {
   TextColumn get room => text().nullable()();
   TextColumn get teacher => text().nullable()();
   TextColumn get note => text().nullable()();
+  // Добавлено в версии базы 2:
+  TextColumn get kind => text().nullable()(); // lecture / practice — для своей (в том числе перенесённой) пары
+  BoolColumn get repeatWeekly => boolean().withDefault(const Constant(false))(); // действует каждую неделю
+  TextColumn get matchSubject => text().nullable()(); // для «каждую неделю»: к какому предмету относится
 }
 
 /// Короткие названия и цвета предметов.
@@ -92,5 +96,18 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'raspisanie'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          // v1 → v2: правки «каждую неделю» и тип своей пары. Старые правки остаются как были.
+          if (from < 2) {
+            await m.addColumn(overrides, overrides.kind);
+            await m.addColumn(overrides, overrides.repeatWeekly);
+            await m.addColumn(overrides, overrides.matchSubject);
+          }
+        },
+      );
 }

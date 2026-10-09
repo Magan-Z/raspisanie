@@ -252,6 +252,9 @@ class Override {
     this.room,
     this.teacher,
     this.note,
+    this.kind,
+    this.repeatWeekly = false,
+    this.matchSubject,
   });
 
   final int? id; // null — ещё не сохранено в базу
@@ -262,6 +265,19 @@ class Override {
   final String? room;
   final String? teacher;
   final String? note;
+
+  /// Тип для своей пары (чтобы перенесённая лекция осталась лекцией). null — «практика».
+  final LessonKind? kind;
+
+  /// true — правка действует не один день, а каждую неделю: с [date] и далее в тот же день недели.
+  final bool repeatWeekly;
+
+  /// Для «каждую неделю»: менять/отменять только пару с таким названием (на этом же номере пары
+  /// в другие недели может идти другой предмет).
+  final String? matchSubject;
+
+  /// Действует ли правка в этот день.
+  bool appliesOn(DateTime day) => date == day || (repeatWeekly && !day.isBefore(date) && day.weekday == date.weekday);
 }
 
 /// Занятие на конкретную дату — то, что показывается на экране.

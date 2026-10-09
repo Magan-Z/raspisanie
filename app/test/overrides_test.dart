@@ -72,4 +72,28 @@ void main() {
     expect(blankToNull('   '), isNull);
     expect(blankToNull(' 3-01 '), '3-01');
   });
+
+  test('сохраняются тип, «каждую неделю» и предмет правила', () async {
+    await repo.save(Override(date: day, pair: 3, type: OverrideType.cancel, repeatWeekly: true, matchSubject: 'Философия'));
+    await repo.save(Override(date: day, pair: 5, type: OverrideType.add, subject: 'Лекция-перенос', kind: LessonKind.lecture));
+    final all = await repo.all();
+    final cancel = all.firstWhere((o) => o.type == OverrideType.cancel);
+    expect((cancel.repeatWeekly, cancel.matchSubject), (true, 'Философия'));
+    final add = all.firstWhere((o) => o.type == OverrideType.add);
+    expect((add.kind, add.repeatWeekly), (LessonKind.lecture, false));
+  });
+
+  test('appliesOn: «каждую неделю» — с даты правки и дальше по тому же дню недели', () {
+    final rule = Override(date: day, pair: 3, type: OverrideType.cancel, repeatWeekly: true);
+    expect(rule.appliesOn(day), isTrue);
+    expect(rule.appliesOn(DateTime.utc(2026, 10, 14)), isTrue);
+    expect(rule.appliesOn(DateTime.utc(2026, 9, 30)), isFalse); // раньше
+    expect(rule.appliesOn(DateTime.utc(2026, 10, 8)), isFalse); // другой день недели
+    expect(Override(date: day, pair: 3, type: OverrideType.cancel).appliesOn(DateTime.utc(2026, 10, 14)), isFalse);
+  });
+
+  test('описания: «каждую неделю» и предмет правила', () {
+    expect(describeOverride(Override(date: day, pair: 3, type: OverrideType.cancel, repeatWeekly: true, matchSubject: 'Философия')),
+        'Отменена: 3 пара (Философия) · каждую неделю');
+  });
 }

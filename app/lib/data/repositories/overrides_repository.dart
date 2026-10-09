@@ -36,6 +36,9 @@ class OverridesRepository {
           room: Value(override.room),
           teacher: Value(override.teacher),
           note: Value(override.note),
+          kind: Value(override.kind?.name),
+          repeatWeekly: Value(override.repeatWeekly),
+          matchSubject: Value(override.matchSubject),
         ));
   }
 
@@ -54,5 +57,8 @@ class OverridesRepository {
         room: row.room,
         teacher: row.teacher,
         note: row.note,
+        kind: row.kind == null ? null : LessonKind.parse(row.kind!),
+        repeatWeekly: row.repeatWeekly,
+        matchSubject: row.matchSubject,
       );
 }

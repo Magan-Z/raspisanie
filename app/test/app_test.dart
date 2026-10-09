@@ -231,7 +231,7 @@ void main() {
     await _start(tester, prefs: profile);
     await tester.longPress(find.text('ЧТК и этика').last);
     await _settle(tester);
-    await tester.tap(find.text('Изменить на этот день'));
+    await tester.tap(find.text('Изменить'));
     await _settle(tester);
 
     await tester.enterText(find.widgetWithText(TextField, 'Аудитория'), '3-01');
@@ -267,5 +267,46 @@ void main() {
 
     expect(find.text('Консультация'), findsWidgets);
     expect(find.text('2-10'), findsWidgets);
+  });
+
+  testWidgets('Перенос пары: ЧТК с 4 пары на 5 — на экране «перенесено», старое место пустое', (tester) async {
+    final gateway = FakeGateway();
+    await _start(tester, prefs: profile, gateway: gateway); // ср 07.10, 13:30
+    await tester.longPress(find.text('ЧТК и этика').last);
+    await _settle(tester);
+    await tester.tap(find.text('Перенести'));
+    await _settle(tester);
+    expect(find.text('Перенести пару'), findsOneWidget);
+
+    await tester.tap(find.text('5 пара'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Перенести'));
+    await _settle(tester);
+
+    // Время 5 пары — 16:20 (раньше ЧТК была в 14:40)
+    expect(find.text('16:20'), findsOneWidget);
+    expect(find.text('14:40'), findsNothing);
+    expect(find.text('перенесено'), findsOneWidget);
+    // Напоминание теперь за 10 минут до 16:20, то есть в 16:10 (13:10 UTC)
+    expect(gateway.lastPlan.first.title, 'ЧТК и этика → 2-15');
+    expect(gateway.lastPlan.first.fireAt, DateTime.utc(2026, 10, 7, 13, 10));
+  });
+
+  testWidgets('Отмена каждую неделю: в «Мои правки» видно правило, удаление возвращает пару', (tester) async {
+    await _start(tester, prefs: profile);
+    await tester.longPress(find.text('ЧТК и этика').last);
+    await _settle(tester);
+    await tester.tap(find.text('Отменить каждую неделю'));
+    await _settle(tester);
+    expect(find.text('ЧТК и этика'), findsNothing);
+
+    await tester.tap(find.text('Мои правки (1)'));
+    await _settle(tester);
+    expect(find.textContaining('каждую неделю'), findsWidgets);
+    await tester.tap(find.byTooltip('Убрать правку'));
+    await _settle(tester);
+    await tester.tapAt(const Offset(10, 10));
+    await _settle(tester);
+    expect(find.text('ЧТК и этика'), findsWidgets);
   });
 }

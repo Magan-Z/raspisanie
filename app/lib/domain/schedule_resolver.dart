@@ -39,28 +39,32 @@ List<ResolvedLesson> resolve(
         subject: lesson.subject, teacher: lesson.teacher, room: lesson.room, kind: lesson.kind, tags: lesson.tags));
   }
 
-  // 5. Личные правки на эту дату
-  for (final o in overrides.where((o) => o.date == day)) {
-    switch (o.type) {
-      case OverrideType.cancel:
-        result.removeWhere((l) => l.pair == o.pair);
-      case OverrideType.replace:
-        for (var i = 0; i < result.length; i++) {
-          if (result[i].pair == o.pair) {
-            result[i] = result[i].copyWith(
-                subject: o.subject, teacher: o.teacher, room: o.room, note: o.note, isPersonal: true);
-          }
+  // 5. Личные правки. Сначала правила «каждую неделю», потом правки на конкретный день — они главнее.
+  // Отмены и замены применяются раньше добавлений: перенесённая пара не должна отмениться собственной отменой.
+  final applicable = overrides.where((o) => o.appliesOn(day)).toList()
+    ..sort((a, b) => a.repeatWeekly == b.repeatWeekly ? 0 : (a.repeatWeekly ? -1 : 1));
+  bool matches(Override o, ResolvedLesson l) => l.pair == o.pair && (o.matchSubject == null || l.subject == o.matchSubject);
+
+  for (final o in applicable.where((o) => o.type != OverrideType.add)) {
+    if (o.type == OverrideType.cancel) {
+      result.removeWhere((l) => matches(o, l));
+    } else {
+      for (var i = 0; i < result.length; i++) {
+        if (matches(o, result[i])) {
+          result[i] = result[i].copyWith(subject: o.subject, teacher: o.teacher, room: o.room, note: o.note, isPersonal: true);
         }
-      case OverrideType.add:
-        result.add(_toResolved(day, o.pair, index.bells, week,
-            subject: o.subject ?? 'Занятие',
-            teacher: o.teacher,
-            room: o.room,
-            kind: LessonKind.practice,
-            tags: const [],
-            note: o.note,
-            isPersonal: true));
+      }
     }
+  }
+  for (final o in applicable.where((o) => o.type == OverrideType.add)) {
+    result.add(_toResolved(day, o.pair, index.bells, week,
+        subject: o.subject ?? 'Занятие',
+        teacher: o.teacher,
+        room: o.room,
+        kind: o.kind ?? LessonKind.practice,
+        tags: const [],
+        note: o.note,
+        isPersonal: true));
   }
 
   // 6. По порядку пар (время уже проставлено в _toResolved)

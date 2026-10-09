@@ -193,7 +193,7 @@ class _DayPage extends ConsumerWidget {
     final lessons = resolve(day, data.index, data.schedule, data.profile, overrides: data.overrides, forcedWeek: data.forcedWeek);
     final theme = Theme.of(context);
     final container = ProviderScope.containerOf(context);
-    final editsCount = data.overrides.where((o) => o.date == day).length;
+    final editsCount = data.overrides.where((o) => o.appliesOn(day)).length;
 
     // Потянуть вниз — проверить обновления (ошибки сети не показываем, см. АРХИТЕКТУРА.md §7.5)
     Future<void> refresh() async {

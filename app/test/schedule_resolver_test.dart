@@ -111,4 +111,74 @@ void main() {
   test('Ближайший учебный день после воскресенья — понедельник', () {
     expect(nextStudyDay(DateTime.utc(2026, 10, 11), index, schedule, profile), DateTime.utc(2026, 10, 12));
   });
+
+  group('Правки «каждую неделю» и переносы', () {
+    // Среда 07.10 (2 неделя): 3 пара — Технологическое предпринимательство 2-05; 4 пара — ЧТК и этика (практика 2-15)
+    final wed = DateTime.utc(2026, 10, 7);
+
+    List<ResolvedLesson> day(DateTime d, List<Override> o) => resolve(d, index, schedule, profile, overrides: o);
+
+    test('отмена каждую неделю: действует с этой даты и дальше по средам, раньше — нет', () {
+      final rule = Override(date: wed, pair: 3, type: OverrideType.cancel, repeatWeekly: true, matchSubject: 'Технологическое предпринимательство');
+      expect(day(wed, [rule]).map((l) => l.pair), [4]);
+      expect(day(DateTime.utc(2026, 10, 14), [rule]).map((l) => l.pair), [4, 5]); // следующая среда: пары 4 и кураторский час
+      expect(day(DateTime.utc(2026, 10, 21), [rule]).any((l) => l.pair == 3), isFalse);
+      expect(day(DateTime.utc(2026, 9, 30), [rule]).any((l) => l.pair == 3), isTrue); // до даты правка не действует
+      expect(day(DateTime.utc(2026, 10, 8), [rule]).isNotEmpty, isTrue); // другой день недели не затронут
+    });
+
+    test('правило привязано к предмету: на той же паре другой предмет остаётся', () {
+      // 4 пара по средам: ЧТК и этика (и на 1-й, и на 2-й неделе), правило про другой предмет её не трогает
+      final rule = Override(date: wed, pair: 4, type: OverrideType.cancel, repeatWeekly: true, matchSubject: 'Философия');
+      expect(day(wed, [rule]).any((l) => l.pair == 4), isTrue);
+    });
+
+    test('замена каждую неделю меняет аудиторию во все следующие среды', () {
+      final rule = Override(date: wed, pair: 4, type: OverrideType.replace, room: '3-33', repeatWeekly: true, matchSubject: 'ЧТК и этика');
+      expect(day(wed, [rule]).firstWhere((l) => l.pair == 4).room, '3-33');
+      final next = day(DateTime.utc(2026, 10, 14), [rule]).firstWhere((l) => l.pair == 4);
+      expect(next.room, '3-33');
+      expect(next.kind, LessonKind.lecture); // тип занятия остался как в расписании
+      expect(next.isPersonal, isTrue);
+    });
+
+    test('правка на конкретный день главнее правила «каждую неделю»', () {
+      final rule = Override(date: wed, pair: 4, type: OverrideType.replace, room: '3-33', repeatWeekly: true, matchSubject: 'ЧТК и этика');
+      final once = Override(date: DateTime.utc(2026, 10, 14), pair: 4, type: OverrideType.replace, room: '1-01');
+      expect(day(DateTime.utc(2026, 10, 14), [rule, once]).firstWhere((l) => l.pair == 4).room, '1-01');
+      expect(day(DateTime.utc(2026, 10, 21), [rule, once]).firstWhere((l) => l.pair == 4).room, '3-33');
+    });
+
+    test('перенос: пара исчезает со старого места и появляется на новом с тем же типом и данными', () {
+      final overrides = [
+        Override(date: wed, pair: 4, type: OverrideType.cancel),
+        Override(date: wed, pair: 5, type: OverrideType.add, subject: 'ЧТК и этика', teacher: 'Ахмадова М.П.', room: '2-15', kind: LessonKind.practice, note: 'перенесено'),
+      ];
+      final lessons = day(wed, overrides);
+      expect(lessons.map((l) => l.pair), [3, 5]);
+      final moved = lessons.last;
+      expect((moved.subject, moved.room, moved.kind, moved.note), ('ЧТК и этика', '2-15', LessonKind.practice, 'перенесено'));
+      expect(moved.isPersonal, isTrue);
+    });
+
+    test('перенос на ту же пару другого дня не отменяет сам себя (отмена и добавление на одной паре)', () {
+      // Пятница 09.10: переносим сюда ТП 3 пары из среды; отмена в среде, добавление в пятницу
+      final overrides = [
+        Override(date: wed, pair: 3, type: OverrideType.cancel),
+        Override(date: DateTime.utc(2026, 10, 9), pair: 3, type: OverrideType.add, subject: 'Технологическое предпринимательство', room: '2-05', kind: LessonKind.lecture),
+      ];
+      expect(day(DateTime.utc(2026, 10, 9), overrides).map((l) => l.pair), [3]);
+      expect(day(wed, overrides).any((l) => l.pair == 3), isFalse);
+    });
+
+    test('перенос каждую неделю: в следующую среду пара тоже уходит, а в следующую пятницу появляется', () {
+      final overrides = [
+        Override(date: wed, pair: 3, type: OverrideType.cancel, repeatWeekly: true, matchSubject: 'Технологическое предпринимательство'),
+        Override(date: DateTime.utc(2026, 10, 9), pair: 5, type: OverrideType.add, subject: 'Технологическое предпринимательство', room: '2-05', kind: LessonKind.lecture, repeatWeekly: true),
+      ];
+      expect(day(DateTime.utc(2026, 10, 14), overrides).any((l) => l.pair == 3), isFalse);
+      expect(day(DateTime.utc(2026, 10, 16), overrides).map((l) => l.pair), [5]); // пятница через неделю
+      expect(day(DateTime.utc(2026, 10, 2), overrides), isEmpty); // до даты правила в пятницу ничего нет
+    });
+  });
 }
