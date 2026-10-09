@@ -12,6 +12,7 @@ import '../../domain/models.dart';
 import '../../domain/overrides_text.dart';
 import '../../theme/tokens.dart';
 import '../homework/add_homework_sheet.dart';
+import '../settings/subject_style_editor.dart';
 
 /// Нажатие на пару: что с ней можно сделать.
 Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
@@ -50,6 +51,15 @@ Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
               onTap: () {
                 close();
                 showAddHomework(context, subject: lesson.subject);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.color_lens_rounded),
+              title: const Text('Название и цвет'),
+              subtitle: const Text('Своё короткое название и цвет предмета'),
+              onTap: () {
+                close();
+                showSubjectStyleEditor(context, lesson.subject);
               },
             ),
             ListTile(

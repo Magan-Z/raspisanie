@@ -42,8 +42,11 @@ int stableHash(String text) {
   return hash;
 }
 
-SubjectTone subjectTone(String subject, Brightness brightness) {
-  final (lightAccent, lightContainer, darkAccent, darkContainer) = _palette[stableHash(subject) % _palette.length];
+SubjectTone subjectTone(String subject, Brightness brightness) => subjectToneByIndex(stableHash(subject), brightness);
+
+/// Цвета по номеру из палитры (номер берётся по модулю — подойдёт и хеш).
+SubjectTone subjectToneByIndex(int index, Brightness brightness) {
+  final (lightAccent, lightContainer, darkAccent, darkContainer) = _palette[index % _palette.length];
   if (brightness == Brightness.dark) {
     return SubjectTone(accent: darkAccent, container: darkContainer, onContainer: _tint(darkAccent, 0.88));
   }
@@ -52,6 +55,9 @@ SubjectTone subjectTone(String subject, Brightness brightness) {
 
 /// Тот же оттенок, но заданной светлоты — для читаемого текста на мягком фоне.
 Color _tint(Color color, double lightness) => HSLColor.fromColor(color).withLightness(lightness).withSaturation(0.55).toColor();
+
+/// Названия цветов палитры — для выбора в настройках предметов и для озвучки (TalkBack).
+const subjectColorNames = ['Бирюзовый', 'Индиго', 'Розовый', 'Янтарный', 'Зелёный', 'Фиолетовый', 'Коралловый', 'Голубой', 'Оливковый', 'Сланцевый'];
 
 /// Для проверок: размер палитры.
 int get subjectPaletteSize => _palette.length;

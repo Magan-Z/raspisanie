@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app_state.dart';
 import '../../core/formatting.dart';
 import '../../domain/homework.dart';
-import '../../theme/subject_palette.dart';
 import '../../theme/tokens.dart';
 import '../common/word_fit_text.dart';
 import 'attachment_widgets.dart';
@@ -96,7 +95,8 @@ class _HomeworkTile extends ConsumerWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final repo = ref.read(homeworkRepositoryProvider);
-    final tone = subjectTone(item.subject, theme.brightness);
+    final styles = ref.watch(subjectStylesProvider);
+    final tone = styles.tone(item.subject, theme.brightness);
 
     Future<void> toggle() async {
       // лёгкая вибрация: при отметке «сделано» — щелчок, при возврате — слабее
@@ -150,7 +150,7 @@ class _HomeworkTile extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(0, Gap.md, Gap.xs, Gap.md),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     WordFitText(
-                      item.subject,
+                      styles.name(item.subject),
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: item.done ? scheme.onSurfaceVariant : tone.onContainer,
                         decoration: item.done ? TextDecoration.lineThrough : null,

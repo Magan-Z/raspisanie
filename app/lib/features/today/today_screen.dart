@@ -298,7 +298,7 @@ class _DayPage extends ConsumerWidget {
         start: moscowTimeText(l.startAt),
         end: moscowTimeText(l.endAt),
         phase: phase,
-        tone: subjectTone(l.subject, theme.brightness),
+        tone: ref.watch(subjectStylesProvider).tone(l.subject, theme.brightness),
         child: LessonTile(
           subject: l.subject,
           kind: l.kind,
@@ -419,17 +419,19 @@ class _GapRow extends StatelessWidget {
 }
 
 /// Крупная карточка текущей или следующей пары: аудитория — самый большой элемент экрана.
-class _NowCard extends StatelessWidget {
+class _NowCard extends ConsumerWidget {
   const _NowCard({required this.lesson, required this.now, required this.isCurrent});
   final ResolvedLesson lesson;
   final DateTime now;
   final bool isCurrent;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final tone = subjectTone(lesson.subject, theme.brightness);
+    final styles = ref.watch(subjectStylesProvider);
+    final tone = styles.tone(lesson.subject, theme.brightness);
+    final subjectName = styles.name(lesson.subject);
     final total = lesson.endAt.difference(lesson.startAt).inSeconds;
     final passed = now.difference(lesson.startAt).inSeconds.clamp(0, total);
     final progress = isCurrent && total > 0 ? passed / total : 0.0;
@@ -439,7 +441,7 @@ class _NowCard extends StatelessWidget {
 
     return Semantics(
       container: true,
-      label: '${isCurrent ? 'Сейчас' : 'Далее'}: ${lesson.subject}, ${lesson.room != null ? 'аудитория ${lesson.room}, ' : ''}$status',
+      label: '${isCurrent ? 'Сейчас' : 'Далее'}: $subjectName, ${lesson.room != null ? 'аудитория ${lesson.room}, ' : ''}$status',
       child: ExcludeSemantics(
         child: Container(
           padding: const EdgeInsets.all(Gap.xl),
@@ -469,7 +471,7 @@ class _NowCard extends StatelessWidget {
               KindBadge(lesson.kind, tone: tone),
             ]),
             const SizedBox(height: Gap.md),
-            WordFitText(lesson.subject, style: theme.textTheme.titleLarge?.copyWith(color: scheme.onSurface)),
+            WordFitText(subjectName, style: theme.textTheme.titleLarge?.copyWith(color: scheme.onSurface)),
             const SizedBox(height: Gap.lg),
             // При очень крупном системном шрифте табличка и подписи идут друг под другом, а не в ряд
             Builder(builder: (context) {

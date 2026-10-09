@@ -12,6 +12,8 @@ Future<void> pushWidgets(ProviderContainer c) async {
   final my = await c.read(myScheduleProvider.future);
   if (my == null) return;
   final homework = await c.read(homeworkProvider.future);
+  await c.read(subjectStyleMapProvider.future); // свои названия предметов должны быть загружены
+  final styles = c.read(subjectStylesProvider);
   await c.read(widgetBridgeProvider).push(
         now: c.read(clockProvider).now(),
         index: my.index,
@@ -23,6 +25,7 @@ Future<void> pushWidgets(ProviderContainer c) async {
         // Цвета из обоев виджету недоступны — тогда он остаётся в стандартных цветах
         palette: c.read(settingsProvider).useDynamicColor ? null : c.read(settingsProvider).palette,
         amoled: c.read(settingsProvider).amoled,
+        compactNameOf: styles.compactName,
       );
 }
 
@@ -31,6 +34,8 @@ Future<void> replanNotifications(ProviderContainer c) async {
   final my = await c.read(myScheduleProvider.future);
   if (my == null) return;
   final settings = c.read(settingsProvider);
+  await c.read(subjectStyleMapProvider.future);
+  final styles = c.read(subjectStylesProvider);
   final plan = planNotifications(
     now: c.read(clockProvider).now(),
     index: my.index,
@@ -41,6 +46,7 @@ Future<void> replanNotifications(ProviderContainer c) async {
     eveningReminder: settings.eveningHomeworkReminder,
     overrides: my.overrides,
     forcedWeek: my.forcedWeek,
+    nameOf: styles.name,
   );
   try {
     await c.read(notificationGatewayProvider).replaceAll(plan);

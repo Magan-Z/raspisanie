@@ -1,6 +1,9 @@
 // Карточка пары: название, тип, преподаватель и «табличка» с аудиторией. Цвета — по предмету.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../app_state.dart';
 
 import '../../domain/models.dart';
 import '../../theme/subject_palette.dart';
@@ -30,7 +33,7 @@ class KindBadge extends StatelessWidget {
 }
 
 /// Одна пара. [timeLabel] — подпись со временем (в списке «Неделя»); в ленте «Сегодня» время стоит слева, там null.
-class LessonTile extends StatelessWidget {
+class LessonTile extends ConsumerWidget {
   const LessonTile({
     super.key,
     required this.subject,
@@ -61,10 +64,12 @@ class LessonTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final tone = subjectTone(subject, theme.brightness);
+    // Свои название и цвет предмета (если пользователь их задал в настройках)
+    final styles = ref.watch(subjectStylesProvider);
+    final tone = styles.tone(subject, theme.brightness);
     final textColor = scheme.onSurface;
 
     final card = Material(
@@ -91,7 +96,7 @@ class LessonTile extends StatelessWidget {
                       child: Text(timeLabel!, style: theme.textTheme.labelMedium?.copyWith(color: tone.onContainer)),
                     ),
                   WordFitText(
-                    subject,
+                    styles.name(subject),
                     style: theme.textTheme.titleMedium?.copyWith(color: textColor),
                     trailing: hasHomework
                         ? WidgetSpan(

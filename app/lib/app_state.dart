@@ -18,9 +18,11 @@ import 'data/remote/schedule_api.dart';
 import 'data/repositories/homework_repository.dart';
 import 'data/repositories/overrides_repository.dart';
 import 'data/repositories/schedule_repository.dart';
+import 'data/repositories/subject_styles_repository.dart';
 import 'domain/diff_summary.dart';
 import 'domain/homework.dart';
 import 'domain/models.dart';
+import 'domain/subject_styles.dart';
 import 'notifications/notification_gateway.dart';
 import 'theme/brand_colors.dart';
 import 'widget_bridge/deep_links.dart';
@@ -58,6 +60,7 @@ class Settings {
     this.useDynamicColor = false,
     this.palette = AppPalette.petrol,
     this.amoled = false,
+    this.customSubjects = true,
   });
 
   final UserProfile? profile; // null — первый запуск, профиль ещё не выбран
@@ -68,6 +71,7 @@ class Settings {
   final bool useDynamicColor; // цвета из обоев (Material You) вместо фирменных
   final AppPalette palette; // цветовая тема
   final bool amoled; // чёрный фон в тёмной теме
+  final bool customSubjects; // показывать свои названия и цвета предметов
 }
 
 class SettingsNotifier extends Notifier<Settings> {
@@ -93,6 +97,7 @@ class SettingsNotifier extends Notifier<Settings> {
       useDynamicColor: prefs.getBool('useDynamicColor') ?? false,
       palette: AppPalette.parse(prefs.getString('palette')),
       amoled: prefs.getBool('amoled') ?? false,
+      customSubjects: prefs.getBool('customSubjects') ?? true,
     );
   }
 
@@ -125,6 +130,11 @@ class SettingsNotifier extends Notifier<Settings> {
 
   Future<void> setPalette(AppPalette palette) async {
     await _prefs.setString('palette', palette.id);
+    ref.invalidateSelf();
+  }
+
+  Future<void> setCustomSubjects(bool value) async {
+    await _prefs.setBool('customSubjects', value);
     ref.invalidateSelf();
   }
 
@@ -297,6 +307,20 @@ class RequestedDayNotifier extends Notifier<DateTime?> {
 }
 
 final requestedDayProvider = NotifierProvider<RequestedDayNotifier, DateTime?>(RequestedDayNotifier.new);
+
+// ---------- свои названия и цвета предметов ----------
+
+final subjectStylesRepositoryProvider = Provider<SubjectStylesRepository>((ref) => SubjectStylesRepository(ref.watch(databaseProvider)));
+
+/// Сохранённые настройки предметов. После изменения вызываем ref.invalidate(subjectStyleMapProvider).
+final subjectStyleMapProvider = FutureProvider<Map<String, SubjectStyle>>((ref) => ref.watch(subjectStylesRepositoryProvider).all());
+
+/// То, чем пользуются экраны: настройки + выключатель из «Настройки → Предметы».
+final subjectStylesProvider = Provider<SubjectStyles>((ref) {
+  final enabled = ref.watch(settingsProvider.select((s) => s.customSubjects));
+  final map = ref.watch(subjectStyleMapProvider).value ?? const {};
+  return SubjectStyles(enabled: enabled, styles: map);
+});
 
 // ---------- личные правки ----------
 

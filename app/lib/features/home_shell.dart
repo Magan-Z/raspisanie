@@ -44,6 +44,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
     );
     ref.listenManual(homeworkProvider, (_, _) => _scheduleRefresh());
     ref.listenManual(settingsProvider, (_, _) => _scheduleRefresh());
+    ref.listenManual(subjectStyleMapProvider, (_, _) => _scheduleRefresh()); // свои названия предметов попадают в виджеты и уведомления
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _askNotificationPermissionOnce(),
     );

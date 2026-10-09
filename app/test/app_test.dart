@@ -224,6 +224,40 @@ void main() {
     expect(surface, Colors.black);
   });
 
+  testWidgets('Предметы: своё название и цвет через меню пары; выключатель в настройках возвращает названия из расписания', (tester) async {
+    final gateway = FakeGateway();
+    await _start(tester, prefs: profile, gateway: gateway);
+    expect(find.text('ЧТК и этика'), findsWidgets);
+
+    await tester.longPress(find.text('ЧТК и этика').last);
+    await _settle(tester);
+    await tester.tap(find.text('Название и цвет'));
+    await _settle(tester);
+    await tester.enterText(find.widgetWithText(TextField, 'Своё короткое название'), 'Этика');
+    await tester.tap(find.byTooltip('Коралловый'));
+    await tester.pump();
+    await tester.tap(find.text('Сохранить'));
+    await _settle(tester);
+
+    // На экране — своё название; настоящее исчезло; в уведомлениях тоже своё
+    expect(find.text('Этика'), findsWidgets);
+    expect(find.text('ЧТК и этика'), findsNothing);
+    expect(gateway.lastPlan.map((n) => n.title), contains('Этика → 2-15'));
+
+    // Выключаем в настройках — возвращается название из расписания
+    await tester.tap(find.text('Настройки').last);
+    await _settle(tester);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -600));
+    await _settle(tester);
+    await tester.tap(find.text('Свои названия и цвета'));
+    await _settle(tester);
+    await tester.tap(find.text('Сегодня').last);
+    await _settle(tester);
+    expect(find.text('ЧТК и этика'), findsWidgets);
+    expect(find.text('Этика'), findsNothing);
+    expect(gateway.lastPlan.map((n) => n.title), contains('ЧТК и этика → 2-15'));
+  });
+
   testWidgets('Поиск: свободные аудитории и расписание преподавателя', (tester) async {
     await _start(tester, prefs: profile); // среда 07.10.2026 13:30 МСК, 3 пара идёт
 

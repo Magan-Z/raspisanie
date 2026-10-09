@@ -107,6 +107,20 @@ void main() {
       expect(colors['light']['accent'], isNot(colors['dark']['accent']));
     });
 
+    test('в снимке используются свои короткие названия предметов', () {
+      final snapshot = buildWidgetSnapshot(
+        now: DateTime.utc(2026, 10, 7, 5, 0),
+        index: index,
+        schedule: schedule,
+        profile: profile,
+        homework: const [],
+        compactNameOf: (s) => s == 'ЧТК и этика' ? 'Этика' : s,
+      );
+      final lessons = [for (final d in snapshot['days'] as List) ...(d['lessons'] as List)];
+      expect(lessons.where((l) => l['subject'] == 'ЧТК и этика').every((l) => l['short'] == 'Этика'), isTrue);
+      expect(lessons.any((l) => l['subject'] == 'ЧТК и этика'), isTrue);
+    });
+
     test('без выбранной темы цветов в снимке нет (виджет остаётся в стандартных)', () {
       final snapshot = buildWidgetSnapshot(
           now: DateTime.utc(2026, 10, 7, 5, 0), index: index, schedule: schedule, profile: profile, homework: const []);

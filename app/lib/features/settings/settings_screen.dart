@@ -11,6 +11,7 @@ import '../../domain/homework.dart';
 import '../../domain/models.dart';
 import '../../theme/tokens.dart';
 import 'palette_picker.dart';
+import 'subjects_screen.dart';
 import '../common/brand_mark.dart';
 import '../onboarding/onboarding_screen.dart';
 
@@ -99,6 +100,22 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: 'Material You, Android 12 и новее. Выключено — фирменные цвета приложения',
             value: settings.useDynamicColor,
             onChanged: notifier.setUseDynamicColor,
+          ),
+        ]),
+
+        _Section(title: 'Предметы', children: [
+          _SwitchRow(
+            icon: Icons.label_rounded,
+            title: 'Свои названия и цвета',
+            subtitle: 'Сокращайте длинные названия и выбирайте цвет для каждого предмета. Выключено — как в расписании',
+            value: settings.customSubjects,
+            onChanged: notifier.setCustomSubjects,
+          ),
+          _Row(
+            icon: Icons.color_lens_rounded,
+            title: 'Настроить предметы',
+            subtitle: 'Название и цвет каждого предмета вашей группы',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SubjectsScreen())),
           ),
         ]),
 

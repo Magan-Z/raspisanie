@@ -42,7 +42,9 @@ Map<String, dynamic> buildWidgetSnapshot({
   int? forcedWeek,
   AppPalette? palette, // цветовая тема приложения: виджеты красятся в те же цвета (null — стандартные)
   bool amoled = false,
+  String Function(String subject)? compactNameOf, // короткое название предмета для виджета (свои названия)
 }) {
+  final compact = compactNameOf ?? shortSubject;
   final today = moscowToday(now);
   final days = <Map<String, dynamic>>[];
 
@@ -58,7 +60,7 @@ Map<String, dynamic> buildWidgetSnapshot({
             'start': _momentText(l.startAt),
             'end': _momentText(l.endAt),
             'pair': l.pair,
-            'short': shortSubject(l.subject),
+            'short': compact(l.subject),
             'subject': l.subject,
             'room': l.room,
             'teacher': l.teacher,
@@ -82,7 +84,7 @@ Map<String, dynamic> buildWidgetSnapshot({
       for (final h in open.take(widgetHomeworkLimit))
         {
           'subject': h.subject,
-          'short': shortSubject(h.subject),
+          'short': compact(h.subject),
           'text': h.text,
           'due': _dayText(dayOnly(h.dueDate)),
           'files': h.attachments.length,

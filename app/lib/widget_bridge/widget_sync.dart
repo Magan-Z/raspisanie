@@ -37,6 +37,7 @@ class WidgetBridge {
     int? forcedWeek,
     AppPalette? palette,
     bool amoled = false,
+    String Function(String subject)? compactNameOf,
   }) async {
     final snapshot = buildWidgetSnapshot(
       now: now,
@@ -48,6 +49,7 @@ class WidgetBridge {
       forcedWeek: forcedWeek,
       palette: palette,
       amoled: amoled,
+      compactNameOf: compactNameOf,
     );
     try {
       await HomeWidget.saveWidgetData<String>(snapshotKey, encodeWidgetSnapshot(snapshot));

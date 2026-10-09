@@ -53,7 +53,9 @@ List<PlannedNotification> planNotifications({
   required bool eveningReminder,
   List<Override> overrides = const [],
   int? forcedWeek,
+  String Function(String subject)? nameOf, // свои названия предметов (null — настоящие)
 }) {
+  final name = nameOf ?? (String s) => s;
   final today = moscowToday(now);
   final result = <PlannedNotification>[];
 
@@ -69,7 +71,7 @@ List<PlannedNotification> planNotifications({
           id: _id(day, l.pair, 0),
           payload: dayPayload(day),
           fireAt: fireAt,
-          title: l.room == null ? l.subject : '${l.subject} → ${l.room}',
+          title: l.room == null ? name(l.subject) : '${name(l.subject)} → ${l.room}',
           body: [if (l.teacher != null) l.teacher!, 'через $notifyBeforeMin мин'].join(' · '),
         ));
       }
@@ -80,7 +82,7 @@ List<PlannedNotification> planNotifications({
       final fireAt = DateTime.utc(day.year, day.month, day.day, eveningReminderHour).subtract(moscowOffset);
       final due = dueOn(homework, day.add(const Duration(days: 1)));
       if (due.isNotEmpty && fireAt.isAfter(now)) {
-        final subjects = {for (final h in due) h.subject}.toList();
+        final subjects = {for (final h in due) name(h.subject)}.toList();
         result.add(PlannedNotification(
           id: _id(day, 0, 1),
           fireAt: fireAt,
