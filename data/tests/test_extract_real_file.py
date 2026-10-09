@@ -178,3 +178,12 @@ def test_json_has_with_groups_only_when_shared(groups: dict[str, Group]) -> None
     g = groups["ofo-1-bi-25"]
     assert find(g, MON, 1)[0].to_dict()["withGroups"] == ["2 БИ-25", "2 ИБ-25"]
     assert "withGroups" not in find(g, MON, 2)[0].to_dict()
+
+
+def test_shared_lecture_never_names_extra_groups(groups: dict[str, Group]) -> None:
+    """У ОЗ-БИ-25 философия в пятницу объединена с ОЗ-ИБ-25 каждую неделю, а с ИТиСС-25 — только на 2 неделе.
+    Для занятия «каждую неделю» называем только тех, кто вместе со всеми неделями."""
+    friday = find(groups["ozfo-oz-bi-25"], FRI, 3)
+    assert [l.with_groups for l in friday] == [["ОЗ-ИБ-25"]]
+    itiss = find(groups["ozfo-oz-1-itiss-25"], FRI, 3, week=2)[0]
+    assert set(itiss.with_groups) == {"ОЗ-БИ-25", "ОЗ-ИБ-25", "ОЗ-2 ИТиСС-25"}

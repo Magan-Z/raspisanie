@@ -111,9 +111,20 @@ def _lessons_in_slot(
 
 
 def _groups_sharing(areas: list[Area], layout: SheetLayout, own: GroupLayout) -> list[str]:
-    """С какими ещё группами объединена ячейка (общая лекция, поток): названия групп слева направо."""
-    cols = {c for a in areas for c in a.cols}
-    return [g.name for g in layout.groups if g is not own and cols & set(g.cols)]
+    """С какими ещё группами объединена ячейка (общая лекция, поток): названия групп слева направо.
+
+    Если занятие идёт каждую неделю, но в верхней и нижней строке ячейка объединена по-разному
+    (например, на 1 неделе лекция у двух групп, а на 2 неделе у четырёх), называем только группы,
+    которые вместе с этой во ВСЕ недели: так мы никогда не укажем лишнего."""
+    per_row: dict[int, set[int]] = {}
+    for area in areas:
+        for row in area.rows:
+            per_row.setdefault(row, set()).update(area.cols)
+    shared: set[str] | None = None
+    for cols in per_row.values():
+        names = {g.name for g in layout.groups if g is not own and cols & set(g.cols)}
+        shared = names if shared is None else shared & names
+    return [g.name for g in layout.groups if g.name in (shared or set())]
 
 
 def _lesson_kind(text: str, areas: list[Area], layout: SheetLayout) -> str:
