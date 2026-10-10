@@ -19,6 +19,7 @@ import 'group_changes_screen.dart';
 import 'palette_picker.dart';
 import 'subjects_screen.dart';
 import '../common/brand_mark.dart';
+import '../common/widget_picker.dart';
 import '../onboarding/onboarding_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -128,6 +129,16 @@ class SettingsScreen extends ConsumerWidget {
 
         if (sharedApiUrl.isNotEmpty) const _StarostaSection(),
 
+        if (!kIsWeb)
+          _Section(title: 'Виджеты', children: [
+            _Row(
+              icon: Icons.widgets_rounded,
+              title: 'Добавить виджет',
+              subtitle: 'Расписание на главном экране телефона: выберите вид',
+              onTap: () => showWidgetPicker(context),
+            ),
+          ]),
+
         _Section(title: 'Расписание', children: [
           _Row(
             icon: Icons.swap_horiz_rounded,
@@ -144,7 +155,7 @@ class SettingsScreen extends ConsumerWidget {
           _Row(
             icon: Icons.sync_rounded,
             title: 'Обновить расписание',
-            subtitle: fetched == null ? 'Сейчас используется встроенная копия' : 'Обновлено ${agoText(fetched, now)}',
+            subtitle: fetched == null ? 'Пока без обновлений с сайта: показано расписание от ${_scheduleDateText(ref)}' : 'Обновлено ${agoText(fetched, now)}',
             onTap: () async {
               final result = await syncSchedule(ProviderScope.containerOf(context));
               if (!context.mounted) return;
@@ -292,6 +303,12 @@ Future<T?> _choose<T>(BuildContext context, String title, Map<T, String> options
 
 /// Раздел настроек: подпись и скруглённая карточка со строками.
 /// «Староста и группа»: выключатель правок старосты, ввод кода и управление для самого старосты.
+/// «9 октября» — дата показанного расписания (из его версии); если не разобрать — «из памяти приложения».
+String _scheduleDateText(WidgetRef ref) {
+  final date = scheduleDate(ref.watch(myScheduleProvider).value?.schedule.version);
+  return date == null ? 'из памяти приложения' : dateText(date);
+}
+
 class _StarostaSection extends ConsumerWidget {
   const _StarostaSection();
 

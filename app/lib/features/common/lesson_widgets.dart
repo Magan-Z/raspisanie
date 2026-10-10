@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_state.dart';
-
+import '../../core/bells.dart';
+import '../../core/formatting.dart';
 import '../../domain/models.dart';
 import '../../theme/subject_palette.dart';
 import '../../theme/tokens.dart';
@@ -174,4 +175,16 @@ class LessonTile extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Подпись под парой: заметка из правки или «изменено вами» / «изменено старостой в 14:20».
+/// Время показывается по Москве; если правка сделана не сегодня — с датой («9 октября в 14:20»).
+String? lessonNote(ResolvedLesson l, DateTime now) {
+  if (l.note != null) return l.note;
+  if (l.isPersonal) return 'изменено вами';
+  if (!l.isGroup) return null;
+  final at = l.groupChangedAt;
+  if (at == null) return 'изменено старостой';
+  final sameDay = moscowToday(at) == moscowToday(now);
+  return 'изменено старостой ${sameDay ? '' : '${dateText(moscowToday(at))} '}в ${moscowTimeText(at)}';
 }

@@ -77,3 +77,10 @@ String shortSubject(String subject, {int maxLength = 18}) {
   final result = joined();
   return result.length <= maxLength + 6 ? result : '${result.substring(0, maxLength + 5)}…';
 }
+
+/// Дата расписания из его версии («2026-10-09T22:47:56Z-9cffa803» → 9 октября). Пусто, если версию не разобрать.
+DateTime? scheduleDate(String? version) {
+  if (version == null || version.length < 10) return null;
+  final d = DateTime.tryParse(version.substring(0, 10));
+  return d == null ? null : DateTime.utc(d.year, d.month, d.day);
+}

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Листовка — Расписание для студентов ИМФИТ</title>
+<style>
+  @font-face { font-family: "Onest"; src: url("fonts/onest.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  :root { --petrol: #0B5563; --ink: #1A2022; --muted: #55626A; --amber: #F2A93B; --soft: #CDEBF0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9e6df; font: 400 18px/1.5 "Onest", system-ui, sans-serif; color: var(--ink); }
+  .bar { max-width: 210mm; margin: 16px auto 0; padding: 0 12px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .bar a { color: var(--petrol); }
+  .bar button { font: inherit; font-weight: 700; background: var(--petrol); color: #fff; border: 0; border-radius: 12px; padding: 12px 20px; cursor: pointer; }
+  /* Лист A4: на экране показан в уменьшенном виде, при печати занимает всю страницу */
+  .sheet { width: 210mm; min-height: 297mm; margin: 16px auto; background: #FBF8F3; padding: 18mm 16mm; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,.18); }
+  .logo { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 26px; color: var(--petrol); }
+  .logo img { width: 56px; height: 56px; border-radius: 16px; }
+  h1 { font-size: 46px; line-height: 1.05; letter-spacing: -.03em; font-weight: 800; margin: 14mm 0 6mm; }
+  h1 span { background: linear-gradient(transparent 62%, #FFE7BF 62% 92%, transparent 92%); }
+  .lead { font-size: 22px; color: var(--muted); max-width: 150mm; margin: 0 0 10mm; }
+  .qr { background: #fff; padding: 6mm; border-radius: 8mm; border: 2px solid var(--soft); }
+  .qr img { display: block; width: 88mm; height: 88mm; }
+  .scan { font-size: 22px; font-weight: 700; margin: 6mm 0 2mm; }
+  .url { font-size: 20px; color: var(--petrol); font-weight: 700; word-break: break-all; }
+  ul { list-style: none; padding: 0; margin: 10mm 0 0; display: grid; gap: 4mm; font-size: 22px; text-align: left; }
+  li::before { content: "✓"; color: var(--petrol); font-weight: 800; margin-right: 8px; }
+  .foot { margin-top: auto; padding-top: 10mm; font-size: 14px; color: var(--muted); }
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { background: #FBF8F3; }
+    .bar { display: none; }
+    .sheet { margin: 0; box-shadow: none; width: 100%; min-height: 100vh; }
+  }
+  @media (max-width: 800px) { .sheet { width: calc(100% - 24px); padding: 22px 14px; min-height: 0; } h1 { font-size: 34px; } .qr img { width: min(80vw, 88mm); height: auto; } }
+</style>
+</head>
+<body>
+<div class="bar">
+  <a href="./">← На главную страницу</a>
+  <button type="button" onclick="window.print()">Распечатать</button>
+</div>
+<div class="sheet">
+  <div class="logo"><img src="img/Icon-192.png" alt="" width="56" height="56">Расписание</div>
+  <h1>Пары, аудитории и домашка <span>в телефоне</span></h1>
+  <p class="lead">Приложение для студентов ИМФИТ. Android и iPhone. Бесплатно, без регистрации, работает без интернета.</p>
+  <div class="qr"><img src="qr.svg" alt="QR-код со ссылкой на страницу приложения"></div>
+  <p class="scan">Наведите камеру телефона на код</p>
+  <div class="url">magan-z.github.io/raspisanie</div>
+  <ul>
+    <li>Расписание вашей группы и подгруппы</li>
+    <li>Домашка и файлы от старосты</li>
+    <li>Поиск преподавателей и свободных аудиторий</li>
+  </ul>
+  <div class="foot">Неофициальное студенческое приложение. Не связано с институтом. Расписание берётся из официального файла.</div>
+</div>
+</body>
+</html>

@@ -22,6 +22,7 @@ class GroupOverrideRow {
     this.kind,
     this.repeatWeekly = false,
     this.matchSubject,
+    this.updatedAt,
   });
 
   final String id;
@@ -40,6 +41,9 @@ class GroupOverrideRow {
   final bool repeatWeekly;
   final String? matchSubject;
 
+  /// Когда сервер сохранил правку (UTC). У только что созданной на телефоне правки ещё нет.
+  final DateTime? updatedAt;
+
   factory GroupOverrideRow.fromJson(Map<String, dynamic> j) => GroupOverrideRow(
         id: j['id'] as String,
         baseHash: j['base_hash'] as String,
@@ -53,6 +57,7 @@ class GroupOverrideRow {
         kind: j['kind'] == null ? null : LessonKind.parse(j['kind'] as String),
         repeatWeekly: j['repeat_weekly'] as bool? ?? false,
         matchSubject: j['match_subject'] as String?,
+        updatedAt: j['updated_at'] == null ? null : DateTime.tryParse(j['updated_at'] as String)?.toUtc(),
       );
 
   /// В том виде, в каком хранится на сервере (без служебных полей).
@@ -69,6 +74,7 @@ class GroupOverrideRow {
         'kind': kind?.name,
         'repeat_weekly': repeatWeekly,
         'match_subject': matchSubject,
+        if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(), // для кэша; сервер это поле игнорирует
       };
 
   Override toOverride() => Override(
@@ -84,6 +90,7 @@ class GroupOverrideRow {
         matchSubject: matchSubject,
         fromGroup: true,
         remoteId: id,
+        changedAt: updatedAt,
       );
 }
 

@@ -53,9 +53,10 @@ jobs:
       - name: Разбор расписания
         run: python -m schedule_parser --out ../public --previous "${{ steps.pages.outputs.base_url }}/"
 
-      - name: Страница подписки
+      # Главная страница сайта (лендинг): index.html, листовка, QR, картинки и шрифт из data/web
+      - name: Главная страница сайта
         run: |
-          cp web/index.html ../public/index.html
+          cp -R web/. ../public/
           touch ../public/.nojekyll
 
       # Веб-версия приложения для iPhone: тот же интерфейс, что на Android, но в браузере (кроме виджетов и напоминаний).

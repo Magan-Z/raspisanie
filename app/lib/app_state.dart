@@ -17,6 +17,7 @@ import 'core/bells.dart';
 import 'core/clock.dart';
 import 'core/week.dart';
 import 'data/attachments/attachment_store.dart';
+import 'widget_bridge/widget_pinner.dart';
 import 'data/attachments/group_files.dart';
 import 'data/local/database.dart';
 import 'data/remote/schedule_api.dart';
@@ -481,3 +482,26 @@ final overridesProvider = FutureProvider<List<Override>>((ref) => ref.watch(over
 // ---------- уведомления ----------
 
 final notificationGatewayProvider = Provider<NotificationGateway>((ref) => kIsWeb ? NoopNotificationGateway() : LocalNotificationGateway());
+
+
+// ---------- виджеты: добавление одним нажатием ----------
+
+final widgetPinnerProvider = Provider<WidgetPinner>((ref) => HomeWidgetPinner());
+
+/// Умеет ли этот телефон добавлять виджет по кнопке (на нём же и показываем подсказку).
+final widgetPinSupportedProvider = FutureProvider<bool>((ref) => ref.watch(widgetPinnerProvider).isSupported());
+
+/// Показывать ли на «Сегодня» подсказку «Добавьте виджет»: пока человек её не закрыл и не добавил виджет.
+class WidgetPromoNotifier extends Notifier<bool> {
+  static const _key = 'widgetPromoDismissed';
+
+  @override
+  bool build() => !(ref.watch(sharedPreferencesProvider).getBool(_key) ?? false);
+
+  Future<void> dismiss() async {
+    await ref.read(sharedPreferencesProvider).setBool(_key, true);
+    state = false;
+  }
+}
+
+final widgetPromoProvider = NotifierProvider<WidgetPromoNotifier, bool>(WidgetPromoNotifier.new);

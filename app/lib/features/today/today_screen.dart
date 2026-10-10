@@ -19,6 +19,7 @@ import '../common/empty_state.dart';
 import '../common/illustrations.dart';
 import '../common/lesson_widgets.dart';
 import '../common/reveal.dart';
+import '../common/widget_promo.dart';
 import '../common/room_plate.dart';
 import '../common/word_fit_text.dart';
 import '../overrides/day_edits.dart';
@@ -130,7 +131,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 itemBuilder: (context, page) => _DayPage(day: _dayFor(page), today: today, now: now, data: data),
               ),
             ),
-            const _SyncLabel(),
           ],
         );
       },
@@ -242,6 +242,8 @@ class _DayPage extends ConsumerWidget {
                     subtitle: sunday ? 'Воскресенье — отдыхаем' : 'Можно заняться своими делами',
                     action: _EditsButton(day: day, count: editsCount),
                   ),
+                  const SizedBox(height: Gap.md),
+                  const _SyncLabel(),
                 ]),
               ),
             ],
@@ -261,7 +263,8 @@ class _DayPage extends ConsumerWidget {
     }
     final focus = current ?? next;
 
-    final children = <Widget>[];
+    // Подсказка про виджет — внутри списка, а не над ним: так она прокручивается и не отнимает место на узких экранах
+    final children = <Widget>[const WidgetPromo()];
     if (focus != null) {
       children.add(Padding(
         padding: const EdgeInsets.only(bottom: Gap.lg),
@@ -306,7 +309,7 @@ class _DayPage extends ConsumerWidget {
           room: l.room,
           highlighted: phase == _Phase.current,
           dimmed: phase == _Phase.past,
-          note: l.note ?? (l.isPersonal ? 'изменено вами' : (l.isGroup ? 'изменено старостой' : null)),
+          note: lessonNote(l, now),
           hasHomework: homeworkDue.any((h) => h.subject == l.subject),
           withGroups: l.withGroups,
           onLongPress: () => showLessonActions(context, l),
@@ -320,6 +323,8 @@ class _DayPage extends ConsumerWidget {
       padding: const EdgeInsets.only(top: Gap.sm),
       child: Center(child: _EditsButton(day: day, count: editsCount)),
     ));
+    // «Расписание от 9 октября» — в конце списка, а не отдельной строкой снизу: так она не обрезает карточки пар
+    children.add(const Padding(padding: EdgeInsets.only(top: Gap.md), child: Center(child: _SyncLabel())));
 
     return RefreshIndicator(
       onRefresh: refresh,
@@ -580,9 +585,14 @@ class _SyncLabel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final fetched = ref.watch(lastFetchedProvider).value;
     final now = ref.watch(nowProvider).value ?? ref.read(clockProvider).now();
-    final text = fetched == null ? 'встроенная копия расписания' : 'обновлено ${agoText(fetched, now)}';
+    // Пока обновлений с сайта не было, называем дату самого расписания: «Расписание от 9 октября»
+    final version = ref.watch(myScheduleProvider).value?.schedule.version;
+    final date = scheduleDate(version);
+    final text = fetched != null
+        ? 'обновлено ${agoText(fetched, now)}'
+        : (date == null ? 'расписание из памяти приложения' : 'расписание от ${dateText(date)}');
     return Padding(
-      padding: const EdgeInsets.only(bottom: Gap.sm),
+      padding: EdgeInsets.zero,
       child: Text(text, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
     );
   }

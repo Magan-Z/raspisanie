@@ -14,6 +14,7 @@ import 'package:raspisanie/data/remote/shared_api.dart';
 import 'package:raspisanie/domain/attachment.dart';
 import 'package:raspisanie/domain/notification_plan.dart';
 import 'package:raspisanie/notifications/notification_gateway.dart';
+import 'package:raspisanie/widget_bridge/widget_pinner.dart';
 import 'package:raspisanie/widget_bridge/deep_links.dart';
 
 /// Ассеты читаются прямо с диска и без ожидания — в тестах так надёжнее, чем настоящий rootBundle.
@@ -240,4 +241,18 @@ class FakeBackend {
         }
         return fail('unknown $fn');
       }));
+}
+
+
+/// Поддельное «добавление виджета на главный экран»: запоминает, что просили добавить.
+class FakeWidgetPinner implements WidgetPinner {
+  FakeWidgetPinner({required this.supported});
+  final bool supported;
+  final pinned = <String>[];
+
+  @override
+  Future<bool> isSupported() async => supported;
+
+  @override
+  Future<void> pin(String className) async => pinned.add(className);
 }

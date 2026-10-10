@@ -292,6 +292,61 @@ void main() {
     expect(find.text('2 БИ-25'), findsOneWidget);
   });
 
+  testWidgets('Подпись внизу: без обновлений с сайта пишет дату расписания, а не «встроенная копия»', (tester) async {
+    await _start(tester, prefs: profile);
+    expect(find.textContaining('встроенная копия'), findsNothing);
+    expect(find.textContaining('расписание от '), findsOneWidget);
+  });
+
+  testWidgets('Меню пары: полное ФИО преподавателя из справочника института', (tester) async {
+    await _start(tester, prefs: profile);
+    await tester.tap(find.text('Технологическое предпринимательство').last);
+    await _settle(tester);
+    expect(find.text('Халиев Магомед Сайд-Усманович'), findsOneWidget); // в расписании только «Халиев М.С-У.»
+    expect(find.text('Преподаватель'), findsOneWidget);
+  });
+
+  group('Виджеты: добавление одним нажатием', () {
+    testWidgets('подсказка на «Сегодня» → выбрать вид → система просит добавить; подсказка пропадает', (tester) async {
+      final pinner = FakeWidgetPinner(supported: true);
+      await _start(tester, prefs: profile, extraOverrides: [widgetPinnerProvider.overrideWithValue(pinner)]);
+
+      expect(find.text('Виджет на главный экран'), findsOneWidget);
+      await tester.tap(find.text('Добавить'));
+      await _settle(tester);
+      expect(find.text('Какой виджет добавить?'), findsOneWidget);
+      await tester.tap(find.text('Ближайшая пара (строка)'));
+      await _settle(tester);
+
+      expect(pinner.pinned, ['StripWidget']);
+      expect(find.text('Виджет на главный экран'), findsNothing);
+    });
+
+    testWidgets('«Скрыть подсказку» убирает её насовсем', (tester) async {
+      await _start(tester, prefs: profile, extraOverrides: [widgetPinnerProvider.overrideWithValue(FakeWidgetPinner(supported: true))]);
+      await tester.tap(find.byTooltip('Скрыть подсказку'));
+      await _settle(tester);
+      expect(find.text('Виджет на главный экран'), findsNothing);
+    });
+
+    testWidgets('на телефоне без поддержки подсказки нет, а в настройках — ручная инструкция', (tester) async {
+      final pinner = FakeWidgetPinner(supported: false);
+      await _start(tester, prefs: profile, extraOverrides: [widgetPinnerProvider.overrideWithValue(pinner)]);
+      expect(find.text('Виджет на главный экран'), findsNothing);
+
+      await tester.tap(find.text('Настройки').last);
+      await _settle(tester);
+      await tester.dragUntilVisible(find.text('Добавить виджет'), find.byType(Scrollable).first, const Offset(0, -300));
+      await tester.tap(find.text('Добавить виджет'));
+      await _settle(tester);
+      await tester.tap(find.text('Сегодня').last);
+      await _settle(tester);
+
+      expect(pinner.pinned, isEmpty);
+      expect(find.textContaining('Нажмите и удерживайте пустое место'), findsOneWidget);
+    });
+  });
+
   group('Староста и группа', () {
     // Хеш расписания 1 БИ-25 в встроенной копии: правки старосты привязаны к нему
     String groupHash() {
@@ -320,7 +375,8 @@ void main() {
 
       expect(find.text('3-33'), findsWidgets);
       expect(find.text('2-15'), findsNothing); // прежняя аудитория заменена
-      expect(find.text('изменено старостой'), findsOneWidget);
+      // сервер сохранил правку 9 октября в 12:00 UTC, то есть в 15:00 по Москве; сегодня в тесте 7 октября — с датой
+      expect(find.text('изменено старостой 9 октября в 15:00'), findsOneWidget);
       expect(find.text('9-99'), findsNothing); // устаревшая правка не действует
     });
 
@@ -652,7 +708,8 @@ void main() {
       final loader = FontLoader('Onest')..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Onest.ttf').readAsBytesSync())));
       await loader.load();
     });
-    await _start(tester, prefs: profile);
+    // Подсказка про виджет тоже показана (телефон умеет добавлять виджеты) — она не должна переполняться
+    await _start(tester, prefs: profile, extraOverrides: [widgetPinnerProvider.overrideWithValue(FakeWidgetPinner(supported: true))]);
     tester.view.physicalSize = const Size(320, 640); // узкий телефон
     tester.platformDispatcher.textScaleFactorTestValue = 2.0;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);

@@ -263,6 +263,7 @@ class Override {
     this.matchSubject,
     this.fromGroup = false,
     this.remoteId,
+    this.changedAt,
   });
 
   final int? id; // null — ещё не сохранено в базу
@@ -290,6 +291,9 @@ class Override {
   /// Номер правки на сервере (только для правок старосты).
   final String? remoteId;
 
+  /// Когда староста внёс правку (время сервера, UTC). Только для правок старосты.
+  final DateTime? changedAt;
+
   /// Действует ли правка в этот день.
   bool appliesOn(DateTime day) => date == day || (repeatWeekly && !day.isBefore(date) && day.weekday == date.weekday);
 }
@@ -311,6 +315,7 @@ class ResolvedLesson {
     this.isPersonal = false,
     this.isGroup = false,
     this.withGroups = const [],
+    this.groupChangedAt,
   });
 
   final DateTime date;
@@ -327,8 +332,9 @@ class ResolvedLesson {
   final bool isPersonal; // изменено личной правкой
   final bool isGroup; // изменено старостой для всей группы
   final List<String> withGroups; // с какими группами объединена лекция (пусто — только эта группа)
+  final DateTime? groupChangedAt; // когда староста изменил эту пару (для подписи «изменено старостой в 14:20»)
 
-  ResolvedLesson copyWith({String? subject, String? teacher, String? room, String? note, bool? isPersonal, bool? isGroup}) =>
+  ResolvedLesson copyWith({String? subject, String? teacher, String? room, String? note, bool? isPersonal, bool? isGroup, DateTime? groupChangedAt}) =>
       ResolvedLesson(
         date: date,
         pair: pair,
@@ -345,6 +351,7 @@ class ResolvedLesson {
         isGroup: isGroup ?? this.isGroup,
         // если пару заменили другим предметом, прежний «поток» к ней уже не относится
         withGroups: subject != null && subject != this.subject ? const [] : withGroups,
+        groupChangedAt: groupChangedAt ?? this.groupChangedAt,
       );
 }
 

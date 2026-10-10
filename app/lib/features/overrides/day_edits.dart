@@ -10,6 +10,7 @@ import '../../app_state.dart';
 import '../../core/formatting.dart';
 import '../../domain/models.dart';
 import '../../domain/overrides_text.dart';
+import '../../domain/search.dart' show teacherFullName;
 import '../../theme/tokens.dart';
 import '../../data/remote/shared_api.dart';
 import '../../group_actions.dart';
@@ -24,6 +25,9 @@ Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
   final overrides = container.read(overridesProvider).value ?? const <Override>[];
   final rulesForThisPair = [for (final o in overrides) if (o.appliesOn(lesson.date) && o.pair == lesson.pair) o];
   final hasRepeatingRule = rulesForThisPair.any((o) => o.repeatWeekly);
+  // Полное ФИО преподавателя из справочника института (если там есть), иначе как в расписании
+  final directory = container.read(indexProvider).value?.teachers ?? const <String>[];
+  final teacherName = lesson.teacher == null ? null : teacherFullName(lesson.teacher!, directory);
 
   Future<void> save(List<Override> items) async {
     for (final o in items) {
@@ -73,6 +77,12 @@ Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
               title: Text(lesson.subject, style: theme.textTheme.titleMedium),
               subtitle: Text('${dayTitle(lesson.date)}, ${lesson.pair} пара'),
             ),
+            if (teacherName != null)
+              ListTile(
+                leading: const Icon(Icons.person_rounded),
+                title: Text(teacherName),
+                subtitle: const Text('Преподаватель'),
+              ),
             if (lesson.withGroups.isNotEmpty)
               ListTile(
                 leading: const Icon(Icons.groups_rounded),

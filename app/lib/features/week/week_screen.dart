@@ -104,7 +104,7 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
                     room: l.room,
                     highlighted: entry.day == today && !now.isBefore(l.startAt) && now.isBefore(l.endAt),
                     dimmed: entry.day == today && !now.isBefore(l.endAt),
-                    note: l.note ?? (l.isPersonal ? 'изменено вами' : (l.isGroup ? 'изменено старостой' : null)),
+                    note: lessonNote(l, now),
                     hasHomework: dueOn(homework, entry.day).any((h) => h.subject == l.subject),
                     withGroups: l.withGroups,
                     onLongPress: () => showLessonActions(context, l),

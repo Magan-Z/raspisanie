@@ -68,6 +68,7 @@ void _applyOverrides(List<ResolvedLesson> result, List<Override> layer, DateTime
             note: o.note,
             isPersonal: group ? null : true,
             isGroup: group ? true : null,
+            groupChangedAt: group ? o.changedAt : null,
           );
         }
       }
@@ -82,6 +83,7 @@ void _applyOverrides(List<ResolvedLesson> result, List<Override> layer, DateTime
         tags: const [],
         note: o.note,
         isPersonal: !group,
+        groupChangedAt: group ? o.changedAt : null,
         isGroup: group));
   }
 }
@@ -100,6 +102,7 @@ ResolvedLesson _toResolved(
   bool isPersonal = false,
   bool isGroup = false,
   List<String> withGroups = const [],
+  DateTime? groupChangedAt,
 }) {
   final (start, end) = pairTimes(day, pair, bells);
   return ResolvedLesson(
@@ -117,6 +120,7 @@ ResolvedLesson _toResolved(
     isPersonal: isPersonal,
     isGroup: isGroup,
     withGroups: withGroups,
+    groupChangedAt: groupChangedAt,
   );
 }
 

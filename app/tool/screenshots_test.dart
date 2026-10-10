@@ -44,7 +44,7 @@ Map<String, dynamic> backend0hw(String subject, String text, String due) =>
     {'id': '$subject$due', 'subject': subject, 'body': text, 'due_date': due, 'kind': null, 'deleted': false, 'updated_at': '2026-10-09T12:00:00+00:00'};
 
 void main() {
-  Future<void> shoot(WidgetTester tester, String name, {required bool dark, DateTime? now, double textScale = 1, Future<void> Function()? act, Map<String, Object> prefs = const {}, bool noProfile = false, Size size = const Size(1080, 2340), SharedApi? sharedApi}) async {
+  Future<void> shoot(WidgetTester tester, String name, {required bool dark, DateTime? now, double textScale = 1, Future<void> Function()? act, Map<String, Object> prefs = const {}, bool noProfile = false, Size size = const Size(1080, 2340), SharedApi? sharedApi, double pixelRatio = 1, String? dir}) async {
     tester.view.physicalSize = size;
     // Как на настоящем телефоне: строка состояния сверху и жестовая полоса снизу
     tester.view.padding = const FakeViewPadding(top: 72, bottom: 66);
@@ -100,11 +100,12 @@ void main() {
       await settle();
     }
     await tester.runAsync(() async {
-      Directory(outDir).createSync(recursive: true);
+      final target = dir ?? outDir;
+      Directory(target).createSync(recursive: true);
       final boundary = key.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: 1);
+      final image = await boundary.toImage(pixelRatio: pixelRatio);
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      File('$outDir/$name.png').writeAsBytesSync(bytes!.buffer.asUint8List());
+      File('$target/$name.png').writeAsBytesSync(bytes!.buffer.asUint8List());
     });
   }
 
@@ -238,6 +239,52 @@ void main() {
       await tester.pumpAndSettle();
       await tester.dragUntilVisible(find.text('Изменения для группы'), find.byType(Scrollable).first, const Offset(0, -200));
       await tester.pumpAndSettle();
+    });
+  });
+  // Снимки для страницы-лендинга (data/web): высокое разрешение (1080×2340), настоящие шрифты, данные «как у живой группы».
+  // Запуск:  flutter test tool/screenshots_test.dart --plain-name landing   →  /tmp/claude-shots/landing/
+  const landingDir = '/tmp/claude-shots/landing';
+  FakeBackend landingBackend() {
+    final backend = FakeBackend(hash: hashOfGroup());
+    final change = backend.override(room: '3-33')..['updated_at'] = '2026-10-07T07:30:00+00:00'; // староста в 10:30 по Москве
+    backend.overrides['o1'] = change;
+    backend.homework['h1'] = backend.hw(id: 'h1', subject: 'Философия', text: 'Прочитать главу 3, подготовить конспект', due: '2026-10-14',
+        files: [{'id': 'f1', 'name': 'Глава 3.pdf', 'size': 1800000}]);
+    backend.homework['h2'] = backend.hw(id: 'h2', subject: 'ЧТК и этика', text: 'Эссе на одну страницу', due: '2026-10-09');
+    backend.homework['h3'] = backend.hw(id: 'h3', subject: 'Технологическое предпринимательство', text: 'Подготовить бизнес-идею, 3 слайда', due: '2026-10-15',
+        files: [{'id': 'f2', 'name': 'Шаблон слайдов.pptx', 'size': 420000}]);
+    return backend;
+  }
+
+  testWidgets('landing today light', (tester) async {
+    await tester.runAsync(loadFonts);
+    await shoot(tester, 'today-light', dark: false, sharedApi: landingBackend().api(), pixelRatio: 3, dir: landingDir);
+  });
+  testWidgets('landing today dark', (tester) async {
+    await tester.runAsync(loadFonts);
+    await shoot(tester, 'today-dark', dark: true, sharedApi: landingBackend().api(), pixelRatio: 3, dir: landingDir);
+  });
+  testWidgets('landing week', (tester) async {
+    await tester.runAsync(loadFonts);
+    await shoot(tester, 'week-light', dark: false, sharedApi: landingBackend().api(), pixelRatio: 3, dir: landingDir, act: () async {
+      await tester.tap(find.text('Неделя').last);
+    });
+  });
+  testWidgets('landing homework', (tester) async {
+    await tester.runAsync(loadFonts);
+    await shoot(tester, 'homework-light', dark: false, sharedApi: landingBackend().api(), pixelRatio: 3, dir: landingDir, act: () async {
+      await tester.tap(find.text('ДЗ').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('От старосты'));
+      await tester.pumpAndSettle();
+    });
+  });
+  testWidgets('landing search teacher', (tester) async {
+    await tester.runAsync(loadFonts);
+    await shoot(tester, 'search-light', dark: false, sharedApi: landingBackend().api(), pixelRatio: 3, dir: landingDir, act: () async {
+      await tester.tap(find.text('Поиск').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Преподаватель').first);
     });
   });
   testWidgets('today large font', (tester) async {
