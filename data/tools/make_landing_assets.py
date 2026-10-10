@@ -26,7 +26,7 @@ PAPER, PETROL, INK, MUTED, AMBER = (251, 248, 243), (11, 85, 99), (26, 32, 34), 
 
 def screenshots() -> None:
     (WEB / "img").mkdir(parents=True, exist_ok=True)
-    for name in ("today-light", "today-dark", "week-light", "homework-light", "search-light"):
+    for name in ("today-light", "today-dark", "week-light", "homework-light", "search-free-light", "search-teacher-light"):
         image = Image.open(SHOTS / f"{name}.png").convert("RGB")
         image = image.resize((600, int(600 * image.height / image.width)), Image.LANCZOS)
         image.save(WEB / "img" / f"{name}.webp", "WEBP", quality=82, method=6)

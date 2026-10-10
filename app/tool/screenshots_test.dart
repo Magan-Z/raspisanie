@@ -279,12 +279,29 @@ void main() {
       await tester.pumpAndSettle();
     });
   });
-  testWidgets('landing search teacher', (tester) async {
+  testWidgets('landing search free rooms', (tester) async {
     await tester.runAsync(loadFonts);
-    await shoot(tester, 'search-light', dark: false, sharedApi: landingBackend().api(), pixelRatio: 3, dir: landingDir, act: () async {
+    await shoot(tester, 'search-free-light', dark: false, sharedApi: landingBackend().api(), pixelRatio: 3, dir: landingDir, act: () async {
+      await tester.tap(find.text('Поиск').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Свободные').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('3 пара'));
+      await tester.pumpAndSettle();
+    });
+  });
+  testWidgets('landing search teacher schedule', (tester) async {
+    await tester.runAsync(loadFonts);
+    await shoot(tester, 'search-teacher-light', dark: false, sharedApi: landingBackend().api(), pixelRatio: 3, dir: landingDir, act: () async {
       await tester.tap(find.text('Поиск').last);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Преподаватель').first);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, 'Хасанова');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Хасанова З.С.').last);
+      await tester.pumpAndSettle();
+      FocusManager.instance.primaryFocus?.unfocus();
     });
   });
   testWidgets('today large font', (tester) async {
