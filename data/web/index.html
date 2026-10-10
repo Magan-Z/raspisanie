@@ -116,22 +116,6 @@
   }
   .phone img { display: block; width: 100%; height: auto; border-radius: 32px; aspect-ratio: 600 / 1300; background: var(--surface-2); }
 
-  /* ---------- Лента звонков (фирменный элемент): день института по реальным звонкам ---------- */
-  .rail { margin-top: 26px; padding: 16px 16px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-  .rail-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-  .rail-status { font-weight: 700; font-size: 1.02rem; }
-  .rail-cap { color: var(--muted); font-size: .8rem; }
-  .rail-track { position: relative; height: 38px; }
-  .rail-seg {
-    position: absolute; top: 0; bottom: 0; border-radius: 10px; background: var(--petrol-soft); color: var(--petrol-soft-ink);
-    display: grid; place-items: center; font-weight: 700; font-size: .9rem;
-  }
-  .rail-seg.done { opacity: .5; }
-  .rail-seg.now { background: var(--petrol); color: var(--petrol-ink); }
-  .rail-mark { position: absolute; top: -7px; bottom: -7px; width: 3px; background: var(--amber); border-radius: 3px; transform: translateX(-1.5px); }
-  .rail-mark::before { content: ""; position: absolute; top: -3px; left: -4px; width: 11px; height: 11px; background: var(--amber); border-radius: 50%; }
-  .rail-ticks { display: flex; justify-content: space-between; color: var(--muted); font-size: .78rem; margin-top: 10px; }
-
   /* ---------- Секции ---------- */
   section { padding: 44px 0; }
   section + section { border-top: 1px solid var(--line); }
@@ -215,7 +199,8 @@
 
   /* ---------- Подвал ---------- */
   footer { border-top: 1px solid var(--line); padding: 28px 0 max(36px, env(safe-area-inset-bottom)); color: var(--muted); font-size: .92rem; }
-  footer .links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 0; }
+  footer .uni { color: var(--ink); font-weight: 600; margin: 0 0 8px; max-width: 40em; }
+  footer .btn { flex-direction: row; min-height: 48px; padding: 8px 20px; font-size: 1rem; }
 
   @media (min-width: 720px) {
     .grid { grid-template-columns: repeat(2, 1fr); }
@@ -271,16 +256,6 @@
           <li>Не собираем данные о вас</li>
           <li>Исходный код открыт</li>
         </ul>
-
-        <!-- Лента звонков: настоящий ритм дня института -->
-        <div class="rail" aria-live="polite">
-          <div class="rail-head">
-            <span class="rail-status" id="rail-status">Считаем время…</span>
-            <span class="rail-cap">звонки института, время московское</span>
-          </div>
-          <div class="rail-track" id="rail-track" role="img" aria-label="Пять пар в течение дня"></div>
-          <div class="rail-ticks"><span id="tick-start">9:00</span><span id="tick-end">17:50</span></div>
-        </div>
       </div>
 
       <div>
@@ -393,10 +368,16 @@
 
   <!-- КАЛЕНДАРЬ БЕЗ ПРИЛОЖЕНИЯ -->
   <section id="calendar" aria-labelledby="h-calendar">
-    <h2 id="h-calendar">Только календарь, без приложения</h2>
-    <p class="sub">Подпишитесь на расписание своей группы в календаре телефона: пары появятся там сами и будут обновляться.</p>
+    <h2 id="h-calendar">Не хотите ставить приложение? Подключите календарь</h2>
+    <p class="sub">Календарь — это программа, которая уже есть в вашем телефоне: «Календарь» на iPhone и «Google Календарь» на Android. Выберите свою группу, и все пары появятся в нём сами, с временем и аудиторией. Когда расписание изменится, пары в календаре обновятся тоже.</p>
+    <ol class="steps">
+      <li><div><b>Выберите группу</b><span>Нажмите кнопку ниже и укажите форму обучения, курс, группу и подгруппу.</span></div></li>
+      <li><div><b>Нажмите «Добавить в календарь»</b><span>Телефон спросит, подписаться ли на расписание. Согласитесь.</span></div></li>
+      <li><div><b>Откройте «Календарь»</b><span>Пары уже там. Можно добавить виджет календаря на главный экран.</span></div></li>
+    </ol>
+    <div class="callout calm"><b>Чего в календаре не будет</b>Только пары. Домашки, замен от старосты, поиска преподавателей и виджетов приложения в нём нет: для этого нужно приложение. Новое расписание в календаре появляется не мгновенно, а в течение нескольких часов.</div>
     <details id="cal-details">
-      <summary>Выбрать группу и подписаться</summary>
+      <summary>Выбрать группу и подключить календарь</summary>
       <div id="loading" style="padding-bottom:14px">Загружаю расписание…</div>
       <div id="app" hidden>
         <div class="cal-step" id="step-form"><h4>Форма обучения</h4><div class="choices" id="forms"></div></div>
@@ -412,10 +393,10 @@
         </div>
         <div id="result" hidden>
           <div class="actions" style="margin-bottom:8px">
-            <a class="btn primary" id="btn-ics-ios" href="#">Добавить в Календарь iPhone</a>
-            <a class="btn soft" id="btn-google" href="#" target="_blank" rel="noopener">Добавить в Google Календарь</a>
+            <a class="btn primary" id="btn-ics-ios" href="#">Добавить в календарь iPhone</a>
+            <a class="btn soft" id="btn-google" href="#" target="_blank" rel="noopener">Добавить в Google Календарь (Android)</a>
           </div>
-          <p class="hint">Календарь обновляется сам: когда меняется расписание, пары в нём тоже поменяются.</p>
+          <p class="hint">На iPhone нажмите первую кнопку, на Android — вторую.</p>
           <h3 id="table-title" style="margin-top:22px">Расписание</h3>
           <div class="wk-tabs" role="tablist">
             <button role="tab" id="tab-1" aria-selected="true" data-week="1">1 неделя</button>
@@ -457,11 +438,11 @@
     </details>
     <details>
       <summary>Расписание в приложении не совпадает с настоящим. Что делать?</summary>
-      <p>Потяните экран «Сегодня» вниз: приложение проверит обновления. Внизу экрана видна дата расписания. Если в файле института ошибка, она будет и в приложении: сообщите старосте или в деканат. Нашли ошибку именно в приложении? <a href="https://github.com/Magan-Z/raspisanie/issues/new" rel="noopener">Напишите об этом на GitHub</a>.</p>
+      <p>Потяните экран «Сегодня» вниз: приложение проверит обновления. Внизу экрана видна дата расписания. Если в файле института ошибка, она будет и в приложении: сообщите старосте или в деканат.</p>
     </details>
     <details>
       <summary>Как стать старостой в приложении?</summary>
-      <p>Старосте группы нужен одноразовый код, его выдаёт автор приложения. <a href="https://github.com/Magan-Z/raspisanie/issues/new" rel="noopener">Оставьте заявку на GitHub</a>, указав группу. В приложении: «Настройки» → «Староста и группа» → ввести код.</p>
+      <p>Старосте группы нужен одноразовый код, его выдаёт автор приложения. Контакт для заявок скоро появится на этой странице. Когда код будет у вас: «Настройки» → «Староста и группа» → ввести код.</p>
     </details>
     <details>
       <summary>Чем отличается iPhone от Android?</summary>
@@ -470,13 +451,9 @@
   </section>
 
   <footer>
+    <p class="uni">Для студентов Института математики, физики и информационных технологий (ИМФИТ) Чеченского государственного университета имени А. А. Кадырова</p>
     <div id="footer-date">Студенческий проект. Расписание берётся из официального файла института.</div>
-    <div class="links">
-      <a href="https://github.com/Magan-Z/raspisanie" rel="noopener">Исходный код</a>
-      <a href="https://github.com/Magan-Z/raspisanie/blob/main/LICENSE" rel="noopener">Лицензия</a>
-      <a href="https://github.com/Magan-Z/raspisanie/releases" rel="noopener">Все версии</a>
-      <a href="poster.html">Листовка</a>
-    </div>
+    <p><a class="btn soft" href="poster.html">Листовка для печати</a></p>
   </footer>
 </div>
 
@@ -484,8 +461,7 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://magan-z.github.io/raspisanie/";
-const FALLBACK_BELLS = [["09:00", "10:30"], ["10:40", "12:10"], ["13:00", "14:30"], ["14:40", "16:10"], ["16:20", "17:50"]];
-const state = { index: null, form: null, course: null, group: null, subgroup: null, pe: null, week: 1, groupData: null, bells: FALLBACK_BELLS };
+const state = { index: null, form: null, course: null, group: null, subgroup: null, pe: null, week: 1, groupData: null };
 
 // ---------- Время (Москва, UTC+3) ----------
 function moscowNow() { return new Date(Date.now() + 3 * 3600 * 1000); }
@@ -494,48 +470,6 @@ function weekNumber(day, anchorIso) {
   const anchor = new Date(anchorIso + "T00:00:00Z");
   const days = Math.round((day - anchor) / 86400000);
   return ((Math.floor(days / 7) % 2) + 2) % 2 + 1;
-}
-const minutes = (hm) => { const [h, m] = hm.split(":").map(Number); return h * 60 + m; };
-const clock = (min) => `${Math.floor(min / 60)}:${String(min % 60).padStart(2, "0")}`;
-
-// ---------- Лента звонков ----------
-function drawRail() {
-  const bells = state.bells.map(([s, e]) => [minutes(s), minutes(e)]);
-  const from = bells[0][0] - 30, to = bells[bells.length - 1][1] + 30, span = to - from;
-  const now = moscowNow();
-  const nowMin = now.getUTCHours() * 60 + now.getUTCMinutes();
-  const sunday = now.getUTCDay() === 0;
-  const track = $("rail-track");
-  track.replaceChildren();
-  let status;
-  let current = -1;
-  bells.forEach(([s, e], i) => { if (nowMin >= s && nowMin < e) current = i; });
-  if (sunday) status = "Сегодня воскресенье — пар нет";
-  else if (current >= 0) status = `Сейчас идёт ${current + 1}-я пара · до конца ${bells[current][1] - nowMin} мин`;
-  else if (nowMin < bells[0][0]) status = `Первая пара в ${clock(bells[0][0])}`;
-  else if (nowMin >= bells[bells.length - 1][1]) status = "На сегодня пары закончились";
-  else {
-    const next = bells.find(([s]) => s > nowMin);
-    status = `Перемена · следующая пара в ${clock(next[0])}`;
-  }
-  $("rail-status").textContent = status;
-  bells.forEach(([s, e], i) => {
-    const seg = document.createElement("div");
-    seg.className = "rail-seg" + (i === current ? " now" : (!sunday && nowMin >= e ? " done" : ""));
-    seg.style.left = ((s - from) / span * 100) + "%";
-    seg.style.width = ((e - s) / span * 100) + "%";
-    seg.textContent = String(i + 1);
-    track.append(seg);
-  });
-  if (!sunday && nowMin >= from && nowMin <= to) {
-    const mark = document.createElement("div");
-    mark.className = "rail-mark";
-    mark.style.left = ((nowMin - from) / span * 100) + "%";
-    track.append(mark);
-  }
-  track.setAttribute("aria-label", `Пары дня: ${bells.map(([s, e], i) => `${i + 1}-я с ${clock(s)} до ${clock(e)}`).join(", ")}`);
-  $("tick-start").textContent = clock(bells[0][0]);
-  $("tick-end").textContent = clock(bells[bells.length - 1][1]);
 }
 
 // ---------- Платформа: подсвечиваем нужную кнопку ----------
@@ -739,7 +673,6 @@ async function startCalendar() {
     $("loading").innerHTML = '<p class="error">Не удалось загрузить расписание. Проверьте интернет и обновите страницу.</p>';
     return;
   }
-  if (Array.isArray(state.index.bells) && state.index.bells.length) { state.bells = state.index.bells; drawRail(); }
   state.week = weekNumber(moscowToday(), state.index.weekAnchor);
   const saved = loadChoice();
   if (saved) Object.assign(state, saved);
@@ -758,8 +691,6 @@ function openCalendarIfLinked() {
 window.addEventListener("hashchange", openCalendarIfLinked);
 document.querySelectorAll('a[href="#calendar"]').forEach((a) => a.addEventListener("click", () => { $("cal-details").open = true; }));
 
-drawRail();
-setInterval(drawRail, 30000);
 setupPlatform();
 openCalendarIfLinked();
 loadRelease();
