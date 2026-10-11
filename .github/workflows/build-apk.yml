@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write   # нужно, чтобы создать Release
+  actions: write    # нужно, чтобы после выпуска запустить публикацию сайта (на сайте лежит копия APK)
 
 jobs:
   apk:
@@ -74,6 +75,14 @@ jobs:
         with:
           files: app/raspisanie.apk
           generate_release_notes: true
+
+      # Выпуск, созданный из задачи, сам другие задачи не запускает, поэтому запускаем публикацию сайта вручную:
+      # она положит новый APK на сайт.
+      - name: Обновить сайт
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run publish-schedule.yml --repo "${{ github.repository }}" --ref main
 
       - name: APK как файл задачи (для ручного запуска)
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}

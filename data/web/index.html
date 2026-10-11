@@ -240,7 +240,7 @@
         <p class="lead">Открыли телефон — увидели, где и когда ваша пара. Без регистрации и паролей, работает без интернета, а староста группы сам вносит замены.</p>
 
         <div class="cta" id="cta">
-          <a class="btn primary" id="btn-android" href="https://github.com/Magan-Z/raspisanie/releases/latest/download/raspisanie.apk" data-os="android">
+          <a class="btn primary" id="btn-android" href="raspisanie.apk" download data-os="android">
             Скачать для Android
             <small id="apk-meta">бесплатно · файл APK</small>
           </a>
@@ -486,9 +486,33 @@ function setupPlatform() {
     ios.className = "btn primary"; android.className = "btn ghost";
     $("cta").prepend(ios);
     selectTab("ios");
+    prefetchApp();
   } else if (os === "android") {
     selectTab("android");
   }
+}
+
+// На iPhone, когда человек дошёл до инструкции, тихо подгружаем веб-версию приложения (около 5 МБ):
+// пока он читает, файлы уже окажутся в телефоне, и по кнопке приложение откроется почти сразу.
+function prefetchApp() {
+  const saveData = navigator.connection && navigator.connection.saveData; // «экономия трафика» — уважаем
+  if (saveData || !("IntersectionObserver" in window)) return;
+  const watcher = new IntersectionObserver((entries) => {
+    if (!entries.some((e) => e.isIntersecting)) return;
+    watcher.disconnect();
+    // <link rel="prefetch"> браузер доканчивает даже после перехода на другую страницу; если не поддерживается — обычный запрос
+    const canPrefetch = document.createElement("link").relList.supports("prefetch");
+    for (const name of ["flutter_bootstrap.js", "main.dart.js", "canvaskit/canvaskit.js", "canvaskit/canvaskit.wasm", "sqlite3.wasm", "drift_worker.js"]) {
+      if (canPrefetch) {
+        const link = document.createElement("link");
+        link.rel = "prefetch"; link.href = "app/" + name;
+        document.head.appendChild(link);
+      } else {
+        fetch("app/" + name, { priority: "low" }).catch(() => {});
+      }
+    }
+  });
+  watcher.observe($("install"));
 }
 
 // ---------- Вкладки «Как установить» ----------
@@ -507,16 +531,14 @@ for (const n of ["android", "ios"]) {
   });
 }
 
-// ---------- Версия и размер файла (если GitHub ответит; иначе остаётся надпись по умолчанию) ----------
+// ---------- Версия и размер файла (apk.json кладёт на сайт публикация; если файла нет — остаётся надпись по умолчанию) ----------
 async function loadRelease() {
   try {
-    const response = await fetch("https://api.github.com/repos/Magan-Z/raspisanie/releases/latest", { headers: { Accept: "application/vnd.github+json" } });
+    const response = await fetch("apk.json", { cache: "no-cache" });
     if (!response.ok) return;
-    const release = await response.json();
-    const apk = (release.assets || []).find((a) => /\.apk$/i.test(a.name));
-    if (!apk) return;
-    $("apk-meta").textContent = `версия ${release.tag_name.replace(/^v/, "")} · ${(apk.size / 1048576).toFixed(0)} МБ · бесплатно`;
-  } catch (e) { /* без сети с GitHub — оставляем как есть */ }
+    const apk = await response.json();
+    $("apk-meta").textContent = `версия ${apk.version} · ${(apk.size / 1048576).toFixed(0)} МБ · бесплатно`;
+  } catch (e) { /* файла нет — оставляем как есть */ }
 }
 
 // ---------- Поделиться ----------

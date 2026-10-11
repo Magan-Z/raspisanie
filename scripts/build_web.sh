@@ -24,4 +24,6 @@ rm -f web/drift_worker.js.deps web/drift_worker.js.map
 # 2. Сама сборка. canvaskit кладём внутрь сборки (без загрузки с чужого сервера) — приложение работает и без интернета
 flutter build web --release --base-href "$BASE_HREF" --no-web-resources-cdn \
   --dart-define=SCHEDULE_BASE_URL="$SITE_URL"
+# 3. Кэш приложения (sw.js): список файлов и отпечаток сборки
+python3 ../scripts/make_sw.py build/web
 echo "Готово: app/build/web (адрес на сайте: $BASE_HREF)"

@@ -59,6 +59,26 @@ jobs:
           cp -R web/. ../public/
           touch ../public/.nojekyll
 
+      # APK лежит на самом сайте, поэтому кнопка «Скачать» не уводит на GitHub. Берём файл из последнего выпуска (Releases);
+      # apk.json — версия и размер для подписи под кнопкой. Если скачать не вышло, сайт всё равно публикуется (с предупреждением).
+      - name: APK на сайте
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ok=0
+          for attempt in 1 2 3; do
+            if gh release download --repo "${{ github.repository }}" --pattern raspisanie.apk --dir ../public --clobber; then ok=1; break; fi
+            sleep 5
+          done
+          if [ "$ok" = 1 ]; then
+            size=$(stat -c %s ../public/raspisanie.apk)
+            tag=$(gh release view --repo "${{ github.repository }}" --json tagName --jq .tagName)
+            printf '{"version":"%s","size":%s}\n' "${tag#v}" "$size" > ../public/apk.json
+            echo "APK $tag, $size байт"
+          else
+            echo "::warning::Не удалось скачать APK из последнего выпуска: на сайте не будет файла для скачивания"
+          fi
+
       # Веб-версия приложения для iPhone: тот же интерфейс, что на Android, но в браузере (кроме виджетов и напоминаний).
       # Собирается с самым свежим расписанием внутри, лежит на сайте по адресу /app/.
       - uses: subosito/flutter-action@v2
