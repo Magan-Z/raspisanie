@@ -21,6 +21,18 @@ Future<void> main() async {
   ));
 }
 
+/// Проверочный режим веб-версии: адрес …/app/?scroll=ios включает «айфоновскую» прокрутку (длинный плавный разгон
+/// и отскок на краях) вместо «андроидовской». В браузере Flutter сам считает разгон списка, поэтому ощущение
+/// от прокрутки отличается от системного; это позволяет сравнить два варианта на телефоне.
+final bool _iosScroll = kIsWeb && Uri.base.queryParameters['scroll'] == 'ios';
+
+class _IosScrollBehavior extends MaterialScrollBehavior {
+  const _IosScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) => const BouncingScrollPhysics();
+}
+
 class RaspisanieApp extends ConsumerWidget {
   const RaspisanieApp({super.key});
 
@@ -46,6 +58,7 @@ class RaspisanieApp extends ConsumerWidget {
         return MaterialApp(
           title: 'Расписание',
           debugShowCheckedModeBanner: false,
+          scrollBehavior: _iosScroll ? const _IosScrollBehavior() : null,
           themeMode: settings.themeMode,
           theme: theme(Brightness.light, lightDynamic),
           darkTheme: theme(Brightness.dark, darkDynamic),
