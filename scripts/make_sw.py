@@ -1,6 +1,6 @@
 """Готовит кэш приложения для браузера: подставляет в sw.js список файлов и «отпечаток» сборки.
 
-Запуск (из scripts/build_web.sh):  python3 scripts/make_sw.py app/build/web
+Запуск (из scripts/build_web.sh):  python3 scripts/make_sw.py app/build/web [префикс кэша]
 Отпечаток считается по всем файлам приложения, КРОМЕ встроенной копии расписания: так, пока код приложения
 не менялся, обновление расписания не заставляет всех заново скачивать 5 МБ.
 """
@@ -10,6 +10,7 @@ import os
 import sys
 
 root = sys.argv[1]
+prefix = sys.argv[2] if len(sys.argv) > 2 else "raspisanie-app-"
 SKIP_DIRS = ("canvaskit/",)  # движок кладётся отдельно (sw.js выбирает нужную версию)
 SKIP_NAMES = {"sw.js", "flutter_service_worker.js", "drift_worker.dart", "NOTICES", "version.json"}
 SKIP_SUFFIXES = (".map", ".deps", ".symbols")
@@ -35,6 +36,6 @@ for rel in files:
 listed = ["./"] + files
 path = os.path.join(root, "sw.js")
 text = open(path, encoding="utf-8").read()
-text = text.replace("__BUILD__", digest.hexdigest()[:12]).replace("__FILES__", json.dumps(listed, ensure_ascii=False))
+text = text.replace("__PREFIX__", prefix).replace("__BUILD__", digest.hexdigest()[:12]).replace("__FILES__", json.dumps(listed, ensure_ascii=False))
 open(path, "w", encoding="utf-8").write(text)
 print(f"sw.js: {len(listed)} файлов, сборка {digest.hexdigest()[:12]}")

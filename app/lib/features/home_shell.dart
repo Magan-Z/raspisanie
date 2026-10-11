@@ -10,6 +10,7 @@ import '../app_outputs.dart';
 import '../app_state.dart';
 import '../core/bells.dart' show moscowToday;
 import '../domain/notification_plan.dart';
+import '../theme/next_design.dart';
 import '../widget_bridge/deep_links.dart';
 import 'homework/add_homework_sheet.dart';
 import 'homework/homework_screen.dart';
@@ -26,8 +27,17 @@ class HomeShell extends ConsumerStatefulWidget {
 }
 
 class _HomeShellState extends ConsumerState<HomeShell>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   int _tab = 0;
+
+  /// Новый вид: при смене вкладки новый экран мягко проявляется и поднимается на несколько пикселей.
+  late final AnimationController _swap = AnimationController(vsync: this, duration: const Duration(milliseconds: 260), value: 1);
+
+  void _pick(int i) {
+    if (i == _tab) return;
+    setState(() => _tab = i);
+    if (kNextDesign && !MediaQuery.disableAnimationsOf(context)) _swap.forward(from: 0);
+  }
 
   @override
   void initState() {
@@ -129,6 +139,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
 
   @override
   void dispose() {
+    _swap.dispose();
     _debounce?.cancel();
     _tapSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -155,7 +166,15 @@ class _HomeShellState extends ConsumerState<HomeShell>
     ];
     return Scaffold(
       body: SafeArea(
-        child: IndexedStack(index: _tab, children: pages),
+        child: kNextDesign
+            ? FadeTransition(
+                opacity: CurvedAnimation(parent: _swap, curve: Curves.easeOut),
+                child: SlideTransition(
+                  position: Tween<Offset>(begin: const Offset(0, 0.012), end: Offset.zero).animate(CurvedAnimation(parent: _swap, curve: kEaseOutExpo)),
+                  child: IndexedStack(index: _tab, children: pages),
+                ),
+              )
+            : IndexedStack(index: _tab, children: pages),
       ),
       // Подписи нижней панели не растут выше 1.15× — иначе слова переносятся и панель разваливается
       bottomNavigationBar: Builder(
@@ -168,7 +187,7 @@ class _HomeShellState extends ConsumerState<HomeShell>
           ),
           child: NavigationBar(
             selectedIndex: _tab,
-            onDestinationSelected: (i) => setState(() => _tab = i),
+            onDestinationSelected: _pick,
             destinations: const [
               NavigationDestination(
                 icon: Icon(Icons.today_outlined),

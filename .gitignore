@@ -35,3 +35,6 @@ app/web/sqlite3.wasm
 app/web/.sqlite3-version
 app/web/drift_worker.js
 app/web/drift_worker.js.*
+
+# Рабочие файлы инструментов дизайна (макеты, решения), в репозиторий не попадают
+.impeccable/

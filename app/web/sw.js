@@ -5,7 +5,9 @@
 
 const BUILD = '__BUILD__';
 const FILES = __FILES__;
-const CACHE = 'raspisanie-app-' + BUILD;
+// Префикс разный у обычной и тестовой версии, иначе они стирали бы кэш друг друга
+const PREFIX = '__PREFIX__';
+const CACHE = PREFIX + BUILD;
 
 // Рисовальный движок: в Chrome/Edge нужна одна версия, в Safari (iPhone) и Firefox — другая.
 const ENGINE = typeof Intl.v8BreakIterator !== 'undefined'
@@ -28,7 +30,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     for (const key of await caches.keys()) {
-      if (key.startsWith('raspisanie-app-') && key !== CACHE) await caches.delete(key);
+      if (key.startsWith(PREFIX) && key !== CACHE) await caches.delete(key);
     }
     await self.clients.claim();
   })());

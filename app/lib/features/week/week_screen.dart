@@ -9,8 +9,11 @@ import '../../core/bells.dart';
 import '../../core/formatting.dart';
 import '../../domain/homework.dart';
 import '../../domain/schedule_resolver.dart';
+import '../../theme/next_design.dart';
 import '../../theme/tokens.dart';
+import '../common/skeleton.dart';
 import '../common/lesson_widgets.dart';
+import '../common/reveal.dart';
 import '../overrides/day_edits.dart';
 
 class WeekScreen extends ConsumerStatefulWidget {
@@ -29,6 +32,9 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
     return data.weekFor(thisMonday) == week ? thisMonday : thisMonday.add(const Duration(days: 7));
   }
 
+  /// Новый вид: пары появляются мягкой волной (в рамках одного дня, чтобы длинная неделя не ждала).
+  Widget _maybeReveal(int index, Widget child) => kNextDesign ? Reveal(index: index, child: child) : child;
+
   @override
   Widget build(BuildContext context) {
     final my = ref.watch(myScheduleProvider);
@@ -39,7 +45,7 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
     final scheme = theme.colorScheme;
 
     return my.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => kNextDesign ? const ScheduleSkeleton() : const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Не удалось прочитать расписание:\n$e', textAlign: TextAlign.center)),
       data: (data) {
         if (data == null) return const SizedBox();
@@ -94,7 +100,9 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
                   ]),
                 ),
               for (final l in entry.lessons)
-                Padding(
+                _maybeReveal(
+                  entry.lessons.indexOf(l),
+                  Padding(
                   padding: const EdgeInsets.only(bottom: Gap.sm),
                   child: LessonTile(
                     timeLabel: '${moscowTimeText(l.startAt)}–${moscowTimeText(l.endAt)} · ${l.pair} пара',
@@ -110,6 +118,7 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
                     onLongPress: () => showLessonActions(context, l),
                     onTap: () => showLessonActions(context, l),
                   ),
+                ),
                 ),
             ],
           ],

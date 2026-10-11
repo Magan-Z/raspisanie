@@ -7,8 +7,10 @@ import '../../app_state.dart';
 import '../../core/bells.dart';
 import '../../core/formatting.dart';
 import '../../domain/models.dart';
+import '../../theme/next_design.dart';
 import '../../theme/subject_palette.dart';
 import '../../theme/tokens.dart';
+import 'press_scale.dart';
 import 'room_plate.dart';
 import 'word_fit_text.dart';
 
@@ -78,7 +80,7 @@ class LessonTile extends ConsumerWidget {
     final card = Material(
       color: tone.container,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Radii.lg),
+        borderRadius: BorderRadius.circular(kNextDesign ? Radii.lg + 2 : Radii.lg),
         side: highlighted ? BorderSide(color: tone.accent, width: 2.5) : BorderSide.none,
       ),
       clipBehavior: Clip.antiAlias,
@@ -87,11 +89,12 @@ class LessonTile extends ConsumerWidget {
         onLongPress: onLongPress,
         child: DecoratedBox(
           // цветная полоса слева — граница, а не отдельный блок: так карточка не зависит от IntrinsicHeight
-          decoration: BoxDecoration(border: Border(left: BorderSide(color: tone.accent, width: 6))),
+          // Новый вид: без толстой полосы слева (цвет предмета уже есть на точке ленты и на табличке аудитории)
+          decoration: kNextDesign ? const BoxDecoration() : BoxDecoration(border: Border(left: BorderSide(color: tone.accent, width: 6))),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(Gap.lg, Gap.md, Gap.md, Gap.md),
+                padding: EdgeInsets.fromLTRB(kNextDesign ? Gap.lg + 2 : Gap.lg, Gap.md, Gap.md, Gap.md),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
                   if (timeLabel != null)
                     Padding(
@@ -128,7 +131,7 @@ class LessonTile extends ConsumerWidget {
                     ),
                     if (room != null) ...[
                       const SizedBox(width: Gap.sm),
-                      RoomPlate(room: room!, tone: tone),
+                      RoomPlate(room: room!, tone: tone, pop: kNextDesign && note != null),
                     ],
                   ]),
                   if (note != null)
@@ -170,7 +173,9 @@ class LessonTile extends ConsumerWidget {
         child: AnimatedOpacity(
           opacity: dimmed ? 0.55 : 1,
           duration: Motion.of(context, Motion.base),
-          child: card,
+          child: kNextDesign
+              ? PressScale(child: note != null ? _AttentionGlow(color: scheme.tertiary, radius: Radii.lg + 2, child: card) : card)
+              : card,
         ),
       ),
     );
@@ -187,4 +192,33 @@ String? lessonNote(ResolvedLesson l, DateTime now) {
   if (at == null) return 'изменено старостой';
   final sameDay = moscowToday(at) == moscowToday(now);
   return 'изменено старостой ${sameDay ? '' : '${dateText(moscowToday(at))} '}в ${moscowTimeText(at)}';
+}
+
+/// Изменённая пара (староста или вы) при появлении на секунду «вспыхивает» янтарным и затихает:
+/// взгляд сам находит, что в расписании не как обычно. Дальше остаётся только подпись «изменено…».
+class _AttentionGlow extends StatelessWidget {
+  const _AttentionGlow({required this.color, required this.radius, required this.child});
+  final Color color;
+  final double radius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = Motion.of(context, const Duration(milliseconds: 1600));
+    if (duration == Duration.zero) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 1, end: 0),
+      duration: duration,
+      curve: Curves.easeOutCubic,
+      child: child,
+      builder: (context, v, child) => DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          // тень со смещением и размытием (не «ореол»): светится снизу, как подсвеченная плитка
+          boxShadow: v < 0.01 ? null : [BoxShadow(color: color.withValues(alpha: 0.55 * v), blurRadius: 22 * v, offset: Offset(0, 6 * v), spreadRadius: 1.5 * v)],
+        ),
+        child: child,
+      ),
+    );
+  }
 }

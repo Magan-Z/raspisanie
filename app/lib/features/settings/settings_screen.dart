@@ -10,6 +10,7 @@ import '../../app_state.dart';
 import '../../core/formatting.dart';
 import '../../domain/homework.dart';
 import '../../domain/models.dart';
+import '../../theme/next_design.dart';
 import '../../theme/tokens.dart';
 import '../../config.dart';
 import '../../data/remote/shared_api.dart';
@@ -47,6 +48,25 @@ class SettingsScreen extends ConsumerWidget {
           child: Text('Настройки', style: theme.textTheme.headlineMedium),
         ),
         const SizedBox(height: Gap.lg),
+        if (kNextDesign) ...[
+          // Тестовое оформление: понятно, что это пробная версия, и где обычная
+          Container(
+            padding: const EdgeInsets.all(Gap.lg),
+            decoration: BoxDecoration(color: theme.colorScheme.tertiaryContainer, borderRadius: BorderRadius.circular(Radii.lg)),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Icon(Icons.science_rounded, color: theme.colorScheme.onTertiaryContainer),
+              const SizedBox(width: Gap.md),
+              Expanded(
+                child: Text(
+                  'Тестовый вид. Расписание и функции те же, пробуется только новое оформление и анимации. '
+                  'Обычная версия открывается по адресу без «-next».',
+                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onTertiaryContainer),
+                ),
+              ),
+            ]),
+          ),
+          const SizedBox(height: Gap.lg),
+        ],
 
         _Section(title: 'Профиль', children: [
           _Row(

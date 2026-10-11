@@ -13,7 +13,9 @@ import '../../domain/homework.dart';
 import '../../domain/models.dart';
 import '../../domain/schedule_resolver.dart';
 import '../../theme/subject_palette.dart';
+import '../../theme/next_design.dart';
 import '../../theme/tokens.dart';
+import '../common/skeleton.dart';
 import '../common/day_strip.dart';
 import '../common/empty_state.dart';
 import '../common/illustrations.dart';
@@ -55,7 +57,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final my = ref.watch(myScheduleProvider);
     ref.watch(requestedDayProvider); // перестроиться, когда пришёл запрос на день
     return my.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => kNextDesign ? const ScheduleSkeleton() : const Center(child: CircularProgressIndicator()),
       error: (e, _) => EmptyState(
         icon: Icons.error_outline_rounded,
         title: 'Не удалось прочитать расписание',
@@ -268,7 +270,9 @@ class _DayPage extends ConsumerWidget {
     if (focus != null) {
       children.add(Padding(
         padding: const EdgeInsets.only(bottom: Gap.lg),
-        child: _NowCard(lesson: focus, now: now, isCurrent: current != null),
+        child: kNextDesign
+            ? Reveal(index: 0, child: _NowCard(lesson: focus, now: now, isCurrent: current != null, following: current == null ? null : lessons.where((l) => l.startAt.isAfter(current!.startAt)).firstOrNull))
+            : _NowCard(lesson: focus, now: now, isCurrent: current != null),
       ));
     }
     if (isToday && focus == null) {
@@ -282,14 +286,23 @@ class _DayPage extends ConsumerWidget {
       ));
     }
 
+    // Какая часть отрезка времени [from, to] уже прошла: прошлые дни целиком, будущие нисколько
+    double dayFill(DateTime from, DateTime to) {
+      if (day.isBefore(today)) return 1;
+      if (day.isAfter(today)) return 0;
+      final total = to.difference(from).inSeconds;
+      return total <= 0 ? (now.isBefore(to) ? 0 : 1) : (now.difference(from).inSeconds / total).clamp(0.0, 1.0);
+    }
+
     for (var i = 0; i < lessons.length; i++) {
       final l = lessons[i];
       if (i > 0) {
         final gap = l.startAt.difference(lessons[i - 1].endAt);
+        final gapFill = dayFill(lessons[i - 1].endAt, l.startAt);
         if (lessons[i - 1].pair == 2 && l.pair == 3) {
-          children.add(const _GapRow(icon: Icons.free_breakfast_rounded, text: 'большая перемена'));
+          children.add(_GapRow(icon: Icons.free_breakfast_rounded, text: 'большая перемена', fill: gapFill));
         } else if (l.pair - lessons[i - 1].pair > 1) {
-          children.add(_GapRow(icon: Icons.hourglass_empty_rounded, text: 'окно ${durationText(gap)}'));
+          children.add(_GapRow(icon: Icons.hourglass_empty_rounded, text: 'окно ${durationText(gap)}', fill: gapFill));
         }
       }
       final phase = !isToday
@@ -301,6 +314,7 @@ class _DayPage extends ConsumerWidget {
         start: moscowTimeText(l.startAt),
         end: moscowTimeText(l.endAt),
         phase: phase,
+        fill: dayFill(l.startAt, l.endAt),
         tone: ref.watch(subjectStylesProvider).tone(l.subject, theme.brightness),
         child: LessonTile(
           subject: l.subject,
@@ -339,12 +353,15 @@ class _DayPage extends ConsumerWidget {
 
 /// Строка ленты: время слева, линия времени с «точкой», карточка пары справа.
 class _TimelineRow extends StatelessWidget {
-  const _TimelineRow({required this.start, required this.end, required this.phase, required this.tone, required this.child});
+  const _TimelineRow({required this.start, required this.end, required this.phase, required this.tone, required this.child, this.fill = 0});
   final String start;
   final String end;
   final _Phase phase;
   final SubjectTone tone;
   final Widget child;
+
+  /// Новый вид: какая часть линии времени у этой пары уже пройдена (0…1).
+  final double fill;
 
   @override
   Widget build(BuildContext context) {
@@ -385,7 +402,10 @@ class _TimelineRow extends StatelessWidget {
       ),
       Expanded(
         child: Stack(children: [
-          Positioned(left: 11, top: 0, bottom: 0, width: 2, child: ColoredBox(color: scheme.outlineVariant)),
+          if (kNextDesign)
+            _FillRail(fill: fill, startOffset: Gap.lg, color: scheme.primary.withValues(alpha: 0.55), base: scheme.outlineVariant)
+          else
+            Positioned(left: 11, top: 0, bottom: 0, width: 2, child: ColoredBox(color: scheme.outlineVariant)),
           Positioned(top: Gap.lg, left: 0, width: 24, child: Center(child: dot)),
           Padding(padding: const EdgeInsets.only(left: 24, bottom: Gap.md), child: child),
         ]),
@@ -396,9 +416,12 @@ class _TimelineRow extends StatelessWidget {
 
 /// Промежуток между парами («окно», «большая перемена») на той же линии времени.
 class _GapRow extends StatelessWidget {
-  const _GapRow({required this.icon, required this.text});
+  const _GapRow({required this.icon, required this.text, this.fill = 0});
   final IconData icon;
   final String text;
+
+  /// Новый вид: какая часть промежутка уже прошла (0…1).
+  final double fill;
 
   @override
   Widget build(BuildContext context) {
@@ -409,7 +432,10 @@ class _GapRow extends StatelessWidget {
       SizedBox(width: timeWidth),
       Expanded(
         child: Stack(children: [
-          Positioned(left: 11, top: 0, bottom: 0, width: 2, child: ColoredBox(color: scheme.outlineVariant)),
+          if (kNextDesign)
+            _FillRail(fill: fill, startOffset: 0, color: scheme.primary.withValues(alpha: 0.55), base: scheme.outlineVariant)
+          else
+            Positioned(left: 11, top: 0, bottom: 0, width: 2, child: ColoredBox(color: scheme.outlineVariant)),
           Padding(
             padding: const EdgeInsets.only(left: 24, bottom: Gap.md, top: Gap.xs),
             child: Row(children: [
@@ -426,8 +452,11 @@ class _GapRow extends StatelessWidget {
 
 /// Крупная карточка текущей или следующей пары: аудитория — самый большой элемент экрана.
 class _NowCard extends ConsumerWidget {
-  const _NowCard({required this.lesson, required this.now, required this.isCurrent});
+  const _NowCard({required this.lesson, required this.now, required this.isCurrent, this.following});
   final ResolvedLesson lesson;
+
+  /// Новый вид: пара, которая идёт следом (показывается под обратным отсчётом).
+  final ResolvedLesson? following;
   final DateTime now;
   final bool isCurrent;
 
@@ -458,6 +487,9 @@ class _NowCard extends ConsumerWidget {
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Wrap(spacing: Gap.sm, runSpacing: Gap.sm, crossAxisAlignment: WrapCrossAlignment.center, children: [
+              if (kNextDesign)
+                _StatusPill(isCurrent: isCurrent, tone: tone)
+              else
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: Gap.md, vertical: Gap.xs),
                 decoration: BoxDecoration(
@@ -519,7 +551,36 @@ class _NowCard extends ConsumerWidget {
                 ),
               ),
             if (isCurrent) const SizedBox(height: Gap.sm),
-            Text(status, style: theme.textTheme.labelLarge?.copyWith(color: tone.onContainer)),
+            kNextDesign
+                ? AnimatedSwitcher(
+                    duration: Motion.of(context, const Duration(milliseconds: 260)),
+                    switchInCurve: kEaseOutExpo,
+                    transitionBuilder: (child, anim) => FadeTransition(
+                      opacity: anim,
+                      child: SlideTransition(position: Tween<Offset>(begin: const Offset(0, 0.35), end: Offset.zero).animate(anim), child: child),
+                    ),
+                    layoutBuilder: (current, previous) => Stack(alignment: Alignment.centerLeft, children: [...previous, ?current]),
+                    child: Text(status, key: ValueKey(status), style: theme.textTheme.labelLarge?.copyWith(color: tone.onContainer)),
+                  )
+                : Text(status, style: theme.textTheme.labelLarge?.copyWith(color: tone.onContainer)),
+            if (kNextDesign && following != null) ...[
+              const SizedBox(height: Gap.md),
+              Divider(height: 1, color: tone.accent.withValues(alpha: 0.25)),
+              const SizedBox(height: Gap.md),
+              Row(children: [
+                Icon(Icons.subdirectory_arrow_right_rounded, size: 18, color: tone.onContainer),
+                const SizedBox(width: Gap.sm),
+                Expanded(
+                  child: Text(
+                    'Дальше в ${moscowTimeText(following!.startAt)}: ${styles.name(following!.subject)}'
+                    '${following!.room != null ? ' · ${following!.room}' : ''}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
+                  ),
+                ),
+              ]),
+            ],
           ]),
         ),
       ),
@@ -594,6 +655,90 @@ class _SyncLabel extends ConsumerWidget {
     return Padding(
       padding: EdgeInsets.zero,
       child: Text(text, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+    );
+  }
+}
+
+/// Статус карточки «Сейчас» (новый вид): живая точка и обычные слова. Точка один раз «пингует» при появлении
+/// (кольцо расходится и гаснет), дальше спокойна: бесконечная анимация на экране расписания только тратила бы батарею.
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.isCurrent, required this.tone});
+  final bool isCurrent;
+  final SubjectTone tone;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final fg = isCurrent ? scheme.onTertiaryContainer : tone.onContainer;
+    final ping = Motion.of(context, const Duration(milliseconds: 1400));
+    final dot = SizedBox(
+      width: 18,
+      height: 18,
+      child: Stack(alignment: Alignment.center, children: [
+        if (isCurrent && ping != Duration.zero)
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: ping,
+            curve: Curves.easeOutCubic,
+            builder: (context, t, _) => Opacity(
+              opacity: (1 - t) * 0.7,
+              child: Container(width: 8 + 10 * t, height: 8 + 10 * t, decoration: BoxDecoration(shape: BoxShape.circle, color: scheme.tertiary)),
+            ),
+          ),
+        Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: isCurrent ? scheme.tertiary : tone.accent)),
+      ]),
+    );
+    return Container(
+      padding: const EdgeInsets.fromLTRB(Gap.sm, Gap.xs, Gap.md, Gap.xs),
+      decoration: BoxDecoration(
+        color: isCurrent ? scheme.tertiaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(999),
+        border: isCurrent ? null : Border.all(color: tone.onContainer.withValues(alpha: 0.5)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        dot,
+        const SizedBox(width: Gap.xs),
+        Text(isCurrent ? 'Идёт сейчас' : 'Дальше', style: theme.textTheme.labelLarge?.copyWith(color: fg)),
+      ]),
+    );
+  }
+}
+
+/// Линия времени, которая заполняется по ходу дня: пройденная часть окрашена, дальше нейтральная.
+/// Видно, где вы сейчас в дне, не читая время. При появлении заполнение плавно «доезжает» до нужной высоты.
+class _FillRail extends StatelessWidget {
+  const _FillRail({required this.fill, required this.startOffset, required this.color, required this.base});
+  final double fill;
+
+  /// Где у строки начинается заполнение (у пары: уровень точки; у промежутка: с самого верха).
+  final double startOffset;
+  final Color color;
+  final Color base;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: 11,
+      top: 0,
+      bottom: 0,
+      width: 2,
+      child: LayoutBuilder(builder: (context, box) {
+        final h = box.maxHeight;
+        final target = fill <= 0 ? 0.0 : startOffset + (h - startOffset) * fill;
+        return Stack(children: [
+          ColoredBox(color: base, child: const SizedBox.expand()),
+          Align(
+            alignment: Alignment.topCenter,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: target),
+              duration: Motion.of(context, const Duration(milliseconds: 700)),
+              curve: kEaseOutExpo,
+              builder: (context, v, _) => SizedBox(width: 2, height: v, child: ColoredBox(color: color)),
+            ),
+          ),
+        ]);
+      }),
     );
   }
 }

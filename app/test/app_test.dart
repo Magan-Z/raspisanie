@@ -21,6 +21,7 @@ import 'package:raspisanie/data/local/database.dart';
 import 'package:raspisanie/data/repositories/schedule_repository.dart';
 import 'package:raspisanie/main.dart';
 import 'package:raspisanie/theme/brand_colors.dart';
+import 'package:raspisanie/theme/next_design.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fakes.dart';
@@ -89,13 +90,20 @@ void main() {
   testWidgets('«Сегодня» 07.10.2026 13:30: идёт ТП в 2-05, дальше ЧТК практика 2-15', (tester) async {
     await _start(tester, prefs: profile);
     expect(find.text('2 неделя'), findsOneWidget);
-    expect(find.text('СЕЙЧАС'), findsOneWidget);
+    expect(find.text(kNextDesign ? 'Идёт сейчас' : 'СЕЙЧАС'), findsOneWidget);
     expect(find.text('Технологическое предпринимательство'), findsWidgets);
     expect(find.text('2-05'), findsWidgets);
     expect(find.text('ЧТК и этика'), findsOneWidget);
     expect(find.text('2-15'), findsOneWidget);
     expect(find.text('Кураторский час'), findsNothing); // он только на 1 неделе
   });
+
+  // Только для тестовой сборки (flutter test --dart-define=NEXT_DESIGN=true): новые подсказки и заполнение линии времени
+  testWidgets('Новый вид: в карточке «Сейчас» есть подсказка, что дальше', (tester) async {
+    await _start(tester, prefs: profile);
+    expect(find.textContaining('Дальше в '), findsOneWidget);
+    expect(find.textContaining('ЧТК и этика'), findsWidgets);
+  }, skip: !kNextDesign);
 
   testWidgets('«Неделя»: 1 неделя содержит кураторский час, 2 неделя — нет', (tester) async {
     await _start(tester, prefs: profile);

@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/formatting.dart';
+import '../../theme/next_design.dart';
 import '../../theme/tokens.dart';
 
 class DayStrip extends StatelessWidget {
@@ -84,19 +85,7 @@ class _DayCell extends StatelessWidget {
               Text(weekdayShort[day.weekday],
                   style: theme.textTheme.labelSmall?.copyWith(color: isSunday ? scheme.onSurfaceVariant.withValues(alpha: 0.7) : scheme.onSurfaceVariant)),
               const SizedBox(height: Gap.xs),
-              AnimatedContainer(
-                duration: Motion.of(context, Motion.base),
-                curve: Motion.enter,
-                width: 40,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected ? scheme.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(Radii.md),
-                  border: isToday && !isSelected ? Border.all(color: scheme.primary, width: 2) : null,
-                ),
-                child: Text('${day.day}', style: theme.textTheme.titleMedium?.copyWith(color: fg)),
-              ),
+              kNextDesign ? _nextNumber(context, scheme, theme, fg) : _oldNumber(context, scheme, theme, fg),
               const SizedBox(height: Gap.xs),
               // Точка: в этот день есть пары (не только цветом — ещё и в подписи для скринридера)
               AnimatedContainer(
@@ -112,6 +101,54 @@ class _DayCell extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  /// Прежний вид числа: фон меняет цвет.
+  Widget _oldNumber(BuildContext context, ColorScheme scheme, ThemeData theme, Color fg) => AnimatedContainer(
+        duration: Motion.of(context, Motion.base),
+        curve: Motion.enter,
+        width: 40,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? scheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(Radii.md),
+          border: isToday && !isSelected ? Border.all(color: scheme.primary, width: 2) : null,
+        ),
+        child: Text('${day.day}', style: theme.textTheme.titleMedium?.copyWith(color: fg)),
+      );
+
+  /// Новый вид: заливка выбранного дня «вырастает» из центра, а у прежнего дня сжимается;
+  /// цвет числа плавно переходит. Движение короткое и уверенное, без отскока.
+  Widget _nextNumber(BuildContext context, ColorScheme scheme, ThemeData theme, Color fg) {
+    final d = Motion.of(context, const Duration(milliseconds: 300));
+    return SizedBox(
+      width: 40,
+      height: 44,
+      child: Stack(alignment: Alignment.center, children: [
+        AnimatedScale(
+          scale: isSelected ? 1 : 0.55,
+          duration: d,
+          curve: kEaseOutExpo,
+          child: AnimatedOpacity(
+            opacity: isSelected ? 1 : 0,
+            duration: d,
+            child: Container(decoration: BoxDecoration(color: scheme.primary, borderRadius: BorderRadius.circular(Radii.md)), width: 40, height: 44),
+          ),
+        ),
+        if (isToday && !isSelected)
+          Container(
+            width: 40,
+            height: 44,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(Radii.md), border: Border.all(color: scheme.primary, width: 2)),
+          ),
+        AnimatedDefaultTextStyle(
+          duration: d,
+          style: (theme.textTheme.titleMedium ?? const TextStyle()).copyWith(color: fg),
+          child: Text('${day.day}'),
+        ),
+      ]),
     );
   }
 }

@@ -4,6 +4,7 @@
 # Переменные (необязательно):
 #   BASE_HREF  — где лежит приложение на сайте (по умолчанию /raspisanie/app/)
 #   SITE_URL   — адрес сайта с расписанием (по умолчанию из data/config.json)
+#   NEXT=1     — тестовое оформление («новый вид»): другой кэш и название, флаг NEXT_DESIGN
 set -e
 cd "$(dirname "$0")/../app"
 
@@ -22,8 +23,18 @@ dart compile js -O4 web/drift_worker.dart -o web/drift_worker.js
 rm -f web/drift_worker.js.deps web/drift_worker.js.map
 
 # 2. Сама сборка. canvaskit кладём внутрь сборки (без загрузки с чужого сервера) — приложение работает и без интернета
+NEXT_FLAGS=""
+CACHE_PREFIX="raspisanie-app-"
+if [ "${NEXT:-}" = "1" ]; then
+  NEXT_FLAGS="--dart-define=NEXT_DESIGN=true"
+  CACHE_PREFIX="raspisanie-next-"
+fi
 flutter build web --release --base-href "$BASE_HREF" --no-web-resources-cdn \
-  --dart-define=SCHEDULE_BASE_URL="$SITE_URL"
+  --dart-define=SCHEDULE_BASE_URL="$SITE_URL" $NEXT_FLAGS
 # 3. Кэш приложения (sw.js): список файлов и отпечаток сборки
-python3 ../scripts/make_sw.py build/web
+if [ "${NEXT:-}" = "1" ]; then
+  # Название вкладки и значка на экране «Домой» у тестовой версии другое, чтобы их не путать
+  sed -i.bak 's#<title>Расписание</title>#<title>Расписание (тест)</title>#; s#apple-mobile-web-app-title" content="Расписание"#apple-mobile-web-app-title" content="Расписание тест"#; s#<meta charset="UTF-8">#<meta charset="UTF-8"><meta name="robots" content="noindex">#' build/web/index.html && rm -f build/web/index.html.bak
+fi
+python3 ../scripts/make_sw.py build/web "$CACHE_PREFIX"
 echo "Готово: app/build/web (адрес на сайте: $BASE_HREF)"
