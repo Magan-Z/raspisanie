@@ -100,7 +100,7 @@ jobs:
           cp -R app/build/web public/app
 
       # Тестовая версия нового дизайна: если на GitHub есть ветка design-test, она собирается отдельно
-      # и лежит на сайте по адресу /app-next/. Обычная версия (/app/) от неё не зависит.
+      # и лежит на сайте по адресу /app-next/ (тестовая главная страница — на /site-next/). Обычная версия (/app/) от неё не зависит.
       - name: "Тестовая версия веб-приложения (ветка design-test)"
         working-directory: .
         env:
@@ -115,6 +115,10 @@ jobs:
             (cd test-src/app && flutter pub get && dart run build_runner build --delete-conflicting-outputs)
             NEXT=1 BASE_HREF=/${{ github.event.repository.name }}/app-next/ bash test-src/scripts/build_web.sh
             cp -R test-src/app/build/web public/app-next
+            # Тестовая главная страница: лежит на /site-next/, а приложение, APK и расписание берёт с основного сайта (на уровень выше)
+            mkdir -p public/site-next
+            cp -R test-src/data/web/. public/site-next/
+            sed -i 's#<meta name="site-root" content="">#<meta name="site-root" content="../">#' public/site-next/index.html
           else
             echo "Ветки design-test нет: тестовая версия не собирается"
           fi
