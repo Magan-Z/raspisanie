@@ -6,6 +6,8 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#FBF8F3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E1416" media="(prefers-color-scheme: dark)">
+<!-- Корень сайта: на основной странице пусто, на тестовой (/site-next/) публикация ставит «../», чтобы приложение, APK и расписание брались с основного сайта -->
+<meta name="site-root" content="">
 <title>Расписание — приложение для студентов ИМФИТ</title>
 <meta name="description" content="Пары, аудитории и домашка в одном месте. Студенческое приложение: без регистрации, работает без интернета, староста группы вносит замены.">
 <meta property="og:type" content="website">
@@ -16,6 +18,7 @@
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preload" href="fonts/onest.woff2" as="font" type="font/woff2" crossorigin>
+<script>document.documentElement.classList.add("js");</script>
 <style>
   /* Шрифт приложения (Onest), урезан до кириллицы и латиницы: ~50 КБ, грузится с этого же сайта */
   @font-face {
@@ -40,9 +43,16 @@
     --amber: #F2A93B;
     --amber-soft: #FFE7BF;
     --amber-ink: #2B1A00;
+    --band: #0B5563;          /* тёмная плашка «без интернета» */
+    --band-ink: #EAF7F9;
     --err: #B3261E;
-    --radius: 20px;
-    --shadow: 0 1px 2px rgba(26, 32, 34, .06), 0 12px 32px rgba(11, 85, 99, .10);
+    /* Одна шкала скруглений на всей странице: крупные поверхности, кнопки и карточки, мелочь */
+    --r-lg: 24px;
+    --r-md: 16px;
+    --r-sm: 12px;
+    --ease: cubic-bezier(.16, 1, .3, 1);
+    --shadow: 0 1px 2px rgba(26, 32, 34, .06), 0 14px 34px rgba(11, 85, 99, .11);
+    --shadow-phone: 0 2px 4px rgba(26, 32, 34, .08), 0 40px 70px -28px rgba(11, 85, 99, .5);
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -59,15 +69,17 @@
       --amber: #F5C26B;
       --amber-soft: #4A3410;
       --amber-ink: #FFE7BF;
+      --band: #123E47;
+      --band-ink: #CDEBF0;
       --err: #FFB4AB;
-      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .35);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 14px 34px rgba(0, 0, 0, .35);
+      --shadow-phone: 0 2px 4px rgba(0, 0, 0, .5), 0 40px 70px -28px rgba(0, 0, 0, .8);
     }
   }
 
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 76px; }
   body {
     margin: 0;
     background: var(--paper);
@@ -77,110 +89,219 @@
   }
   img, svg { max-width: 100%; }
   a { color: var(--petrol); text-underline-offset: 3px; }
+  ::selection { background: var(--amber-soft); color: var(--amber-ink); }
   :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; border-radius: 8px; }
-  .wrap { width: min(1080px, 100% - 32px); margin-inline: auto; }
-  .skip { position: absolute; left: -999px; top: 8px; background: var(--petrol); color: var(--petrol-ink); padding: 10px 14px; border-radius: 10px; z-index: 10; }
+  .wrap { width: min(1100px, 100% - 32px); margin-inline: auto; }
+  .skip { position: absolute; left: -999px; top: 8px; background: var(--petrol); color: var(--petrol-ink); padding: 10px 14px; border-radius: var(--r-sm); z-index: 40; }
   .skip:focus { left: 8px; }
 
-  /* ---------- Шапка ---------- */
-  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: max(14px, env(safe-area-inset-top)) 0 6px; }
-  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
-  .brand img { width: 40px; height: 40px; border-radius: 12px; }
+  /* ---------- Шапка: липкая, при прокрутке получает фон и линию ---------- */
+  .hdr { position: sticky; top: 0; z-index: 30; border-bottom: 1px solid transparent; background: transparent; transition: background-color .3s, border-color .3s; }
+  .hdr.stuck { background: var(--paper); border-color: var(--line); }
+  @supports (backdrop-filter: blur(1px)) {
+    .hdr.stuck { background: color-mix(in srgb, var(--paper) 82%, transparent); backdrop-filter: blur(14px) saturate(1.4); }
+  }
+  .top { display: flex; align-items: center; gap: 20px; height: 64px; padding-top: env(safe-area-inset-top); }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font-weight: 700; font-size: 19px; letter-spacing: -.01em; margin-right: auto; }
+  .brand img { width: 38px; height: 38px; border-radius: var(--r-sm); }
+  .nav { display: none; gap: 4px; }
+  .nav a { color: var(--muted); text-decoration: none; font-weight: 600; font-size: .95rem; padding: 8px 12px; border-radius: var(--r-sm); transition: color .2s, background-color .2s; }
+  .nav a:hover { color: var(--ink); background: var(--surface-2); }
+  .hdr .btn { display: none; min-height: 44px; padding: 6px 18px; font-size: .98rem; border-radius: var(--r-md); }
 
-  /* ---------- Главный экран ---------- */
-  .hero { display: grid; gap: 28px; padding: 28px 0 40px; align-items: center; }
-  .eyebrow { color: var(--petrol); font-weight: 600; font-size: 15px; margin: 0 0 10px; }
-  h1 { font-size: clamp(2.15rem, 8.2vw, 3.7rem); line-height: 1.04; letter-spacing: -.03em; font-weight: 800; margin: 0 0 16px; text-wrap: balance; }
-  h1 em { font-style: normal; background: linear-gradient(transparent 62%, var(--amber-soft) 62% 92%, transparent 92%); }
-  .lead { font-size: 1.15rem; color: var(--muted); max-width: 34em; margin: 0 0 24px; text-wrap: pretty; }
-  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+  /* ---------- Кнопки ---------- */
   .btn {
     display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    min-height: 58px; padding: 10px 24px; border-radius: 16px; font: inherit; font-weight: 700; font-size: 1.05rem;
-    text-decoration: none; text-align: center; border: 2px solid transparent; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease;
+    min-height: 58px; padding: 10px 24px; border-radius: var(--r-md); font: inherit; font-weight: 700; font-size: 1.05rem;
+    text-decoration: none; text-align: center; border: 2px solid transparent; cursor: pointer;
+    transition: transform .25s var(--ease), box-shadow .25s var(--ease), background-color .2s, border-color .2s;
   }
   .btn small { font-size: .78rem; font-weight: 500; opacity: .85; }
   .btn.primary { background: var(--petrol); color: var(--petrol-ink); box-shadow: var(--shadow); }
   .btn.ghost { background: transparent; color: var(--petrol); border-color: var(--petrol); }
   .btn.soft { background: var(--surface-2); color: var(--ink); border-color: var(--line); }
-  .btn:hover { transform: translateY(-1px); }
-  .btn:active { transform: translateY(0); }
-  .note { color: var(--muted); font-size: .92rem; margin: 0; }
-  .facts { display: flex; flex-wrap: wrap; gap: 8px 18px; list-style: none; padding: 0; margin: 22px 0 0; color: var(--muted); font-size: .95rem; }
-  .facts li::before { content: "✓"; color: var(--petrol); font-weight: 800; margin-right: 6px; }
+  @media (hover: hover) { .btn:hover { transform: translateY(-2px); } .btn.primary:hover { box-shadow: 0 2px 4px rgba(26, 32, 34, .08), 0 18px 36px rgba(11, 85, 99, .24); } }
+  .btn:active { transform: scale(.97); transition-duration: .1s; }
 
-  /* Телефон со снимком настоящего экрана приложения */
+  /* ---------- Главный экран ---------- */
+  .hero { display: grid; gap: 36px; padding: 28px 0 52px; align-items: center; }
+  h1 { font-size: clamp(2.1rem, 7.2vw, 2.95rem); line-height: 1.06; letter-spacing: -.03em; font-weight: 800; margin: 0 0 18px; text-wrap: balance; }
+  h1 em { font-style: normal; background: linear-gradient(transparent 62%, var(--amber-soft) 62% 92%, transparent 92%); background-size: 0% 100%; background-repeat: no-repeat; padding-bottom: .04em; }
+  .lead { font-size: 1.15rem; color: var(--muted); max-width: 31em; margin: 0 0 26px; text-wrap: pretty; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+
+  .stage { perspective: 1100px; display: grid; justify-items: center; gap: 18px; }
   .phone {
-    width: min(300px, 72vw); margin-inline: auto; padding: 9px; border-radius: 40px; background: #1A2022; outline: 1px solid var(--line);
-    box-shadow: var(--shadow), 0 40px 80px -30px rgba(11, 85, 99, .45);
+    position: relative; width: min(300px, 72vw); padding: 9px; border-radius: 42px; background: #1A2022; outline: 1px solid var(--line);
+    box-shadow: var(--shadow-phone); transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .5s var(--ease); will-change: transform;
   }
-  .phone img { display: block; width: 100%; height: auto; border-radius: 32px; aspect-ratio: 600 / 1300; background: var(--surface-2); }
+  .phone .shot-img { display: block; width: 100%; height: auto; border-radius: 33px; aspect-ratio: 600 / 1300; background: var(--surface-2); }
+  /* две картинки друг на друге: светлая и тёмная, переключатель плавно меняет их местами */
+  .phone .swap { position: relative; border-radius: 33px; overflow: hidden; }
+  .phone .swap img + img { position: absolute; inset: 0; opacity: 0; transition: opacity .45s ease; }
+  .stage[data-look="dark"] .swap img + img { opacity: 1; }
+
+  /* Переключатель с «ползунком»: тот же, что в приложении */
+  .seg { position: relative; display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface-2); border: 1px solid var(--line); padding: 4px; border-radius: var(--r-md); isolation: isolate; }
+  .seg::before { content: ""; position: absolute; z-index: -1; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / var(--n, 2)); border-radius: var(--r-sm); background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, .16); transform: translateX(calc(var(--i, 0) * 100%)); transition: transform .45s var(--ease); }
+  .seg button { font: inherit; font-weight: 700; font-size: .95rem; min-height: 44px; padding: 0 20px; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--muted); cursor: pointer; transition: color .25s; white-space: nowrap; }
+  .seg button[aria-selected="true"], .seg button[aria-pressed="true"] { color: var(--ink); }
+  .seg button:active { transform: scale(.97); }
+
+  /* Полоса «звонков»: пять пар, третья янтарная (как значок приложения) */
+  .bells { display: flex; gap: 8px; height: 8px; }
+  .bells i { flex: 1; border-radius: 99px; background: var(--petrol); transform-origin: left; }
+  .bells i:nth-child(3) { background: var(--amber); }
 
   /* ---------- Секции ---------- */
-  section { padding: 44px 0; }
-  section + section { border-top: 1px solid var(--line); }
-  h2 { font-size: clamp(1.6rem, 5vw, 2.2rem); line-height: 1.12; letter-spacing: -.02em; font-weight: 800; margin: 0 0 8px; text-wrap: balance; }
-  .sub { color: var(--muted); margin: 0 0 26px; max-width: 38em; }
-  h3 { font-size: 1.08rem; margin: 0 0 4px; letter-spacing: -.01em; }
+  section { padding: 56px 0; }
+  h2 { font-size: clamp(1.7rem, 5.2vw, 2.4rem); line-height: 1.1; letter-spacing: -.025em; font-weight: 800; margin: 0 0 10px; text-wrap: balance; }
+  .sub { color: var(--muted); margin: 0 0 28px; max-width: 38em; text-wrap: pretty; }
+  h3 { font-size: 1.1rem; margin: 0 0 4px; letter-spacing: -.01em; }
+
+  /* Полоса доверия под главным экраном */
+  .trust { padding: 26px 0; border-block: 1px solid var(--line); }
+  .trust ul { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; }
+  .trust li { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: .98rem; line-height: 1.3; }
+  .trust svg { flex: none; width: 40px; height: 40px; padding: 9px; border-radius: var(--r-sm); background: var(--petrol-soft); color: var(--petrol-soft-ink); stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
   /* Экраны приложения */
-  .shots { display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 16px 18px; margin: 0 -16px; scrollbar-width: thin; }
-  .shot { flex: 0 0 min(240px, 62vw); scroll-snap-align: center; margin: 0; }
-  .shot .phone { width: 100%; padding: 7px; border-radius: 32px; }
-  .shot .phone img { border-radius: 26px; }
-  .shot figcaption { margin-top: 12px; font-size: .95rem; color: var(--muted); }
-  .shot figcaption b { display: block; color: var(--ink); font-size: 1rem; }
+  .shots { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 8px 16px 20px; margin: 0 -16px; scrollbar-width: thin; }
+  .shot { flex: 0 0 min(250px, 64vw); scroll-snap-align: center; margin: 0; }
+  .shot .phone { width: 100%; padding: 7px; border-radius: 34px; transform: none; transition: transform .5s var(--ease), box-shadow .5s var(--ease); }
+  .shot .phone img { display: block; width: 100%; height: auto; aspect-ratio: 600 / 1300; border-radius: 27px; background: var(--surface-2); }
+  .shot figcaption { margin-top: 14px; font-size: .95rem; color: var(--muted); text-wrap: pretty; }
+  .shot figcaption b { display: block; color: var(--ink); font-size: 1.02rem; }
+  @media (hover: hover) { .shot:hover .phone { transform: translateY(-8px); box-shadow: 0 2px 4px rgba(26, 32, 34, .08), 0 50px 80px -30px rgba(11, 85, 99, .55); } }
 
-  /* Что умеет */
-  .grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
-  .card p { margin: 0; color: var(--muted); font-size: .98rem; }
-  .ico { width: 44px; height: 44px; border-radius: 14px; background: var(--petrol-soft); color: var(--petrol-soft-ink); display: grid; place-items: center; margin-bottom: 12px; }
-  .ico svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  /* Староста меняет аудиторию: живая демонстрация */
+  .split { display: grid; gap: 32px; align-items: center; }
+  .demo { background: var(--surface-2); border-radius: var(--r-lg); padding: 22px; display: grid; gap: 18px; align-content: start; min-height: 17.5rem; }
+  .who { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+  .who-chip { flex: none; font-weight: 700; font-size: .85rem; padding: 6px 12px; border-radius: 99px; background: var(--petrol); color: var(--petrol-ink); transition: transform .4s var(--ease), background-color .3s; }
+  .who-chip.hot { background: var(--amber); color: var(--amber-ink); transform: scale(1.08); }
+  .who-text { font-weight: 600; transition: opacity .25s; }
+  /* Карточка пары в стиле приложения (цвета предмета «Информатика») */
+  .tile { --tc: #D6F0EC; --ta: #0E8F86; --to: #144340; position: relative; display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; align-items: center; background: var(--tc); color: var(--to); border-radius: var(--r-md); padding: 16px 16px 16px 18px; box-shadow: 0 0 0 0 transparent; transition: box-shadow .6s var(--ease); }
+  @media (prefers-color-scheme: dark) { .tile { --tc: #12403D; --ta: #5CD6C9; --to: #D0F1EE; } }
+  .tile.glow { box-shadow: 0 0 0 3px var(--amber); }
+  .tile .t-time { grid-column: 1 / -1; font-size: .85rem; font-weight: 600; opacity: .8; }
+  .tile .t-subject { font-weight: 800; font-size: 1.2rem; letter-spacing: -.01em; }
+  .tile .t-kind { display: inline-block; font-size: .78rem; font-weight: 700; padding: 2px 9px; border-radius: 99px; background: color-mix(in srgb, var(--ta) 22%, transparent); margin-top: 6px; }
+  .plate { min-width: 84px; text-align: center; font-weight: 800; font-size: 1.7rem; letter-spacing: -.02em; line-height: 1; padding: 12px 14px; border-radius: var(--r-sm); border: 2.5px solid var(--ta); background: color-mix(in srgb, var(--paper) 78%, transparent); }
+  .t-note { grid-column: 1 / -1; display: grid; grid-template-rows: 0fr; transition: grid-template-rows .5s var(--ease); }
+  .t-note > div { overflow: hidden; }
+  .t-note span { display: inline-block; margin-top: 4px; font-size: .85rem; font-weight: 700; padding: 4px 10px; border-radius: 99px; background: var(--amber); color: var(--amber-ink); }
+  .tile.changed .t-note { grid-template-rows: 1fr; }
+
+  /* Возможности: плитки разного размера, у каждой своя картинка или мини-экран */
+  .bento { display: grid; gap: 14px; grid-template-columns: 1fr; }
+  .cell { border-radius: var(--r-lg); padding: 22px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+  .cell p { margin: 0; color: var(--muted); font-size: .98rem; text-wrap: pretty; }
+  .cell.petrol { background: var(--petrol-soft); border-color: transparent; }
+  .cell.petrol p { color: var(--petrol-soft-ink); opacity: .85; }
+  .cell.amber { background: var(--amber-soft); border-color: transparent; }
+  .cell.amber p { color: var(--amber-ink); opacity: .85; }
+  .cell.deep { background: var(--band); color: var(--band-ink); border-color: transparent; }
+  .cell.deep p { color: var(--band-ink); opacity: .85; }
+  .cell.deep { justify-content: space-between; }
+  .cell.sand { background: var(--surface-2); }
+  .cell h3 { margin: 0 0 4px; }
+  .cell .vis { margin-top: auto; }
+  .cell.petrol h3 { color: var(--petrol-soft-ink); } .cell.amber h3 { color: var(--amber-ink); }
+  /* лента дней */
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .days div { display: grid; justify-items: center; gap: 3px; padding: 14px 0 16px; border-radius: var(--r-sm); font-size: .8rem; font-weight: 600; color: var(--petrol-soft-ink); }
+  .days b { font-size: 1.35rem; letter-spacing: -.02em; }
+  .days i { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); }
+  .days div.today { background: var(--petrol); color: var(--petrol-ink); }
+  .days div.today i { background: var(--petrol-ink); }
+  /* домашка */
+  .hw { display: grid; gap: 10px; }
+  .hw div { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: .98rem; color: var(--amber-ink); }
+  .hw .box { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 2px solid currentColor; display: grid; place-items: center; transition: background-color .3s, border-color .3s; }
+  .hw .box svg { width: 14px; height: 14px; stroke: var(--amber-soft); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset .4s var(--ease) .15s; }
+  .hw .done .box { background: var(--amber-ink); }
+  .hw .done .box svg { stroke-dashoffset: 0; }
+  .hw .txt { background: linear-gradient(currentColor, currentColor) 0 55% / 0% 2px no-repeat; transition: background-size .5s var(--ease) .2s, opacity .4s .2s; }
+  .hw .done .txt { background-size: 100% 2px; opacity: .6; }
+  .hw .file { margin-left: 36px; width: fit-content; font-size: .85rem; padding: 4px 10px; border-radius: 99px; background: color-mix(in srgb, var(--amber-ink) 12%, transparent); }
+  /* поиск */
+  .mini-find { display: grid; gap: 14px; }
+  .mini-find .seg { width: 100%; }
+  .mini-find .seg button { padding: 0 2px; font-size: .8rem; letter-spacing: -.01em; }
+  .find-out { min-height: 84px; font-weight: 600; }
+  .find-out [data-pane] { display: none; }
+  .find-out [data-pane].on { display: block; animation: paneIn .45s var(--ease) both; }
+  .find-out .rooms { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .find-out .rooms span { font-weight: 800; padding: 6px 12px; border-radius: var(--r-sm); border: 2px solid var(--petrol); font-size: .95rem; }
+  .find-out small { display: block; font-weight: 500; color: var(--muted); font-size: .88rem; }
+  .find-out .now { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--r-md); background: var(--amber-soft); color: var(--amber-ink); }
+  .find-out .now i { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); flex: none; }
+  /* виджеты */
+  .wid { display: grid; gap: 10px; justify-items: start; }
+  .wid img { display: block; width: 100%; max-width: 420px; height: auto; }
+  .wid img.room { max-width: 300px; }
+  .cell.sand .wid .dk { display: none; }
+  @media (prefers-color-scheme: dark) { .cell.sand .wid .lt { display: none; } .cell.sand .wid .dk { display: block; } }
+  .cell.deep svg.big { width: 56px; height: 56px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
 
   /* Как установить */
-  .tabs { display: flex; gap: 6px; background: var(--surface-2); padding: 5px; border-radius: 16px; width: fit-content; max-width: 100%; margin-bottom: 20px; }
-  .tabs button { font: inherit; font-weight: 700; min-height: 46px; padding: 0 22px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); cursor: pointer; }
-  .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+  .tabs.seg { margin-bottom: 22px; }
   .panel[hidden] { display: none; }
-  .steps { list-style: none; counter-reset: step; padding: 0; margin: 0 0 18px; display: grid; gap: 12px; }
-  .steps li { counter-increment: step; display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
-  .steps li::before { content: counter(step); width: 44px; height: 44px; border-radius: 50%; background: var(--amber); color: #2B1A00; font-weight: 800; font-size: 1.1rem; display: grid; place-items: center; }
-  .steps b { display: block; }
+  .panel:not([hidden]) { animation: paneIn .5s var(--ease) both; }
+  .steps { list-style: none; counter-reset: step; padding: 0; margin: 0 0 20px; display: grid; gap: 0; position: relative; }
+  .steps li { counter-increment: step; position: relative; display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start; padding: 0 0 22px; }
+  .steps li:last-child { padding-bottom: 0; }
+  .steps li::before { content: counter(step); z-index: 1; width: 44px; height: 44px; border-radius: 50%; background: var(--amber); color: #2B1A00; font-weight: 800; font-size: 1.1rem; display: grid; place-items: center; }
+  .steps li::after { content: ""; position: absolute; left: 21px; top: 44px; bottom: 0; width: 2px; background: var(--line); }
+  .steps li:last-child::after { display: none; }
+  .steps b { display: block; padding-top: 9px; }
   .steps span { color: var(--muted); font-size: .98rem; }
-  .callout { background: var(--amber-soft); color: var(--amber-ink); border-radius: var(--radius); padding: 16px 18px; margin: 0 0 14px; font-size: .98rem; }
+  ol.steps.plain-steps { margin-bottom: 20px; }
+  .callout { background: var(--amber-soft); color: var(--amber-ink); border-radius: var(--r-md); padding: 16px 18px; margin: 0 0 14px; font-size: .98rem; text-wrap: pretty; }
   .callout b { display: block; margin-bottom: 2px; }
   .callout.calm { background: var(--petrol-soft); color: var(--petrol-soft-ink); }
+  .note { color: var(--muted); font-size: .95rem; margin: 0; }
 
   /* Поделиться */
-  .share { display: grid; gap: 22px; align-items: center; }
-  .qr { background: #fff; border-radius: 24px; padding: 14px; width: min(236px, 70vw); box-shadow: var(--shadow); }
+  .share { display: grid; gap: 24px; align-items: center; }
+  .qr { background: #fff; border-radius: var(--r-lg); padding: 14px; width: min(236px, 70vw); box-shadow: var(--shadow); }
   .qr img { display: block; width: 100%; height: auto; }
   .share-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
   .share-actions .btn { min-height: 50px; padding: 8px 18px; font-size: 1rem; }
   .copied { color: var(--petrol); font-weight: 600; min-height: 1.6em; margin: 8px 0 0; }
+  .btn .ok { display: none; }
+  .btn.done .ok { display: inline; }
 
-  /* Вопросы */
-  details { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 0 18px; margin-bottom: 10px; }
+  /* Раскрывающиеся блоки (вопросы и календарь): высота меняется плавно там, где браузер это умеет */
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 0 18px; margin-bottom: 10px; transition: border-color .2s; }
+  details[open] { border-color: color-mix(in srgb, var(--petrol) 40%, var(--line)); }
   summary { cursor: pointer; font-weight: 700; padding: 16px 0; list-style: none; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
   summary::-webkit-details-marker { display: none; }
-  summary::after { content: "+"; font-size: 1.5rem; line-height: 1; color: var(--petrol); font-weight: 600; }
-  details[open] summary::after { content: "−"; }
+  summary::after { content: ""; flex: none; width: 22px; height: 22px; background: var(--petrol); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E") center / contain no-repeat; transition: transform .4s var(--ease); }
+  details[open] > summary::after { transform: rotate(135deg); }
   details > :not(summary) { color: var(--muted); }
-  details p { margin: 0 0 14px; }
+  details p { margin: 0 0 14px; text-wrap: pretty; }
+  @supports (interpolate-size: allow-keywords) {
+    details { interpolate-size: allow-keywords; }
+    details::details-content { block-size: 0; overflow: clip; opacity: 0; transition: block-size .45s var(--ease), opacity .3s, content-visibility .45s allow-discrete; }
+    details[open]::details-content { block-size: auto; opacity: 1; }
+  }
 
-  /* Календарь без приложения (старая подписка, теперь внутри раскрывающегося блока) */
+  /* Календарь без приложения (подписка .ics) */
   .choices { display: flex; flex-wrap: wrap; gap: 8px; }
-  .choices button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); cursor: pointer; }
+  .choices button { font: inherit; font-size: 15px; min-height: 44px; padding: 8px 14px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); cursor: pointer; transition: transform .2s var(--ease), background-color .2s, border-color .2s; }
+  .choices button:active { transform: scale(.96); }
   .choices button[aria-pressed="true"] { background: var(--petrol); border-color: var(--petrol); color: var(--petrol-ink); font-weight: 700; }
   .cal-step { margin: 0 0 16px; }
+  .cal-step:not([hidden]) { animation: paneIn .4s var(--ease) both; }
   .cal-step h4 { margin: 0 0 8px; font-size: .85rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
   .hint { color: var(--muted); font-size: .92rem; margin: 8px 0 0; }
   .actions { display: grid; gap: 10px; }
   .actions .btn { flex-direction: row; }
-  .wk-tabs { display: flex; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: 12px; margin: 14px 0 6px; }
-  .wk-tabs button { flex: 1; font: inherit; font-weight: 700; min-height: 40px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer; }
-  .wk-tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.14); }
+  .wk-tabs.seg { display: grid; width: 100%; margin: 14px 0 6px; }
+  .wk-tabs.seg button { min-height: 40px; }
   .day { margin-top: 14px; }
   .day h5 { font-size: 16px; margin: 0 0 6px; display: flex; align-items: baseline; gap: 8px; }
   .day h5 .today { font-size: 12px; font-weight: 700; color: var(--petrol); }
@@ -198,127 +319,234 @@
   ol.plain li { margin-bottom: 6px; }
 
   /* ---------- Подвал ---------- */
-  footer { border-top: 1px solid var(--line); padding: 28px 0 max(36px, env(safe-area-inset-bottom)); color: var(--muted); font-size: .92rem; }
-  footer .uni { color: var(--ink); font-weight: 600; margin: 0 0 8px; max-width: 40em; }
+  footer { padding: 36px 0 max(40px, env(safe-area-inset-bottom)); color: var(--muted); font-size: .92rem; }
+  footer .bells { margin-bottom: 28px; }
+  footer .uni { color: var(--ink); font-weight: 600; margin: 0 0 8px; max-width: 40em; text-wrap: pretty; }
   footer .btn { flex-direction: row; min-height: 48px; padding: 8px 20px; font-size: 1rem; }
 
+  /* Нижняя кнопка на телефоне: появляется, когда главная кнопка уехала с экрана */
+  .dock { position: fixed; z-index: 25; left: 16px; right: 16px; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateY(160%); transition: transform .5s var(--ease); }
+  .dock.show { transform: none; }
+  .dock .btn { width: 100%; min-height: 54px; box-shadow: 0 2px 6px rgba(0, 0, 0, .18), 0 16px 34px rgba(11, 85, 99, .35); }
+
+  /* ---------- Движение ---------- */
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  @keyframes phoneIn { from { opacity: 0; transform: translateY(46px) rotateX(8deg) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes paneIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes hl { to { background-size: 100% 100%; } }
+  @keyframes bell { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero .a { animation: rise .8s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms + 80ms); }
+    .hero .stage { animation: phoneIn 1s var(--ease) .25s both; }
+    h1 em { animation: hl .9s var(--ease) .75s forwards; }
+    /* появление при прокрутке: без скриптов всё просто видно */
+    .js .rv { opacity: 0; transform: translateY(20px); transition: opacity .7s var(--ease), transform .7s var(--ease); transition-delay: calc(var(--d, 0) * 70ms); }
+    .js .rv.in { opacity: 1; transform: none; }
+    .js .bells i { transform: scaleX(0); }
+    .js .bells.in i { animation: bell .6s var(--ease) both; animation-delay: calc(var(--k) * 90ms); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    h1 em { background-size: 100% 100%; }
+    .seg::before, .btn, .phone, .dock, .tile, .t-note { transition-duration: .01ms !important; }
+    .panel:not([hidden]), .find-out [data-pane].on, .cal-step:not([hidden]) { animation: none; }
+  }
+
   @media (min-width: 720px) {
-    .grid { grid-template-columns: repeat(2, 1fr); }
-    .share { grid-template-columns: auto 1fr; gap: 40px; }
-    .shots { overflow: visible; flex-wrap: nowrap; justify-content: space-between; margin: 0; padding: 0; }
+    .bento { grid-template-columns: repeat(6, 1fr); }
+    .cell.c-a { grid-column: span 4; } .cell.c-b { grid-column: span 2; }
+    .cell.c-c, .cell.c-d, .cell.c-e { grid-column: span 2; }
+    .share { grid-template-columns: auto 1fr; gap: 44px; }
+    .shots { overflow: visible; justify-content: space-between; margin: 0; padding: 0; }
     .shot { flex: 1 1 0; }
+    .shot:nth-child(even) { margin-top: 36px; }
+    .trust ul { grid-template-columns: repeat(4, 1fr); }
+    .nav { display: flex; }
+    .hdr .btn { display: inline-flex; }
+    .dock { display: none; }
   }
   @media (min-width: 920px) {
-    .hero { grid-template-columns: 1.15fr .85fr; gap: 56px; padding-top: 48px; }
-    .grid { grid-template-columns: repeat(3, 1fr); }
-    section { padding: 64px 0; }
+    .hero { grid-template-columns: 1.3fr .7fr; gap: 56px; padding: 36px 0 64px; min-height: min(720px, calc(100dvh - 64px)); }
+    .stage .phone { width: min(300px, 34dvh); }
+    .split { grid-template-columns: 1fr 1fr; gap: 56px; }
+    section { padding: 68px 0; }
   }
   @media (max-width: 380px) {
     .lesson { grid-template-columns: 54px 1fr; }
     .lesson .room { grid-column: 2; text-align: left; font-size: 18px; }
     .btn { width: 100%; }
+    .seg button { padding: 0 12px; }
   }
 </style>
 </head>
 <body>
 <a class="skip" href="#install">К установке</a>
+<div id="sentinel" aria-hidden="true" style="position:absolute;top:0;height:1px;width:1px"></div>
 
-<div class="wrap">
-  <header class="top">
-    <a class="brand" href="./" aria-label="Расписание — на главную">
-      <img src="img/Icon-192.png" alt="" width="40" height="40">
+<header class="hdr" id="hdr">
+  <div class="wrap top">
+    <a class="brand" href="./" aria-label="Расписание, на главную">
+      <img src="img/Icon-192.png" alt="" width="38" height="38">
       <span>Расписание</span>
     </a>
-  </header>
+    <nav class="nav" aria-label="Разделы страницы">
+      <a href="#screens">Экраны</a>
+      <a href="#features">Возможности</a>
+      <a href="#install">Установка</a>
+      <a href="#faq">Вопросы</a>
+    </nav>
+    <a class="btn primary" id="hdr-cta" href="#install">Установить</a>
+  </div>
+</header>
 
+<div class="wrap">
   <main id="top">
     <!-- ГЛАВНЫЙ ЭКРАН -->
     <div class="hero">
       <div>
-        <p class="eyebrow">Для студентов ИМФИТ</p>
-        <h1>Пары, аудитории и домашка — <em>в одном месте</em></h1>
-        <p class="lead">Открыли телефон — увидели, где и когда ваша пара. Без регистрации и паролей, работает без интернета, а староста группы сам вносит замены.</p>
-
-        <div class="cta" id="cta">
-          <a class="btn primary" id="btn-android" href="raspisanie.apk" download data-os="android">
+        <h1 class="a" style="--i:0">Пары, аудитории и домашка — <em>в одном месте</em></h1>
+        <p class="lead a" style="--i:1">Для студентов ИМФИТ. Открыли телефон и сразу видно, где и когда ваша пара. Без регистрации, работает без интернета.</p>
+        <div class="cta a" id="cta" style="--i:2">
+          <a class="btn primary" id="btn-android" href="raspisanie.apk" data-shared download data-os="android">
             Скачать для Android
             <small id="apk-meta">бесплатно · файл APK</small>
           </a>
-          <a class="btn ghost" id="btn-ios" href="app/" data-os="ios">
+          <a class="btn ghost" id="btn-ios" href="app/" data-shared data-os="ios">
             Открыть на iPhone
             <small>в браузере, потом на экран «Домой»</small>
           </a>
         </div>
-        <p class="note">Нужна помощь с установкой? <a href="#install">Пошаговая инструкция ниже</a>.</p>
-
-        <ul class="facts">
-          <li>Без регистрации</li>
-          <li>Не собираем данные о вас</li>
-          <li>Исходный код открыт</li>
-        </ul>
       </div>
 
-      <div>
-        <div class="phone">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="img/today-dark.webp">
-            <img src="img/today-light.webp" width="600" height="1300" alt="Экран «Сегодня»: идущая пара, аудитория 2-05 и лента пар дня">
-          </picture>
+      <div class="stage" id="stage" data-look="light">
+        <div class="phone" id="phone">
+          <div class="swap">
+            <img class="shot-img" src="img/today-light.webp" width="600" height="1300" fetchpriority="high" alt="Экран «Сегодня»: идущая пара, аудитория 2-05 и лента пар дня">
+            <img class="shot-img" src="img/today-dark.webp" width="600" height="1300" alt="" aria-hidden="true">
+          </div>
+        </div>
+        <div class="seg" id="look" role="group" aria-label="Тема экрана" style="--n:2;--i:0">
+          <button type="button" data-look="light" aria-pressed="true">Светлая</button>
+          <button type="button" data-look="dark" aria-pressed="false">Тёмная</button>
         </div>
       </div>
     </div>
   </main>
+</div>
 
+<!-- ДОВЕРИЕ -->
+<div class="trust">
+  <div class="wrap">
+    <ul>
+      <li class="rv" style="--d:0"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.7-3.6 3.4-5.5 7-5.5s6.3 1.9 7 5.5"/><path d="M3.5 3.5l17 17"/></svg>Без регистрации и паролей</li>
+      <li class="rv" style="--d:1"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Данные остаются на телефоне</li>
+      <li class="rv" style="--d:2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5a14 14 0 0 1 19 0M5.5 13a9.5 9.5 0 0 1 13 0M8.8 16.3a5 5 0 0 1 6.4 0"/><path d="M12 20h.01"/><path d="M3 3l18 18"/></svg>Работает без интернета</li>
+      <li class="rv" style="--d:3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 7 3.5 12l5 5M15.5 7l5 5-5 5"/></svg>Исходный код открыт</li>
+    </ul>
+  </div>
+</div>
+
+<div class="wrap">
   <!-- ЭКРАНЫ -->
   <section id="screens" aria-labelledby="h-screens">
-    <h2 id="h-screens">Как это выглядит</h2>
-    <p class="sub">Настоящие экраны приложения. Светлая и тёмная тема, цвета можно менять.</p>
+    <h2 id="h-screens" class="rv">Как это выглядит</h2>
+    <p class="sub rv" style="--d:1">Настоящие экраны приложения. Светлая и тёмная тема, цвета можно менять.</p>
     <div class="shots">
-      <figure class="shot">
+      <figure class="shot rv" style="--d:0">
         <div class="phone"><img loading="lazy" src="img/week-light.webp" width="600" height="1300" alt="Экран «Неделя»: пары понедельника с аудиториями"></div>
         <figcaption><b>Неделя</b>Обе недели под рукой, у общих лекций видно, с какими группами они идут</figcaption>
       </figure>
-      <figure class="shot">
+      <figure class="shot rv" style="--d:1">
         <div class="phone"><img loading="lazy" src="img/homework-light.webp" width="600" height="1300" alt="Экран «Домашка»: задания от старосты с прикреплённым файлом"></div>
-        <figcaption><b>Домашка</b>Свои задания и задания от старосты — с файлами и фото</figcaption>
+        <figcaption><b>Домашка</b>Свои задания и задания от старосты, с файлами и фото</figcaption>
       </figure>
-      <figure class="shot">
+      <figure class="shot rv" style="--d:2">
         <div class="phone"><img loading="lazy" src="img/search-teacher-light.webp" width="600" height="1300" alt="Поиск преподавателя: его пары за день с аудиториями"></div>
         <figcaption><b>Где преподаватель</b>Введите фамилию: сразу видно, какая у него пара и в каком кабинете</figcaption>
       </figure>
-      <figure class="shot">
+      <figure class="shot rv" style="--d:3">
         <div class="phone"><img loading="lazy" src="img/search-free-light.webp" width="600" height="1300" alt="Свободные аудитории на выбранную пару, по этажам"></div>
         <figcaption><b>Свободные аудитории</b>Какие кабинеты пустуют на нужной паре, по этажам</figcaption>
       </figure>
     </div>
   </section>
 
-  <!-- ЧТО УМЕЕТ -->
+  <!-- ЗАМЕНЫ ОТ СТАРОСТЫ: живая демонстрация -->
+  <section id="starosta" aria-labelledby="h-starosta">
+    <div class="split">
+      <div>
+        <h2 id="h-starosta" class="rv">Староста меняет аудиторию, и у всей группы это видно</h2>
+        <p class="sub rv" style="--d:1">Замена появляется у каждого в приложении с пометкой «изменено старостой» и временем. Писать в чат не нужно.</p>
+        <button type="button" class="btn soft rv" style="--d:2;min-height:50px" id="demo-replay">Показать ещё раз</button>
+      </div>
+      <div class="demo rv" style="--d:1" id="demo" aria-live="polite">
+        <div class="who"><span class="who-chip" id="who-chip">По расписанию</span><span class="who-text" id="who-text">Информатика в аудитории 2-15</span></div>
+        <div class="tile" id="tile">
+          <div class="t-time">13:00 – 14:30 · 3 пара</div>
+          <div><div class="t-subject">Информатика</div><span class="t-kind">Практика</span></div>
+          <div class="plate" id="plate">2-15</div>
+          <div class="t-note"><div><span id="t-note">изменено старостой в 08:40</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ВОЗМОЖНОСТИ -->
   <section id="features" aria-labelledby="h-features">
-    <h2 id="h-features">Что умеет</h2>
-    <p class="sub">Всё, о чём вы обычно спрашиваете в чате группы.</p>
-    <div class="grid">
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 3v3M16 3v3"/></svg></div>
-        <h3>Расписание вашей группы</h3><p>С учётом подгруппы и двух недель. Сегодня, завтра, вся неделя.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 9h8M8 13h8M8 17h4"/></svg></div>
-        <h3>Домашка с файлами</h3><p>Записывайте задания сами или читайте то, что добавил староста. Файлы и фото открываются прямо в приложении.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M16 6.2a3 3 0 0 1 0 5.6M18 14.3c1.7.6 2.7 2.1 3 4.7"/></svg></div>
-        <h3>Замены от старосты</h3><p>Староста группы меняет аудиторию, переносит или отменяет пару, и у всех это отмечено «изменено старостой» со временем.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></div>
-        <h3>Где преподаватель и свободные аудитории</h3><p>Введите фамилию — и сразу видно, какая у преподавателя пара и в каком кабинете. Заодно можно найти свободную аудиторию на нужную пару.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="3" y="13" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/></svg></div>
-        <h3>Виджеты и напоминания</h3><p>На Android: виджет с ближайшей парой на главном экране и уведомление за несколько минут до начала.</p></div>
-      <div class="card"><div class="ico"><svg viewBox="0 0 24 24"><path d="M2.5 9.5a14 14 0 0 1 19 0M5.5 13a9.5 9.5 0 0 1 13 0M8.8 16.3a5 5 0 0 1 6.4 0"/><path d="M12 20h.01"/><path d="M3 3l18 18"/></svg></div>
-        <h3>Работает без интернета</h3><p>Расписание хранится в телефоне. Сеть нужна только для обновлений и замен от старосты.</p></div>
+    <h2 id="h-features" class="rv">Всё, о чём вы спрашиваете в чате группы</h2>
+    <p class="sub rv" style="--d:1">Пары, домашка, преподаватели, свободные кабинеты. Попробуйте переключатель в карточке поиска.</p>
+    <div class="bento">
+      <div class="cell petrol c-a rv" style="--d:0">
+        <div><h3>Расписание вашей группы</h3><p>С учётом подгруппы и двух недель. Сегодня, завтра, вся неделя.</p></div>
+        <div class="vis days" id="days" aria-hidden="true">
+          <div><span>Пн</span><b>12</b><i></i></div><div><span>Вт</span><b>13</b><i></i></div><div class="today"><span>Ср</span><b>14</b><i></i></div><div><span>Чт</span><b>15</b><i></i></div><div><span>Пт</span><b>16</b><i></i></div><div><span>Сб</span><b>17</b><i></i></div><div><span>Вс</span><b>18</b></div>
+        </div>
+      </div>
+      <div class="cell amber c-b rv" style="--d:1">
+        <div><h3>Домашка с файлами</h3><p>Свои задания и задания от старосты. Файлы и фото открываются в приложении.</p></div>
+        <div class="vis hw" id="hw" aria-hidden="true">
+          <div id="hw-1"><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="txt">Прочитать главу 3</span></div>
+          <span class="file">Глава 3.pdf · 1,7 МБ</span>
+          <div><span class="box"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span class="txt">Эссе на одну страницу</span></div>
+        </div>
+      </div>
+      <div class="cell c-c rv" style="--d:0">
+        <div><h3>Где преподаватель и свободные аудитории</h3><p>Фамилия, номер кабинета или нужная пара, и ответ сразу.</p></div>
+        <div class="vis mini-find">
+          <div class="seg" id="find" role="group" aria-label="Что искать" style="--n:3;--i:0">
+            <button type="button" data-pane="0" aria-pressed="true">Преподаватель</button>
+            <button type="button" data-pane="1" aria-pressed="false">Аудитория</button>
+            <button type="button" data-pane="2" aria-pressed="false">Свободные</button>
+          </div>
+          <div class="find-out" aria-live="polite">
+            <div data-pane="0" class="on"><div class="now"><i></i>Сейчас ведёт: Информатика · 2-15</div></div>
+            <div data-pane="1"><div>В аудитории 2-05 сегодня:</div><small>10:40 Математика, 13:00 Иностранный язык</small></div>
+            <div data-pane="2"><div>3 пара, свободно 35 аудиторий</div><div class="rooms"><span>1-02</span><span>2-07</span><span>2-13</span><span>3-09</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="cell sand c-d rv" style="--d:1">
+        <div><h3>Виджеты и напоминания</h3><p>На Android: виджет с ближайшей парой на главном экране и уведомление за несколько минут до начала.</p></div>
+        <div class="vis wid">
+          <img class="lt" loading="lazy" src="img/widget-today-light.webp" width="865" height="430" alt="Виджет «Сегодня» на главном экране Android">
+          <img class="dk" loading="lazy" src="img/widget-today-dark.webp" width="865" height="430" alt="" aria-hidden="true">
+          <img class="lt room" loading="lazy" src="img/widget-room-light.webp" width="655" height="162" alt="Виджет с аудиторией ближайшей пары">
+          <img class="dk room" loading="lazy" src="img/widget-room-dark.webp" width="655" height="162" alt="" aria-hidden="true">
+        </div>
+      </div>
+      <div class="cell deep c-e rv" style="--d:2">
+        <svg class="big" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9.5a14 14 0 0 1 19 0M5.5 13a9.5 9.5 0 0 1 13 0M8.8 16.3a5 5 0 0 1 6.4 0"/><path d="M12 20h.01"/><path d="M3 3l18 18"/></svg>
+        <div><h3>Работает без интернета</h3><p>Расписание хранится в телефоне. Сеть нужна только для обновлений и замен от старосты.</p></div>
+      </div>
     </div>
   </section>
 
   <!-- КАК УСТАНОВИТЬ -->
   <section id="install" aria-labelledby="h-install">
-    <h2 id="h-install">Как установить</h2>
-    <p class="sub">Займёт пару минут. Выберите свой телефон.</p>
+    <h2 id="h-install" class="rv">Как установить</h2>
+    <p class="sub rv" style="--d:1">Займёт пару минут. Выберите свой телефон.</p>
 
-    <div class="tabs" role="tablist" aria-label="Тип телефона">
+    <div class="tabs seg rv" style="--n:2;--i:0;--d:2" role="tablist" aria-label="Тип телефона" id="tabs">
       <button role="tab" id="tab-android" aria-controls="panel-android" aria-selected="true">Android</button>
       <button role="tab" id="tab-ios" aria-controls="panel-ios" aria-selected="false" tabindex="-1">iPhone</button>
     </div>
@@ -328,36 +556,36 @@
         <li><div><b>Скачайте файл</b><span>Нажмите «Скачать для Android». Если браузер спросит, оставить ли файл, ответьте «Скачать».</span></div></li>
         <li><div><b>Откройте скачанный файл</b><span>Он называется <code>raspisanie.apk</code>. Его можно открыть из уведомления о загрузке или из папки «Загрузки».</span></div></li>
         <li><div><b>Разрешите установку</b><span>Телефон сообщит, что установка из этого источника запрещена. Нажмите «Настройки» и включите «Разрешить из этого источника», потом вернитесь назад.</span></div></li>
-        <li><div><b>Нажмите «Установить»</b><span>Если Play Protect предупредит о неизвестном приложении, нажмите «Подробнее» → «Всё равно установить».</span></div></li>
+        <li><div><b>Нажмите «Установить»</b><span>Если Play Protect предупредит о неизвестном приложении, нажмите «Подробнее», затем «Всё равно установить».</span></div></li>
         <li><div><b>Выберите группу и подгруппу</b><span>Это всё. Дальше расписание откроется сразу, а на главном экране можно добавить виджет.</span></div></li>
       </ol>
       <div class="callout"><b>Почему телефон предупреждает?</b>Так бывает с любым приложением не из магазина. Приложение бесплатное, подписано автором, а его исходный код открыт: каждую версию можно проверить на GitHub.</div>
       <div class="callout calm"><b>Как обновить</b>Скачайте новую версию и установите поверх: ваши настройки и домашка сохранятся. Само расписание обновляется без этого, при открытии приложения.</div>
-      <p class="note">Нет места или не хочется ставить файл? <a href="app/">Откройте версию в браузере</a>: она работает и на Android.</p>
+      <p class="note">Нет места или не хочется ставить файл? <a href="app/" data-shared>Откройте версию в браузере</a>: она работает и на Android.</p>
     </div>
 
     <div class="panel" id="panel-ios" role="tabpanel" aria-labelledby="tab-ios" hidden>
       <ol class="steps">
         <li><div><b>Откройте приложение в Safari</b><span>Нажмите «Открыть на iPhone». Лучше именно в Safari, другие браузеры не умеют добавлять на экран «Домой».</span></div></li>
-        <li><div><b>Нажмите «Поделиться»</b><span>Кнопка в виде квадрата со стрелкой — внизу экрана.</span></div></li>
+        <li><div><b>Нажмите «Поделиться»</b><span>Кнопка в виде квадрата со стрелкой, внизу экрана.</span></div></li>
         <li><div><b>Выберите «На экран „Домой“»</b><span>Потом «Добавить». На экране появится значок приложения.</span></div></li>
         <li><div><b>Запускайте с главного экрана</b><span>Приложение откроется без адресной строки, как обычное. Выберите группу и подгруппу.</span></div></li>
       </ol>
       <div class="callout"><b>Чего нет на iPhone</b>Виджетов и напоминаний о парах: их запрещает платформа для сайтов. Всё остальное, включая домашку с файлами и замены от старосты, работает. Напоминания можно получить через <a href="#calendar">календарь</a>.</div>
-      <a class="btn primary" href="app/" style="display:inline-flex">Открыть на iPhone</a>
+      <a class="btn primary" href="app/" data-shared style="display:inline-flex">Открыть на iPhone</a>
     </div>
   </section>
 
   <!-- ПОДЕЛИТЬСЯ -->
   <section id="share" aria-labelledby="h-share">
-    <h2 id="h-share">Покажите группе</h2>
-    <p class="sub">Наведите камеру телефона на код или отправьте ссылку в чат группы.</p>
+    <h2 id="h-share" class="rv">Покажите группе</h2>
+    <p class="sub rv" style="--d:1">Наведите камеру телефона на код или отправьте ссылку в чат группы.</p>
     <div class="share">
-      <div class="qr"><img src="qr.svg" width="236" height="236" alt="QR-код со ссылкой на эту страницу"></div>
-      <div>
+      <div class="qr rv" style="--d:1"><img src="qr.svg" width="236" height="236" alt="QR-код со ссылкой на эту страницу"></div>
+      <div class="rv" style="--d:2">
         <p style="margin:0">Ссылка открывается на любом телефоне и сразу подскажет, как установить приложение.</p>
         <div class="share-actions">
-          <button type="button" class="btn primary" id="btn-copy">Скопировать ссылку</button>
+          <button type="button" class="btn primary" id="btn-copy"><span class="ok" aria-hidden="true">✓&nbsp;</span><span id="copy-label">Скопировать ссылку</span></button>
           <button type="button" class="btn soft" id="btn-share" hidden>Поделиться</button>
           <a class="btn soft" href="poster.html">Листовка для печати</a>
         </div>
@@ -368,7 +596,7 @@
 
   <!-- КАЛЕНДАРЬ БЕЗ ПРИЛОЖЕНИЯ -->
   <section id="calendar" aria-labelledby="h-calendar">
-    <h2 id="h-calendar">Не хотите ставить приложение? Подключите календарь</h2>
+    <h2 id="h-calendar" class="rv">Не хотите ставить приложение? Подключите календарь</h2>
     <p class="sub">Календарь — это программа, которая уже есть в вашем телефоне: «Календарь» на iPhone и «Google Календарь» на Android. Выберите свою группу, и все пары появятся в нём сами, с временем и аудиторией. Когда расписание изменится, пары в календаре обновятся тоже.</p>
     <ol class="steps">
       <li><div><b>Выберите группу</b><span>Нажмите кнопку ниже и укажите форму обучения, курс, группу и подгруппу.</span></div></li>
@@ -398,7 +626,7 @@
           </div>
           <p class="hint">На iPhone нажмите первую кнопку, на Android — вторую.</p>
           <h3 id="table-title" style="margin-top:22px">Расписание</h3>
-          <div class="wk-tabs" role="tablist">
+          <div class="wk-tabs seg" role="tablist" style="--n:2;--i:0">
             <button role="tab" id="tab-1" aria-selected="true" data-week="1">1 неделя</button>
             <button role="tab" id="tab-2" aria-selected="false" data-week="2">2 неделя</button>
           </div>
@@ -417,50 +645,56 @@
 
   <!-- ВОПРОСЫ -->
   <section id="faq" aria-labelledby="h-faq">
-    <h2 id="h-faq">Частые вопросы</h2>
+    <h2 id="h-faq" class="rv">Частые вопросы</h2>
     <p class="sub">Коротко и без обещаний, которые мы не можем выполнить.</p>
 
-    <details>
+    <details class="rv" style="--d:0">
       <summary>Это официальное приложение института?</summary>
       <p>Нет, это неофициальный студенческий проект. Расписание берётся из официального файла, который институт рассылает студентам. Если приложение и файл расходятся, верен файл. Правки старосты в приложении помечены «изменено старостой» и временем.</p>
     </details>
-    <details>
+    <details class="rv" style="--d:1">
       <summary>Какие данные о нас собирает приложение?</summary>
       <p>Никаких. Нет регистрации и аккаунтов, группа, подгруппа и настройки хранятся только в вашем телефоне. На сервере лежат лишь общие для группы замены и домашка от старосты, без имён и контактов.</p>
     </details>
-    <details>
+    <details class="rv" style="--d:2">
       <summary>Почему не Google Play и не App Store?</summary>
       <p>Публикация в магазинах требует регистрации и оплаты, а приложение бесплатное и студенческое. Поэтому пока оно распространяется напрямую. Исходный код открыт, каждая версия собирается автоматически на GitHub, так что можно проверить, что внутри.</p>
     </details>
-    <details>
+    <details class="rv" style="--d:3">
       <summary>Работает ли без интернета?</summary>
       <p>Да. Расписание хранится в телефоне. Интернет нужен, чтобы получать новое расписание, замены и домашку от старосты, а также чтобы скачать вложения.</p>
     </details>
-    <details>
+    <details class="rv" style="--d:4">
       <summary>Расписание в приложении не совпадает с настоящим. Что делать?</summary>
       <p>Потяните экран «Сегодня» вниз: приложение проверит обновления. Внизу экрана видна дата расписания. Если в файле института ошибка, она будет и в приложении: сообщите старосте или в деканат.</p>
     </details>
-    <details>
+    <details class="rv" style="--d:5">
       <summary>Как стать старостой в приложении?</summary>
       <p>Старосте группы нужен одноразовый код, его выдаёт автор приложения. Контакт для заявок скоро появится на этой странице. Когда код будет у вас: «Настройки» → «Староста и группа» → ввести код.</p>
     </details>
-    <details>
+    <details class="rv" style="--d:5">
       <summary>Чем отличается iPhone от Android?</summary>
       <p>На iPhone приложение открывается из браузера и закрепляется на экране «Домой». В нём есть всё, кроме виджетов и напоминаний о парах: их для сайтов запрещает платформа. Для напоминаний подпишитесь на календарь.</p>
     </details>
   </section>
 
   <footer>
+    <div class="bells" id="bells" aria-hidden="true"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i></div>
     <p class="uni">Для студентов Института математики, физики и информационных технологий (ИМФИТ) Чеченского государственного университета имени А. А. Кадырова</p>
     <div id="footer-date">Студенческий проект. Расписание берётся из официального файла института.</div>
-    <p><a class="btn soft" href="poster.html">Листовка для печати</a></p>
   </footer>
 </div>
+
+<!-- Нижняя кнопка на телефоне: появляется, когда главная кнопка уехала с экрана -->
+<div class="dock" id="dock"><a class="btn primary" id="dock-cta" href="#install">Установить</a></div>
 
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://magan-z.github.io/raspisanie/";
+// Корень сайта: на основной странице пусто; на тестовой (/site-next/) публикация ставит «../» (приложение, APK и расписание лежат на основном сайте)
+const ROOT = (document.querySelector('meta[name="site-root"]') || {}).content || "";
+document.querySelectorAll("a[data-shared]").forEach((a) => { if (ROOT) a.setAttribute("href", ROOT + a.getAttribute("href")); });
 const state = { index: null, form: null, course: null, group: null, subgroup: null, pe: null, week: 1, groupData: null };
 
 // ---------- Время (Москва, UTC+3) ----------
@@ -481,6 +715,10 @@ function detectOs() {
 }
 function setupPlatform() {
   const os = detectOs();
+  // Верхняя и нижняя кнопки зовут к своей платформе; на компьютере ведут к инструкции
+  const label = os === "ios" ? "Открыть на iPhone" : os === "android" ? "Скачать для Android" : "Установить";
+  const target = os === "ios" ? ROOT + "app/" : os === "android" ? ROOT + "raspisanie.apk" : "#install";
+  for (const id of ["hdr-cta", "dock-cta"]) { $(id).textContent = label; $(id).href = target; if (os === "android") $(id).setAttribute("download", ""); }
   const android = $("btn-android"), ios = $("btn-ios");
   if (os === "ios") {
     ios.className = "btn primary"; android.className = "btn ghost";
@@ -505,10 +743,10 @@ function prefetchApp() {
     for (const name of ["flutter_bootstrap.js", "main.dart.js", "canvaskit/canvaskit.js", "canvaskit/canvaskit.wasm", "sqlite3.wasm", "drift_worker.js"]) {
       if (canPrefetch) {
         const link = document.createElement("link");
-        link.rel = "prefetch"; link.href = "app/" + name;
+        link.rel = "prefetch"; link.href = ROOT + "app/" + name;
         document.head.appendChild(link);
       } else {
-        fetch("app/" + name, { priority: "low" }).catch(() => {});
+        fetch(ROOT + "app/" + name, { priority: "low" }).catch(() => {});
       }
     }
   });
@@ -522,6 +760,7 @@ function selectTab(name) {
     $("tab-" + n).setAttribute("aria-selected", String(on));
     $("tab-" + n).tabIndex = on ? 0 : -1;
     $("panel-" + n).hidden = !on;
+    if (on) $("tabs").style.setProperty("--i", n === "ios" ? 1 : 0);
   }
 }
 for (const n of ["android", "ios"]) {
@@ -534,7 +773,7 @@ for (const n of ["android", "ios"]) {
 // ---------- Версия и размер файла (apk.json кладёт на сайт публикация; если файла нет — остаётся надпись по умолчанию) ----------
 async function loadRelease() {
   try {
-    const response = await fetch("apk.json", { cache: "no-cache" });
+    const response = await fetch(ROOT + "apk.json", { cache: "no-cache" });
     if (!response.ok) return;
     const apk = await response.json();
     $("apk-meta").textContent = `версия ${apk.version} · ${(apk.size / 1048576).toFixed(0)} МБ · бесплатно`;
@@ -545,7 +784,9 @@ async function loadRelease() {
 $("btn-copy").addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(PAGE_URL);
-    $("copied").textContent = "Ссылка скопирована";
+    $("btn-copy").classList.add("done");
+    $("copy-label").textContent = "Ссылка скопирована";
+    setTimeout(() => { $("btn-copy").classList.remove("done"); $("copy-label").textContent = "Скопировать ссылку"; }, 2400);
   } catch (e) {
     $("copied").textContent = "Не удалось скопировать. Выделите адрес в строке браузера и скопируйте вручную.";
   }
@@ -613,7 +854,7 @@ function calendarFileName(group) {
 }
 async function showResult() {
   const group = currentGroup();
-  const icsUrl = new URL("ics/" + calendarFileName(group), location.href);
+  const icsUrl = new URL(ROOT + "ics/" + calendarFileName(group), location.href);
   const webcal = icsUrl.href.replace(/^https?:/, "webcal:");
   $("btn-ics-ios").href = webcal;
   $("btn-google").href = "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(webcal);
@@ -622,7 +863,7 @@ async function showResult() {
   if (!state.groupData || state.groupData.group.id !== group.id) {
     $("week-table").textContent = "Загружаю…";
     try {
-      const response = await fetch("groups/" + group.id + ".json", { cache: "no-cache" });
+      const response = await fetch(ROOT + "groups/" + group.id + ".json", { cache: "no-cache" });
       state.groupData = await response.json();
     } catch (e) {
       $("week-table").innerHTML = '<p class="error">Не удалось загрузить расписание группы. Обновите страницу.</p>';
@@ -639,6 +880,7 @@ function lessonVisible(lesson) {
 }
 function renderWeek() {
   for (const n of [1, 2]) $("tab-" + n).setAttribute("aria-selected", String(state.week === n));
+  document.querySelector(".wk-tabs").style.setProperty("--i", state.week - 1);
   const bells = state.index.bells;
   const today = moscowToday();
   const isCurrentWeek = weekNumber(today, state.index.weekAnchor) === state.week;
@@ -689,7 +931,7 @@ for (const n of [1, 2]) $("tab-" + n).addEventListener("click", () => { state.we
 
 async function startCalendar() {
   try {
-    const response = await fetch("index.json", { cache: "no-cache" });
+    const response = await fetch(ROOT + "index.json", { cache: "no-cache" });
     state.index = await response.json();
   } catch (e) {
     $("loading").innerHTML = '<p class="error">Не удалось загрузить расписание. Проверьте интернет и обновите страницу.</p>';
@@ -717,6 +959,139 @@ setupPlatform();
 openCalendarIfLinked();
 loadRelease();
 startCalendar();
+
+// =====================================================================
+//  Оформление и движение (всё необязательное: без скриптов страница просто читается)
+// =====================================================================
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const EASE_OUT = "cubic-bezier(.16, 1, .3, 1)";
+
+// Шапка получает фон и линию, когда страницу прокрутили (следим за невидимой меткой вверху, без обработчика прокрутки)
+if ("IntersectionObserver" in window) {
+  new IntersectionObserver(([e]) => $("hdr").classList.toggle("stuck", !e.isIntersecting)).observe($("sentinel"));
+}
+
+// Нижняя кнопка на телефоне: видна, пока на экране нет ни главной кнопки, ни раздела «Как установить»
+(function dock() {
+  if (!("IntersectionObserver" in window)) return;
+  const seen = { cta: true, install: false };
+  const update = () => $("dock").classList.toggle("show", !seen.cta && !seen.install);
+  const watch = (id, key) => new IntersectionObserver(([e]) => { seen[key] = e.isIntersecting; update(); }).observe($(id));
+  watch("cta", "cta"); watch("install", "install");
+})();
+
+// Переключатель темы на экране телефона в первом экране: плавно меняет светлый снимок на тёмный
+(function look() {
+  const stage = $("stage"), seg = $("look");
+  const set = (name) => {
+    stage.dataset.look = name;
+    seg.style.setProperty("--i", name === "dark" ? 1 : 0);
+    seg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.look === name)));
+  };
+  seg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => set(b.dataset.look)));
+  if (matchMedia("(prefers-color-scheme: dark)").matches) set("dark");
+})();
+
+// Телефон слегка наклоняется за курсором (только на компьютере с мышью)
+(function tilt() {
+  if (REDUCED || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  const stage = $("stage"), phone = $("phone");
+  stage.addEventListener("pointermove", (e) => {
+    const r = phone.getBoundingClientRect();
+    const x = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+    const y = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+    phone.style.setProperty("--ry", (Math.max(-1, Math.min(1, x)) * 6).toFixed(2) + "deg");
+    phone.style.setProperty("--rx", (Math.max(-1, Math.min(1, y)) * -5).toFixed(2) + "deg");
+  });
+  stage.addEventListener("pointerleave", () => { phone.style.setProperty("--rx", "0deg"); phone.style.setProperty("--ry", "0deg"); });
+})();
+
+// ---------- Появление при прокрутке: один раз, с небольшой задержкой по порядку ----------
+const onShown = { demo: () => demoPlay(), hw: () => setTimeout(() => $("hw-1").classList.add("done"), 700), days: () => animateDays() };
+(function reveal() {
+  const items = document.querySelectorAll(".rv, #bells");
+  if (!("IntersectionObserver" in window) || REDUCED) {
+    items.forEach((el) => el.classList.add("in"));
+    if (REDUCED) { setTimeout(() => { demoFinal(); $("hw-1").classList.add("done"); }, 0); }
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add("in");
+      io.unobserve(e.target);
+      const hook = onShown[e.target.id];
+      if (hook) hook();
+    }
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.15 });
+  items.forEach((el) => io.observe(el));
+  for (const id of ["hw", "days"]) io.observe($(id));
+})();
+
+// ---------- Лента дней в карточке «Расписание»: настоящая текущая неделя ----------
+(function days() {
+  const today = moscowToday();
+  const idx = (today.getUTCDay() + 6) % 7; // 0 — понедельник
+  const cells = $("days").children;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today.getTime() + (i - idx) * 86400000);
+    cells[i].querySelector("b").textContent = d.getUTCDate();
+    cells[i].classList.toggle("today", i === idx);
+  }
+})();
+function animateDays() {
+  if (REDUCED) return;
+  [...$("days").children].forEach((c, i) => c.animate([{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duration: 600, delay: i * 55, easing: EASE_OUT, fill: "backwards" }));
+}
+
+// ---------- Демонстрация: староста меняет аудиторию ----------
+const demoTimers = [];
+function demoReset() {
+  demoTimers.splice(0).forEach(clearTimeout);
+  $("tile").classList.remove("changed", "glow");
+  $("who-chip").classList.remove("hot");
+  $("who-chip").textContent = "По расписанию";
+  $("who-text").textContent = "Информатика в аудитории 2-15";
+  $("plate").textContent = "2-15";
+}
+function demoFinal() {
+  $("who-chip").textContent = "Готово";
+  $("who-text").textContent = "У всей группы пара уже в аудитории 3-12";
+  $("plate").textContent = "3-12";
+  $("tile").classList.add("changed");
+}
+function demoPlay() {
+  demoReset();
+  if (REDUCED) { demoFinal(); return; }
+  const at = (ms, fn) => demoTimers.push(setTimeout(fn, ms));
+  at(900, () => { $("who-chip").textContent = "Староста"; $("who-chip").classList.add("hot"); $("who-text").textContent = "Переносит пару в аудиторию 3-12"; });
+  at(2100, () => {
+    // табличка «переворачивается»: сначала уходит ребром, потом возвращается с новым номером
+    const plate = $("plate");
+    plate.animate([{ transform: "perspective(400px) rotateX(0)" }, { transform: "perspective(400px) rotateX(90deg)" }], { duration: 200, easing: "ease-in", fill: "forwards" });
+    demoTimers.push(setTimeout(() => {
+      plate.textContent = "3-12";
+      plate.getAnimations().forEach((a) => a.cancel());
+      plate.animate([{ transform: "perspective(400px) rotateX(-90deg)" }, { transform: "perspective(400px) rotateX(0)" }], { duration: 650, easing: EASE_OUT });
+      $("tile").classList.add("glow", "changed");
+    }, 200));
+  });
+  at(3900, () => { $("tile").classList.remove("glow"); $("who-chip").classList.remove("hot"); $("who-chip").textContent = "Готово"; $("who-text").textContent = "У всей группы пара уже в аудитории 3-12"; });
+}
+$("demo-replay").addEventListener("click", demoPlay);
+
+// ---------- Мини-поиск в карточке «Где преподаватель» ----------
+(function findDemo() {
+  const seg = $("find");
+  const panes = document.querySelectorAll(".find-out [data-pane]");
+  seg.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    const n = Number(b.dataset.pane);
+    seg.style.setProperty("--i", n);
+    seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    panes.forEach((p) => p.classList.toggle("on", Number(p.dataset.pane) === n));
+  }));
+})();
+
 </script>
 </body>
 </html>
