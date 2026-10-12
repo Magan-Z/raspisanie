@@ -99,6 +99,26 @@ jobs:
           bash scripts/build_web.sh
           cp -R app/build/web public/app
 
+      # Тестовая версия нового дизайна: если на GitHub есть ветка design-test, она собирается отдельно
+      # и лежит на сайте по адресу /app-next/. Обычная версия (/app/) от неё не зависит.
+      - name: "Тестовая версия веб-приложения (ветка design-test)"
+        working-directory: .
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}/
+        run: |
+          if git ls-remote --exit-code --heads origin design-test >/dev/null 2>&1; then
+            git fetch --depth=1 origin design-test
+            git worktree add test-src FETCH_HEAD
+            mkdir -p test-src/app/assets/schedule/groups
+            cp public/index.json test-src/app/assets/schedule/
+            cp public/groups/*.json test-src/app/assets/schedule/groups/
+            (cd test-src/app && flutter pub get && dart run build_runner build --delete-conflicting-outputs)
+            NEXT=1 BASE_HREF=/${{ github.event.repository.name }}/app-next/ bash test-src/scripts/build_web.sh
+            cp -R test-src/app/build/web public/app-next
+          else
+            echo "Ветки design-test нет: тестовая версия не собирается"
+          fi
+
       - name: Отчёт в журнал
         if: always()
         run: cat ../public/report.txt || true
