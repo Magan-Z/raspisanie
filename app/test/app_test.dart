@@ -769,6 +769,18 @@ void main() {
     expect(titles, isNot(contains('Технологическое предпринимательство → 2-05'))); // уже идёт
   });
 
+  testWidgets('Уведомления: если разрешения нет, кнопка в настройках открывает настройки телефона', (tester) async {
+    final gateway = FakeGateway()..grantOnRequest = false; // пользователь отказал
+    await _start(tester, prefs: {...profile, 'notificationAskCount': 2}, gateway: gateway);
+    await tester.tap(find.text('Настройки').last);
+    await _settle(tester);
+    expect(gateway.permissionRequests, 0, reason: 'после двух вопросов при запуске больше не спрашиваем');
+
+    await tester.tap(find.text('Разрешить уведомления'));
+    await _settle(tester);
+    expect(gateway.settingsOpened, 1);
+  });
+
   testWidgets('Уведомления: нажатие открывает нужный день или вкладку «ДЗ»', (tester) async {
     final gateway = FakeGateway();
     await _start(tester, prefs: profile, gateway: gateway); // среда 07.10.2026

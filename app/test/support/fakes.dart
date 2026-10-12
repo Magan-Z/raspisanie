@@ -54,6 +54,11 @@ class FakeGateway implements NotificationGateway {
   final plans = <List<PlannedNotification>>[];
   final shown = <String>[];
   int permissionRequests = 0;
+
+  /// Выдаёт ли «телефон» разрешение, когда о нём просят (false — пользователь отказал).
+  bool grantOnRequest = true;
+  bool granted = false;
+  int settingsOpened = 0;
   final tapController = StreamController<String>.broadcast();
   String? startPayload;
 
@@ -71,11 +76,18 @@ class FakeGateway implements NotificationGateway {
   @override
   Future<bool> requestPermission() async {
     permissionRequests++;
-    return true;
+    granted = granted || grantOnRequest;
+    return granted;
   }
 
   @override
-  Future<bool> areEnabled() async => true;
+  Future<bool> areEnabled() async => granted;
+
+  @override
+  Future<bool> openSystemSettings() async {
+    settingsOpened++;
+    return true;
+  }
 
   @override
   Future<void> replaceAll(List<PlannedNotification> plan) async => plans.add(plan);

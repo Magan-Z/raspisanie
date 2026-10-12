@@ -123,15 +123,19 @@ class _HomeShellState extends ConsumerState<HomeShell>
     }
   }
 
-  /// Один раз спрашиваем разрешение на уведомления (Android 13+), когда они включены по умолчанию.
+  /// Спрашиваем разрешение на уведомления (Android 13+) при запуске, пока оно не выдано, но не больше двух раз:
+  /// после двух отказов Android окно больше не показывает, и включить уведомления можно только в настройках (кнопка в «Настройки → Уведомления»).
   Future<void> _askNotificationPermissionOnce() async {
     if (kIsWeb) return; // в браузере разрешение на уведомления не нужно
     final prefs = ref.read(sharedPreferencesProvider);
-    if (prefs.getBool('notificationPermissionAsked') ?? false) return;
-    await prefs.setBool('notificationPermissionAsked', true);
+    // в прошлых версиях хранился флаг «спрашивали»: считаем его одним вопросом
+    final asked = prefs.getInt('notificationAskCount') ?? ((prefs.getBool('notificationPermissionAsked') ?? false) ? 1 : 0);
+    if (asked >= 2) return;
     try {
       final gateway = ref.read(notificationGatewayProvider);
       await gateway.init();
+      if (await gateway.areEnabled()) return;
+      await prefs.setInt('notificationAskCount', asked + 1);
       await gateway.requestPermission();
     } catch (_) {}
     _scheduleRefresh();

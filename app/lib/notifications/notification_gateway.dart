@@ -3,6 +3,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -28,6 +29,9 @@ abstract class NotificationGateway {
   /// Спрашивает разрешение (Android 13+). true — уведомления разрешены.
   Future<bool> requestPermission();
   Future<bool> areEnabled();
+
+  /// Открывает системную страницу уведомлений приложения (куда Android перебрасывает, если окно с вопросом больше не показывается). true — страница открылась.
+  Future<bool> openSystemSettings();
 
   /// Заменяет все запланированные уведомления новым планом.
   Future<void> replaceAll(List<PlannedNotification> plan);
@@ -57,6 +61,9 @@ class NoopNotificationGateway implements NotificationGateway {
 
   @override
   Future<bool> areEnabled() async => false;
+
+  @override
+  Future<bool> openSystemSettings() async => false;
 
   @override
   Future<void> replaceAll(List<PlannedNotification> plan) async {}
@@ -119,6 +126,15 @@ class LocalNotificationGateway implements NotificationGateway {
 
   @override
   Future<bool> areEnabled() async => await _android?.areNotificationsEnabled() ?? false;
+
+  @override
+  Future<bool> openSystemSettings() async {
+    try {
+      return await const MethodChannel('raspisanie/system').invokeMethod<bool>('openNotificationSettings') ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
 
   NotificationDetails _details(NotificationChannel channel) => NotificationDetails(
         android: AndroidNotificationDetails(

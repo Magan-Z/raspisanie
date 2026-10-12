@@ -224,14 +224,21 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'Если уведомления не приходят — нажмите, чтобы разрешить их в системе',
                 onTap: () async {
                   var allowed = false;
+                  var opened = false;
                   try {
                     final gateway = ref.read(notificationGatewayProvider);
                     await gateway.init();
                     allowed = await gateway.requestPermission() || await gateway.areEnabled();
+                    // Если окно с вопросом Android уже не показывает — сразу открываем страницу уведомлений приложения в настройках телефона
+                    if (!allowed) opened = await gateway.openSystemSettings();
                   } catch (_) {}
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(allowed ? 'Уведомления разрешены' : 'Уведомления запрещены. Включите их в настройках телефона: Приложения → Расписание → Уведомления'),
+                    content: Text(allowed
+                        ? 'Уведомления разрешены'
+                        : opened
+                            ? 'Включите «Показывать уведомления» на открывшейся странице'
+                            : 'Уведомления запрещены. Включите их в настройках телефона: Приложения → Расписание → Уведомления'),
                   ));
                 },
               );
