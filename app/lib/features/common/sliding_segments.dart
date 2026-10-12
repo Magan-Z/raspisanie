@@ -37,7 +37,8 @@ class SlidingSegments<T> extends StatelessWidget {
         .indexWhere((s) => s.value == selected)
         .clamp(0, n - 1);
     final duration = Motion.of(context, const Duration(milliseconds: 380));
-    final labelStyle = Theme.of(context).textTheme.labelLarge!;
+    // когда частей три и больше, шрифт чуть мельче у всех сразу: так длинное слово почти не ужимается и подписи выглядят одинаково
+    final labelStyle = Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: n >= 3 ? 13 : null);
 
     // Material, а не Container: иначе всплеск от нажатия прячется под фоном
     return Material(
@@ -91,7 +92,7 @@ class SlidingSegments<T> extends StatelessWidget {
                             child: Center(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
+                                  horizontal: 3,
                                   vertical: Gap.sm,
                                 ),
                                 child: FittedBox(

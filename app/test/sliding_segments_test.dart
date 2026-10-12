@@ -38,11 +38,9 @@ void main() {
       for (final t in ['Преподаватель', 'Аудитория', 'Свободные'])
         tester.getCenter(find.text(t)).dy,
     ];
-    expect(
-      ys.toSet().length,
-      1,
-      reason: 'подписи должны стоять в одной строке',
-    );
+    // допуск 1 px: после ужатия шрифта центры могут отличаться на доли пикселя
+    final spread = ys.reduce((a, b) => a > b ? a : b) - ys.reduce((a, b) => a < b ? a : b);
+    expect(spread, lessThan(1), reason: 'подписи должны стоять в одной строке');
 
     await tester.tap(find.text('Свободные'));
     await tester.pumpAndSettle();
