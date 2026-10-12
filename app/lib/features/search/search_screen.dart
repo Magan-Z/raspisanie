@@ -63,23 +63,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            // Три кнопки-«таблетки»: если слова не помещаются в ряд, кнопка уходит на следующую строку целиком
-            Wrap(
-              spacing: 8,
-              children: [
-                for (final (mode, label) in const [
-                  (_Mode.teacher, 'Преподаватель'),
-                  (_Mode.room, 'Аудитория'),
-                  (_Mode.free, 'Свободные'),
-                ])
-                  // без галочки: иначе выбранная кнопка становится шире и ряд «прыгает»
-                  ChoiceChip(
-                    label: Text(label),
-                    showCheckmark: false,
-                    selected: _mode == mode,
-                    onSelected: (_) => setState(() => _mode = mode),
-                  ),
-              ],
+            _ModeChips(
+              selected: _mode,
+              onSelected: (m) => setState(() => _mode = m),
             ),
             const SizedBox(height: 12),
             _DayChips(
@@ -246,6 +232,64 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         style: theme.textTheme.bodySmall,
       ),
     ];
+  }
+}
+
+/// Три кнопки режима («Преподаватель», «Аудитория», «Свободные») всегда в одну строку:
+/// делят ширину поровну, а длинное слово чуть уменьшается, если не влезает.
+/// При крупном шрифте в настройках телефона слова уже не ужимаем — тогда кнопки переносятся на вторую строку.
+class _ModeChips extends StatelessWidget {
+  const _ModeChips({required this.selected, required this.onSelected});
+  final _Mode selected;
+  final ValueChanged<_Mode> onSelected;
+
+  static const _items = [
+    (_Mode.teacher, 'Преподаватель'),
+    (_Mode.room, 'Аудитория'),
+    (_Mode.free, 'Свободные'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final bigText = MediaQuery.textScalerOf(context).scale(14) > 14 * 1.3;
+    if (bigText) {
+      return Wrap(
+        spacing: 8,
+        children: [
+          for (final (mode, label) in _items)
+            ChoiceChip(
+              label: Text(label),
+              showCheckmark: false,
+              selected: selected == mode,
+              onSelected: (_) => onSelected(mode),
+            ),
+        ],
+      );
+    }
+    return Row(
+      children: [
+        for (var i = 0; i < _items.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: ChoiceChip(
+              // без галочки: иначе выбранная кнопка становится шире и ряд «прыгает»
+              showCheckmark: false,
+              padding: EdgeInsets.zero,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+              label: SizedBox(
+                width: double.infinity,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(_items[i].$2),
+                ),
+              ),
+              selected: selected == _items[i].$1,
+              onSelected: (_) => onSelected(_items[i].$1),
+            ),
+          ),
+        ],
+      ],
+    );
   }
 }
 
