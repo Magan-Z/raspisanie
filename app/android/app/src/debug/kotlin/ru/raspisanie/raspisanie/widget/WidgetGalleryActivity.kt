@@ -46,6 +46,10 @@ class WidgetGalleryActivity : Activity() {
         add("Сегодня 4×2", 320, 160, WidgetRenderer.today(this, snapshot, nowMs))
         add("Ближайшая пара 4×1", 320, 56, WidgetRenderer.strip(this, snapshot, nowMs))
         add("Аудитория 3×1", 240, 56, WidgetRenderer.room(this, snapshot, nowMs))
+        // Длинное «место» вместо номера аудитории (физкультура: «3 корпус»): ближайшая пара — физкультура 14 октября
+        val nowPe = WidgetLogic.parseMoment("2026-10-14T08:00+03:00")
+        add("Ближайшая пара 4×1, «3 корпус»", 320, 56, WidgetRenderer.strip(this, snapshot, nowPe))
+        add("Аудитория 3×1, «3 корпус»", 240, 56, WidgetRenderer.room(this, snapshot, nowPe))
         add("Домашка 4×2", 320, 160, WidgetRenderer.homework(this, snapshot, nowMs))
         add("Завтра 4×2", 320, 160, WidgetRenderer.tomorrow(this, snapshot, nowMs))
         add("Неделя 4×4", 320, 320, WidgetRenderer.week(this, snapshot, nowMs))
@@ -86,7 +90,7 @@ class WidgetGalleryActivity : Activity() {
             Triple(2, arrayOf("Информатика", "Информатика", "2-14", "Алиева М.В."), "practice"),
             Triple(3, arrayOf("История России", "История России", "4-10", "Матагова Х.А."), "lecture"))
         day("2026-10-14",
-            Triple(2, arrayOf("Физкультура", "Физическая культура", "спортзал", "Тамаев М."), "pe"),
+            Triple(2, arrayOf("Физкультура", "Физическая культура", "3 корпус", "Тамаев М."), "pe"),
             Triple(3, arrayOf("Математика", "Математика", "3-03", "Гагаева Х.Л."), "practice"),
             Triple(4, arrayOf("Кураторский час", "Кураторский час", "2-21", "Батукаева А.Р."), "curator"),
             Triple(5, arrayOf("Информатика", "Информатика", "2-14", "Алиева М.В."), "practice"))

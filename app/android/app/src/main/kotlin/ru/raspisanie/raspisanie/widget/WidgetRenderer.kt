@@ -12,6 +12,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.StyleSpan
 import android.graphics.Typeface
+import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import ru.raspisanie.raspisanie.MainActivity
@@ -115,6 +116,20 @@ object WidgetRenderer {
         val fill = tone?.accent ?: c?.accent ?: return
         tint(views, id, fill)
         if (c != null) views.setTextColor(id, c.bg)
+    }
+
+    /**
+     * Размер надписи на табличке: номер вроде «2-05» крупный, а длинное место («3 корпус», «спортзал», «читальный зал»)
+     * мельче и при необходимости в две строки, чтобы табличка не отнимала место у названия предмета.
+     */
+    private fun fitPlateText(views: RemoteViews, id: Int, room: String) {
+        val (size, lines) = when {
+            room.length <= 6 -> 22f to 1
+            room.length <= 10 -> 13f to 1
+            else -> 12f to 2
+        }
+        views.setTextViewTextSize(id, TypedValue.COMPLEX_UNIT_SP, size)
+        views.setInt(id, "setMaxLines", lines)
     }
 
     /** Маленькая плашка аудитории в строке: мягкий фон цвета предмета и текст на нём. */
@@ -315,6 +330,7 @@ object WidgetRenderer {
         views.setTextViewText(R.id.subject, lesson.short)
         views.setTextViewText(R.id.teacher, lesson.teacher ?: "")
         views.setTextViewText(R.id.room, lesson.room ?: "")
+        fitPlateText(views, R.id.room, lesson.room ?: "")
         paintPlate(views, R.id.room, toneOf(context, lesson.tone), colors)
         countdown(views, R.id.countdown, R.id.status, snapshot, lesson, state.isCurrent, nowMs)
         return views
@@ -340,8 +356,15 @@ object WidgetRenderer {
             views.setViewVisibility(R.id.status, View.GONE)
             return views
         }
-        views.setTextViewText(R.id.room, lesson.room ?: "—")
+        // Обычный номер — крупная табличка во всю высоту; длинное название («3 корпус») — небольшая табличка по размеру текста
+        val roomText = lesson.room ?: "—"
+        val long = roomText.length > 6
+        views.setViewVisibility(R.id.room, if (long) View.GONE else View.VISIBLE)
+        views.setViewVisibility(R.id.room_long, if (long) View.VISIBLE else View.GONE)
+        views.setTextViewText(R.id.room, roomText)
+        views.setTextViewText(R.id.room_long, roomText)
         paintPlate(views, R.id.room, toneOf(context, lesson.tone), colors)
+        paintPlate(views, R.id.room_long, toneOf(context, lesson.tone), colors)
         // Подпись «Идёт сейчас/Дальше» здесь не нужна: её говорит сам отсчёт («до конца…» / «через…»), а места мало
         views.setViewVisibility(R.id.label, View.GONE)
         views.setTextViewText(R.id.subject, lesson.short)
