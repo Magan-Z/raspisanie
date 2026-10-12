@@ -8,6 +8,7 @@ import 'package:home_widget/home_widget.dart';
 
 import '../domain/homework.dart';
 import '../theme/brand_colors.dart';
+import '../theme/subject_palette.dart' show SubjectTone;
 import '../domain/models.dart';
 import '../domain/widget_snapshot.dart';
 
@@ -38,6 +39,7 @@ class WidgetBridge {
     AppPalette? palette,
     bool amoled = false,
     String Function(String subject)? compactNameOf,
+    SubjectTone Function(String subject, Brightness brightness)? toneOf,
   }) async {
     final snapshot = buildWidgetSnapshot(
       now: now,
@@ -50,6 +52,7 @@ class WidgetBridge {
       palette: palette,
       amoled: amoled,
       compactNameOf: compactNameOf,
+      toneOf: toneOf,
     );
     try {
       await HomeWidget.saveWidgetData<String>(snapshotKey, encodeWidgetSnapshot(snapshot));

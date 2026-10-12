@@ -39,6 +39,27 @@ class WidgetLogicTest {
     }
 
     @Test
+    fun parsesToneAndChangedFlag() {
+        val withTone = WidgetLogic.parse(
+            """{"weekLabel":"1 неделя","days":[{"date":"2026-10-12","lessons":[
+              {"start":"2026-10-12T09:00+03:00","end":"2026-10-12T10:30+03:00","pair":1,"short":"Филос.","subject":"Философия","room":"3-01","teacher":null,"kind":"lecture",
+               "changed":true,
+               "tone":{"light":{"accent":"#7A8A12","container":"#EBF0C6","onContainer":"#3D4314"},"dark":{"accent":"#CBD870","container":"#3B4306","onContainer":"#EDF1D0"}}},
+              {"start":"2026-10-12T10:40+03:00","end":"2026-10-12T12:10+03:00","pair":2,"short":"Мат.","subject":"Математика","room":"3-03","teacher":null,"kind":"practice"}
+            ]}]}""",
+        )
+        val first = withTone.allLessons[0]
+        assertTrue(first.changed)
+        assertEquals(WidgetLogic.parseHex("#7A8A12"), first.tone!!.pick(night = false).accent)
+        assertEquals(WidgetLogic.parseHex("#CBD870"), first.tone!!.pick(night = true).accent)
+        assertEquals(WidgetLogic.parseHex("#3D4314"), first.tone!!.light.onContainer)
+        // Старые снимки без новых полей читаются как раньше: не изменена, цвета предмета нет
+        val second = withTone.allLessons[1]
+        assertFalse(second.changed)
+        assertNull(second.tone)
+    }
+
+    @Test
     fun momentsAreInUtc() {
         // 13:00 по Москве = 10:00 UTC
         assertEquals(1791367200000L, t("2026-10-07T13:00+03:00"))

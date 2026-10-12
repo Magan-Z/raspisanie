@@ -1,87 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Превью для галереи виджетов (статичный пример).  Виджет 4×1: ближайшая пара одной строкой: подпись и отсчёт, название, аудитория. -->
+<!-- Виджет 4×1: ближайшая пара одной строкой: подпись и отсчёт, название, аудитория на табличке. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:gravity="center_vertical"
     android:orientation="horizontal"
+    android:gravity="center_vertical"
     android:paddingHorizontal="14dp"
     android:paddingVertical="8dp">
 
     <LinearLayout
-        android:layout_width="86dp"
+        android:layout_width="112dp"
         android:layout_height="wrap_content"
         android:orientation="vertical">
         <TextView
-        android:text="ДАЛЕЕ"
+        style="@style/W.Label"
             android:id="@+id/label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_accent"
-            android:textSize="10sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:letterSpacing="0.1" />
-
+            android:text="Идёт сейчас" />
         <TextView
+        style="@style/W.Second"
             android:id="@+id/countdown"
-            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp" />
+            android:text="до конца 42 мин" />
         <TextView
-        android:text="через 12 мин"
+        style="@style/W.Second"
             android:id="@+id/status"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:visibility="gone" />
     </LinearLayout>
-
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="6dp"
+        android:layout_marginHorizontal="8dp"
         android:layout_weight="1"
         android:orientation="vertical">
         <TextView
-        android:text="Философия"
+        style="@style/W.Row"
             android:id="@+id/subject"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
             android:maxLines="2"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:textSize="15sp"
+            android:text="Философия" />
         <TextView
-        android:text="Кутаев А.Х."
+        style="@style/W.Second"
             android:id="@+id/teacher"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:text="Кутаев А.Х." />
     </LinearLayout>
-        <TextView
-        android:text="3-01"
-            android:id="@+id/room"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="22sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:background="@drawable/widget_plate"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="4dp" />
+    <TextView
+    style="@style/W.RoomBig"
+        android:id="@+id/room"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="22sp"
+        android:background="@drawable/widget_plate"
+        android:backgroundTint="@color/widget_accent"
+        android:textColor="@color/widget_bg"
+        android:minWidth="60dp"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="5dp"
+        android:text="2-07" />
 </LinearLayout>

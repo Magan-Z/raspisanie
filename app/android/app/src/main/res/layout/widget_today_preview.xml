@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Превью виджета 4×2 для галереи виджетов (статичный пример) -->
+<!-- Виджет 4×2: «Сегодня» (и «Завтра»). До пяти пар дня на линии времени; идущая подсвечена, точка и табличка цвета предмета. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:orientation="vertical"
@@ -12,243 +13,350 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="6dp">
-
+        android:paddingHorizontal="6dp"
+        android:layout_marginBottom="2dp">
         <TextView
+        style="@style/W.Title"
             android:id="@+id/title"
-            android:text="Сегодня"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
+            android:text="Сегодня" />
         <TextView
+        style="@style/W.Chip"
             android:id="@+id/week"
-            android:text="2 неделя"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:maxLines="1"
-            android:textColor="@color/widget_accent"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
+            android:layout_marginStart="8dp"
+            android:text="1 неделя" />
         <TextView
+        style="@style/W.Button"
             android:id="@+id/add_homework"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/widget_badge"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="3dp"
-            android:text="@string/widget_add_homework"
-            android:textColor="@color/widget_badge_text"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:paddingHorizontal="11dp"
+            android:paddingVertical="4dp"
+            android:text="@string/widget_add_homework" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/row_1"
-        android:background="@drawable/widget_row_highlight"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginVertical="2dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="6dp">
-
         <TextView
+        style="@style/W.Time"
             android:id="@+id/time_1"
-            android:text="09:00"
-            android:layout_width="44dp"
+            android:layout_width="40dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp" />
-
+            android:text="09:00" />
+        <FrameLayout
+            android:layout_width="16dp"
+            android:layout_height="match_parent">
+            <TextView
+                android:layout_width="2dp"
+                android:layout_height="match_parent"
+                android:id="@+id/line_1"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/widget_line"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:id="@+id/dot_1"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
         <TextView
+        style="@style/W.Row"
             android:id="@+id/subject_1"
-            android:text="Философия"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
+            android:layout_marginStart="8dp"
+            android:text="Философия" />
         <TextView
+        style="@style/W.Room"
             android:id="@+id/room_1"
-            android:text="3-01"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/widget_pill"
+            android:backgroundTint="@color/widget_highlight"
+            android:minWidth="46dp"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp"
             android:layout_marginStart="6dp"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:text="3-01" />
+        <TextView
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:id="@+id/chg_1"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/widget_dot"
+            android:backgroundTint="@color/widget_amber"
+            android:visibility="gone"
+            android:importantForAccessibility="no" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/row_2"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginVertical="2dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="6dp">
-
+        android:paddingHorizontal="6dp"
+        android:background="@drawable/widget_row_highlight"
+        android:backgroundTint="@color/widget_highlight">
         <TextView
+        style="@style/W.Time"
             android:id="@+id/time_2"
-            android:text="10:40"
-            android:layout_width="44dp"
+            android:layout_width="40dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp" />
-
+            android:text="10:40" />
+        <FrameLayout
+            android:layout_width="16dp"
+            android:layout_height="match_parent">
+            <TextView
+                android:layout_width="2dp"
+                android:layout_height="match_parent"
+                android:id="@+id/line_2"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/widget_line"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:id="@+id/dot_2"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
         <TextView
+        style="@style/W.Row"
             android:id="@+id/subject_2"
-            android:text="Философия"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
+            android:layout_marginStart="8dp"
+            android:text="Философия" />
         <TextView
+        style="@style/W.Room"
             android:id="@+id/room_2"
-            android:text="2-07"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/widget_pill"
+            android:backgroundTint="@color/widget_highlight"
+            android:minWidth="46dp"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp"
             android:layout_marginStart="6dp"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:text="2-07" />
+        <TextView
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:id="@+id/chg_2"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/widget_dot"
+            android:backgroundTint="@color/widget_amber"
+            android:visibility="gone"
+            android:importantForAccessibility="no" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/row_3"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginVertical="2dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="6dp">
-
         <TextView
+        style="@style/W.Time"
             android:id="@+id/time_3"
-            android:text="13:00"
-            android:layout_width="44dp"
+            android:layout_width="40dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp" />
-
+            android:text="13:00" />
+        <FrameLayout
+            android:layout_width="16dp"
+            android:layout_height="match_parent">
+            <TextView
+                android:layout_width="2dp"
+                android:layout_height="match_parent"
+                android:id="@+id/line_3"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/widget_line"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:id="@+id/dot_3"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
         <TextView
+        style="@style/W.Row"
             android:id="@+id/subject_3"
-            android:text="Иностранный язык"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
+            android:layout_marginStart="8dp"
+            android:text="Иностр. язык" />
         <TextView
+        style="@style/W.Room"
             android:id="@+id/room_3"
-            android:text="2-16"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/widget_pill"
+            android:backgroundTint="@color/widget_highlight"
+            android:minWidth="46dp"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp"
             android:layout_marginStart="6dp"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:text="2-16" />
+        <TextView
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:id="@+id/chg_3"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/widget_dot"
+            android:backgroundTint="@color/widget_amber"
+            android:visibility="gone"
+            android:importantForAccessibility="no" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/row_4"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginVertical="2dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="6dp">
-
         <TextView
+        style="@style/W.Time"
             android:id="@+id/time_4"
-            android:layout_width="44dp"
+            android:layout_width="40dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp" />
-
+            android:text="14:40" />
+        <FrameLayout
+            android:layout_width="16dp"
+            android:layout_height="match_parent">
+            <TextView
+                android:layout_width="2dp"
+                android:layout_height="match_parent"
+                android:id="@+id/line_4"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/widget_line"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:id="@+id/dot_4"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
         <TextView
+        style="@style/W.Row"
             android:id="@+id/subject_4"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
+            android:layout_marginStart="8dp"
+            android:text="Бизнес-коммуникации" />
         <TextView
+        style="@style/W.Room"
             android:id="@+id/room_4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/widget_pill"
+            android:backgroundTint="@color/widget_highlight"
+            android:minWidth="46dp"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp"
             android:layout_marginStart="6dp"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:text="3-20" />
+        <TextView
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:id="@+id/chg_4"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/widget_dot"
+            android:backgroundTint="@color/widget_amber"
+            android:visibility="gone"
+            android:importantForAccessibility="no" />
     </LinearLayout>
     <LinearLayout
         android:id="@+id/row_5"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginVertical="2dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="6dp">
-
+        android:paddingHorizontal="6dp"
+        android:visibility="gone">
         <TextView
+        style="@style/W.Time"
             android:id="@+id/time_5"
-            android:layout_width="44dp"
-            android:layout_height="wrap_content"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp" />
-
+            android:layout_width="40dp"
+            android:layout_height="wrap_content" />
+        <FrameLayout
+            android:layout_width="16dp"
+            android:layout_height="match_parent">
+            <TextView
+                android:layout_width="2dp"
+                android:layout_height="match_parent"
+                android:id="@+id/line_5"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/widget_line"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:id="@+id/dot_5"
+                android:layout_gravity="center"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
         <TextView
+        style="@style/W.Row"
             android:id="@+id/subject_5"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
+            android:layout_marginStart="8dp" />
         <TextView
+        style="@style/W.Room"
             android:id="@+id/room_5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:maxLines="1"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:background="@drawable/widget_pill"
+            android:backgroundTint="@color/widget_highlight"
+            android:minWidth="46dp"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp"
+            android:layout_marginStart="6dp" />
+        <TextView
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:id="@+id/chg_5"
+            android:layout_marginStart="5dp"
+            android:background="@drawable/widget_dot"
+            android:backgroundTint="@color/widget_amber"
+            android:visibility="gone"
+            android:importantForAccessibility="no" />
     </LinearLayout>
 </LinearLayout>

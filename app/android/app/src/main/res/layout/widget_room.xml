@@ -1,70 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Виджет 3×1: только аудитория — крупно, с названием пары рядом. -->
+<!-- Виджет 3×1: аудитория крупно на табличке цвета предмета, рядом название пары и отсчёт. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingHorizontal="12dp"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="10dp"
     android:paddingVertical="8dp">
 
     <TextView
+    style="@style/W.RoomBig"
         android:id="@+id/room"
-        android:layout_width="86dp"
+        android:layout_width="88dp"
         android:layout_height="match_parent"
-        android:autoSizeMaxTextSize="38sp"
-        android:autoSizeMinTextSize="18sp"
-        android:autoSizeTextType="uniform"
         android:background="@drawable/widget_plate"
-        android:gravity="center"
-        android:maxLines="1"
-        android:paddingHorizontal="6dp"
-        android:textColor="@color/widget_text"
-        android:textStyle="bold" />
-
+        android:backgroundTint="@color/widget_accent"
+        android:textColor="@color/widget_bg"
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="18sp"
+        android:autoSizeMaxTextSize="38sp"
+        android:paddingHorizontal="6dp" />
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
+        android:layout_marginStart="12dp"
         android:layout_weight="1"
         android:orientation="vertical">
         <TextView
-            android:id="@+id/label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@color/widget_accent"
-            android:textSize="10sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:letterSpacing="0.1" />
-        <TextView
+        style="@style/W.Row"
             android:id="@+id/subject"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:textStyle="bold" />
-
-        <Chronometer
-            android:id="@+id/countdown"
+            android:textSize="15sp" />
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp" />
-        <TextView
-            android:id="@+id/status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="11sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:visibility="gone" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+            <TextView
+            style="@style/W.Label"
+                android:id="@+id/label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp" />
+            <Chronometer
+            style="@style/W.Second"
+                android:id="@+id/countdown"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+            style="@style/W.Second"
+                android:id="@+id/status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

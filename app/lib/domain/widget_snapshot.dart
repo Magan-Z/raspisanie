@@ -10,6 +10,7 @@ import '../core/bells.dart';
 import '../core/week.dart' show dayOnly;
 import '../core/formatting.dart';
 import '../theme/brand_colors.dart';
+import '../theme/subject_palette.dart' show SubjectTone;
 import 'homework.dart';
 import 'models.dart';
 import 'schedule_resolver.dart';
@@ -31,6 +32,17 @@ Map<String, String> _widgetColors(ColorScheme s, {bool dark = false}) {
   };
 }
 
+/// Цвета предмета для виджета: насыщенный (accent), мягкий фон (container) и цвет текста на нём (onContainer), отдельно для светлой и тёмной тем.
+Map<String, dynamic> _toneJson(SubjectTone Function(String subject, Brightness brightness) toneOf, String subject) {
+  String hex(Color c) => '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
+  Map<String, String> one(Brightness b) {
+    final t = toneOf(subject, b);
+    return {'accent': hex(t.accent), 'container': hex(t.container), 'onContainer': hex(t.onContainer)};
+  }
+
+  return {'light': one(Brightness.light), 'dark': one(Brightness.dark)};
+}
+
 /// Собирает снимок. [now] — настоящий момент (UTC), [today] — сегодняшний день по Москве.
 Map<String, dynamic> buildWidgetSnapshot({
   required DateTime now,
@@ -43,6 +55,7 @@ Map<String, dynamic> buildWidgetSnapshot({
   AppPalette? palette, // цветовая тема приложения: виджеты красятся в те же цвета (null — стандартные)
   bool amoled = false,
   String Function(String subject)? compactNameOf, // короткое название предмета для виджета (свои названия)
+  SubjectTone Function(String subject, Brightness brightness)? toneOf, // цвета предмета (свои или автоматические); null — виджет красит сам
 }) {
   final compact = compactNameOf ?? shortSubject;
   final today = moscowToday(now);
@@ -66,6 +79,9 @@ Map<String, dynamic> buildWidgetSnapshot({
             'teacher': l.teacher,
             'kind': l.kind.name,
             'hasHomework': due.any((h) => h.subject == l.subject),
+            // Пара изменена вами или старостой: на виджете рядом с аудиторией появляется янтарная точка
+            'changed': l.isPersonal || l.isGroup,
+            if (toneOf != null) 'tone': _toneJson(toneOf, l.subject),
           },
       ],
     });
@@ -88,6 +104,7 @@ Map<String, dynamic> buildWidgetSnapshot({
           'text': h.text,
           'due': _dayText(dayOnly(h.dueDate)),
           'files': h.attachments.length,
+          if (toneOf != null) 'tone': _toneJson(toneOf, h.subject),
         },
     ],
     if (palette != null)

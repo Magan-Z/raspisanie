@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Фон виджета: на Android 12+ скругление берётся у системы, чтобы виджет совпадал с остальными на рабочем столе -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/widget_bg" />
+    <corners android:radius="@android:dimen/system_app_widget_background_radius" />
+</shape>

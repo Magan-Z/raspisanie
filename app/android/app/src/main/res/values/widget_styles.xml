@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Текстовые стили виджетов: шрифт приложения (Onest, переменный: толщина задаётся осью wght) и размеры.
+     Цифры одинаковой ширины (tnum), чтобы время и аудитории не «прыгали». -->
+<resources>
+    <style name="W">
+        <item name="android:fontFamily">@font/onest</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textColor">@color/widget_text</item>
+    </style>
+    <!-- Заголовок виджета: «Сегодня», «Неделя», «Домашка» -->
+    <style name="W.Title">
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontVariationSettings">\'wght\' 800</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <!-- Мелкая подпись рядом с заголовком: «1 неделя», «3 задания» -->
+    <style name="W.Chip">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/widget_accent</item>
+        <item name="android:fontVariationSettings">\'wght\' 700</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <!-- Название предмета в строке -->
+    <style name="W.Row">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontVariationSettings">\'wght\' 650</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <!-- Время и другие цифры второго плана -->
+    <style name="W.Time">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/widget_text_secondary</item>
+        <item name="android:fontVariationSettings">\'wght\' 560</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:maxLines">1</item>
+    </style>
+    <!-- Подписи и пометки (идёт сейчас, дальше, осталось) -->
+    <style name="W.Label">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/widget_accent</item>
+        <item name="android:fontVariationSettings">\'wght\' 720</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <!-- Вторичный текст (преподаватель, отсчёт) -->
+    <style name="W.Second">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/widget_text_secondary</item>
+        <item name="android:fontVariationSettings">\'wght\' 520</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <!-- Номер аудитории в строке (маленькая табличка) -->
+    <style name="W.Room">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontVariationSettings">\'wght\' 800</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <!-- Крупный номер аудитории -->
+    <style name="W.RoomBig">
+        <item name="android:fontVariationSettings">\'wght\' 820</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <!-- Кнопка «+ ДЗ» -->
+    <style name="W.Button">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/widget_badge_text</item>
+        <item name="android:fontVariationSettings">\'wght\' 750</item>
+        <item name="android:maxLines">1</item>
+    </style>
+</resources>

@@ -10,6 +10,7 @@ import 'package:raspisanie/domain/homework.dart';
 import 'package:raspisanie/domain/models.dart';
 import 'package:raspisanie/domain/widget_snapshot.dart';
 import 'package:raspisanie/theme/brand_colors.dart';
+import 'package:raspisanie/theme/subject_palette.dart';
 import 'package:raspisanie/widget_bridge/deep_links.dart';
 import 'package:raspisanie/widget_bridge/widget_sync.dart';
 
@@ -126,6 +127,33 @@ void main() {
       final lessons = [for (final d in snapshot['days'] as List) ...(d['lessons'] as List)];
       expect(lessons.where((l) => l['subject'] == 'ЧТК и этика').every((l) => l['short'] == 'Этика'), isTrue);
       expect(lessons.any((l) => l['subject'] == 'ЧТК и этика'), isTrue);
+    });
+
+    test('в снимке есть цвета предметов (светлые и тёмные), а у изменённых пар пометка changed', () {
+      final snapshot = buildWidgetSnapshot(
+        now: DateTime.utc(2026, 10, 7, 5, 0),
+        index: index,
+        schedule: schedule,
+        profile: profile,
+        homework: [
+          HomeworkItem(id: 1, subject: 'Философия', text: 'Задание', dueDate: DateTime.utc(2026, 10, 14), createdAt: DateTime.utc(2026, 10, 1)),
+        ],
+        toneOf: (subject, brightness) => subjectTone(subject, brightness),
+      );
+      final lessons = [for (final d in snapshot['days'] as List) ...(d['lessons'] as List)];
+      final hex = RegExp(r'^#[0-9A-F]{6}$');
+      for (final l in lessons) {
+        final tone = l['tone'] as Map;
+        for (final mode in ['light', 'dark']) {
+          for (final key in ['accent', 'container', 'onContainer']) {
+            expect(tone[mode][key], matches(hex));
+          }
+        }
+        expect(l['changed'], isFalse); // правок нет
+      }
+      // один предмет одного цвета везде, в том числе в домашке
+      final fil = lessons.firstWhere((l) => l['subject'] == 'Философия');
+      expect(((snapshot['homework'] as List).first['tone'] as Map)['light']['accent'], (fil['tone'] as Map)['light']['accent']);
     });
 
     test('без выбранной темы цветов в снимке нет (виджет остаётся в стандартных)', () {

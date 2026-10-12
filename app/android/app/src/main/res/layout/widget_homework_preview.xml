@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Превью для галереи виджетов (статичный пример).  Виджет «Домашка»: ближайшие невыполненные задания и сроки. Нажатие — вкладка «ДЗ». -->
+<!-- Виджет «Домашка»: ближайшие невыполненные задания, цвет предмета и срок. Нажатие — вкладка «ДЗ». -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -13,44 +13,32 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="6dp">
+        android:paddingHorizontal="6dp"
+        android:layout_marginBottom="2dp">
         <TextView
-        android:text="Домашка"
+        style="@style/W.Title"
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:text="Домашка" />
         <TextView
-        android:text="3 задания"
+        style="@style/W.Chip"
             android:id="@+id/count"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_accent"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            android:text="3 задания" />
         <TextView
+        style="@style/W.Button"
             android:id="@+id/add_homework"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_badge_text"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
             android:background="@drawable/widget_badge"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="3dp"
+            android:paddingHorizontal="11dp"
+            android:paddingVertical="4dp"
             android:text="@string/widget_add_homework" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/hw_row_1"
         android:layout_width="match_parent"
@@ -61,28 +49,34 @@
         android:orientation="horizontal"
         android:paddingHorizontal="6dp">
         <TextView
-        android:text="Физика · Решить задачи 4–9"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:id="@+id/hw_dot_1"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/widget_dot"
+            android:backgroundTint="@color/widget_accent"
+            android:importantForAccessibility="no" />
+        <TextView
+        style="@style/W.Row"
             android:id="@+id/hw_title_1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text"
+            android:maxLines="2"
             android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:text="Математика · Номера 14–19" />
         <TextView
-        android:text="завтра"
+        style="@style/W.Label"
             android:id="@+id/hw_due_1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_accent"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            android:background="@drawable/widget_pill"
+            android:backgroundTint="@color/widget_highlight"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp"
+            android:text="завтра" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/hw_row_2"
         android:layout_width="match_parent"
@@ -93,28 +87,34 @@
         android:orientation="horizontal"
         android:paddingHorizontal="6dp">
         <TextView
-        android:text="Философия · Конспект главы 3"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:id="@+id/hw_dot_2"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/widget_dot"
+            android:backgroundTint="@color/widget_accent"
+            android:importantForAccessibility="no" />
+        <TextView
+        style="@style/W.Row"
             android:id="@+id/hw_title_2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text"
+            android:maxLines="2"
             android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:text="Информатика · Лабораторная №3" />
         <TextView
-        android:text="Ср 14"
+        style="@style/W.Label"
             android:id="@+id/hw_due_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_accent"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            android:background="@drawable/widget_pill"
+            android:backgroundTint="@color/widget_highlight"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp"
+            android:text="Ср 14" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/hw_row_3"
         android:layout_width="match_parent"
@@ -125,58 +125,69 @@
         android:orientation="horizontal"
         android:paddingHorizontal="6dp">
         <TextView
-        android:text="Иностранный язык · Эссе"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:id="@+id/hw_dot_3"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/widget_dot"
+            android:backgroundTint="@color/widget_accent"
+            android:importantForAccessibility="no" />
+        <TextView
+        style="@style/W.Row"
             android:id="@+id/hw_title_3"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text"
+            android:maxLines="2"
             android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:text="История России · Конспект §12" />
         <TextView
-        android:text="Пт 16"
+        style="@style/W.Label"
             android:id="@+id/hw_due_3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_accent"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            android:background="@drawable/widget_pill"
+            android:backgroundTint="@color/widget_highlight"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp"
+            android:text="Пт 16" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/hw_row_4"
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginVertical="2dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="6dp">
+        android:paddingHorizontal="6dp"
+        android:visibility="gone">
         <TextView
-        android:text=""
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:id="@+id/hw_dot_4"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/widget_dot"
+            android:backgroundTint="@color/widget_accent"
+            android:importantForAccessibility="no" />
+        <TextView
+        style="@style/W.Row"
             android:id="@+id/hw_title_4"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:maxLines="2"
+            android:textSize="13sp" />
         <TextView
-        android:text=""
+        style="@style/W.Label"
             android:id="@+id/hw_due_4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_accent"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            android:background="@drawable/widget_pill"
+            android:backgroundTint="@color/widget_highlight"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="3dp" />
     </LinearLayout>
 </LinearLayout>

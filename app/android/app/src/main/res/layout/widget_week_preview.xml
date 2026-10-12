@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Превью для галереи виджетов (статичный пример).  Виджет 4×4: неделя целиком — по строке на день: сколько пар и когда начало и конец. Сегодня подсвечено. -->
+<!-- Виджет 4×4: неделя целиком, по строке на день: «шкала» из точек (сколько пар), время начала и конца. Сегодня подсвечено. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -11,34 +11,25 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="8dp">
+        android:paddingHorizontal="6dp"
+        android:layout_marginBottom="2dp">
         <TextView
-        android:text="Неделя"
+        style="@style/W.Title"
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:text="Неделя" />
         <TextView
-        android:text="2 неделя"
+        style="@style/W.Chip"
             android:id="@+id/week"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_accent"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            android:text="1 неделя" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_1"
         android:layout_width="match_parent"
@@ -47,29 +38,70 @@
         android:layout_marginVertical="1dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="8dp">
+        android:paddingHorizontal="8dp"
+        android:background="@drawable/widget_row_highlight"
+        android:backgroundTint="@color/widget_highlight">
         <TextView
-        android:text="Пн 5"
+        style="@style/W.Row"
             android:id="@+id/week_day_1"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:text="Пн" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_1_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_1_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_1_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_1_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_1_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
-        android:text="3 пары · 09:00–14:30"
+        style="@style/W.Second"
             android:id="@+id/week_info_1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end"
+            android:text="4 пары · 09:00–16:10" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_2"
         android:layout_width="match_parent"
@@ -80,30 +112,68 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
-        android:text="Вт 6"
+        style="@style/W.Row"
             android:id="@+id/week_day_2"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:text="Вт" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_2_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_2_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_2_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_2_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_2_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
-        android:text="2 пары · 10:40–14:30"
+        style="@style/W.Second"
             android:id="@+id/week_info_2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end"
+            android:text="3 пары · 09:00–14:30" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_3"
-        android:background="@drawable/widget_row_highlight"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -112,27 +182,66 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
-        android:text="Ср 7"
+        style="@style/W.Row"
             android:id="@+id/week_day_3"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:text="Ср" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_3_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_3_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_3_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_3_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_3_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
-        android:text="2 пары · 13:00–16:10"
+        style="@style/W.Second"
             android:id="@+id/week_info_3"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end"
+            android:text="4 пары · 10:40–17:50" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_4"
         android:layout_width="match_parent"
@@ -143,27 +252,66 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
-        android:text="Чт 8"
+        style="@style/W.Row"
             android:id="@+id/week_day_4"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:text="Чт" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_4_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_4_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_4_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_4_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_4_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
-        android:text="3 пары · 09:00–14:30"
+        style="@style/W.Second"
             android:id="@+id/week_info_4"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end"
+            android:text="3 пары · 09:00–14:30" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_5"
         android:layout_width="match_parent"
@@ -174,27 +322,66 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
-        android:text="Пт 9"
+        style="@style/W.Row"
             android:id="@+id/week_day_5"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:text="Пт" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_5_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_5_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_5_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_5_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_5_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
-        android:text="Пар нет"
+        style="@style/W.Second"
             android:id="@+id/week_info_5"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end"
+            android:text="3 пары · 09:00–14:30" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_6"
         android:layout_width="match_parent"
@@ -205,27 +392,66 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
-        android:text="Сб 10"
+        style="@style/W.Row"
             android:id="@+id/week_day_6"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:text="Сб" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_6_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_6_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_accent"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_6_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_6_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_6_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
-        android:text="1 пара · 09:00–10:30"
+        style="@style/W.Second"
             android:id="@+id/week_info_6"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end"
+            android:text="2 пары · 09:00–12:10" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_7"
         android:layout_width="match_parent"
@@ -234,26 +460,65 @@
         android:layout_marginVertical="1dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="8dp">
+        android:paddingHorizontal="8dp"
+        android:visibility="gone">
         <TextView
-        android:text="Вс 11"
+        style="@style/W.Row"
             android:id="@+id/week_day_7"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_7_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_7_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_7_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_7_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_7_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
-        android:text="Пар нет"
+        style="@style/W.Second"
             android:id="@+id/week_info_7"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end" />
     </LinearLayout>
 </LinearLayout>

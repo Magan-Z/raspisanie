@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Виджет 4×4: неделя целиком — по строке на день: сколько пар и когда начало и конец. Сегодня подсвечено. -->
+<!-- Виджет 4×4: неделя целиком, по строке на день: «шкала» из точек (сколько пар), время начала и конца. Сегодня подсвечено. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -11,32 +11,23 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="8dp">
+        android:paddingHorizontal="6dp"
+        android:layout_marginBottom="2dp">
         <TextView
+        style="@style/W.Title"
             android:id="@+id/title"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="15sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:layout_height="wrap_content" />
         <TextView
+        style="@style/W.Chip"
             android:id="@+id/week"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_accent"
-            android:textSize="12sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold"
             android:layout_marginStart="8dp" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_1"
         android:layout_width="match_parent"
@@ -47,25 +38,64 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
+        style="@style/W.Row"
             android:id="@+id/week_day_1"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_1_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_1_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_1_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_1_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_1_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
+        style="@style/W.Second"
             android:id="@+id/week_info_1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_2"
         android:layout_width="match_parent"
@@ -76,25 +106,64 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
+        style="@style/W.Row"
             android:id="@+id/week_day_2"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_2_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_2_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_2_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_2_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_2_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
+        style="@style/W.Second"
             android:id="@+id/week_info_2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_3"
         android:layout_width="match_parent"
@@ -105,25 +174,64 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
+        style="@style/W.Row"
             android:id="@+id/week_day_3"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_3_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_3_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_3_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_3_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_3_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
+        style="@style/W.Second"
             android:id="@+id/week_info_3"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_4"
         android:layout_width="match_parent"
@@ -134,25 +242,64 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
+        style="@style/W.Row"
             android:id="@+id/week_day_4"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_4_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_4_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_4_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_4_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_4_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
+        style="@style/W.Second"
             android:id="@+id/week_info_4"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_5"
         android:layout_width="match_parent"
@@ -163,25 +310,64 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
+        style="@style/W.Row"
             android:id="@+id/week_day_5"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_5_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_5_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_5_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_5_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_5_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
+        style="@style/W.Second"
             android:id="@+id/week_info_5"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_6"
         android:layout_width="match_parent"
@@ -192,25 +378,64 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
+        style="@style/W.Row"
             android:id="@+id/week_day_6"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_6_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_6_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_6_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_6_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_6_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
+        style="@style/W.Second"
             android:id="@+id/week_info_6"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end" />
     </LinearLayout>
-
     <LinearLayout
         android:id="@+id/week_row_7"
         android:layout_width="match_parent"
@@ -221,22 +446,62 @@
         android:orientation="horizontal"
         android:paddingHorizontal="8dp">
         <TextView
+        style="@style/W.Row"
             android:id="@+id/week_day_7"
-            android:layout_width="52dp"
+            android:layout_width="46dp"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:layout_marginHorizontal="6dp">
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_7_1"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_7_2"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_7_3"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_7_4"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+            <TextView
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:id="@+id/week_dot_7_5"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/widget_dot"
+                android:backgroundTint="@color/widget_rail"
+                android:importantForAccessibility="no" />
+        </LinearLayout>
         <TextView
+        style="@style/W.Second"
             android:id="@+id/week_info_7"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:gravity="end" />
     </LinearLayout>
 </LinearLayout>

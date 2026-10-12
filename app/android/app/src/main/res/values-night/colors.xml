@@ -7,4 +7,8 @@
     <color name="widget_highlight">#FF0F4A55</color>
     <color name="widget_badge_bg">#FF5E4100</color>
     <color name="widget_badge_text">#FFFFDDA8</color>
+    <!-- линия времени и «пустые» точки на виджетах -->
+    <color name="widget_rail">#40B5BEC0</color>
+    <!-- янтарная точка «пара изменена» -->
+    <color name="widget_amber">#FFF2A93B</color>
 </resources>

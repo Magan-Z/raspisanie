@@ -12,6 +12,14 @@ import java.util.TimeZone
  * Виджет сам смотрит на часы и выбирает из снимка текущую или следующую пару,
  * поэтому остаётся верным целую неделю, даже если приложение не запускали.
  */
+/** Цвета предмета (ARGB): насыщенный, мягкий фон и цвет текста на нём. */
+data class WidgetTone(val accent: Int, val container: Int, val onContainer: Int)
+
+/** Цвета предмета для светлой и тёмной темы; виджет берёт подходящие по режиму телефона. */
+data class WidgetToneSet(val light: WidgetTone, val dark: WidgetTone) {
+    fun pick(night: Boolean): WidgetTone = if (night) dark else light
+}
+
 data class WidgetLesson(
     val startMs: Long,
     val endMs: Long,
@@ -22,6 +30,10 @@ data class WidgetLesson(
     val teacher: String?,
     val kind: String,
     val hasHomework: Boolean,
+    /** Пара изменена вами или старостой. */
+    val changed: Boolean = false,
+    /** Цвета предмета из приложения (null — виджет красит сам). */
+    val tone: WidgetToneSet? = null,
 ) {
     /** Л / П / Ф / К — значок типа занятия. */
     val kindLetter: String
@@ -48,7 +60,7 @@ data class WidgetColors(
 )
 
 /** Одно невыполненное домашнее задание для виджета «Домашка». */
-data class HomeworkEntry(val subject: String, val short: String, val text: String, val due: String, val files: Int)
+data class HomeworkEntry(val subject: String, val short: String, val text: String, val due: String, val files: Int, val tone: WidgetToneSet? = null)
 
 data class WidgetSnapshot(
     val weekLabel: String,
@@ -94,6 +106,8 @@ object WidgetLogic {
                         teacher = if (l.isNull("teacher")) null else l.getString("teacher"),
                         kind = l.getString("kind"),
                         hasHomework = l.optBoolean("hasHomework", false),
+                        changed = l.optBoolean("changed", false),
+                        tone = parseToneSet(l.optJSONObject("tone")),
                     )
                 },
             )
@@ -118,12 +132,28 @@ object WidgetLogic {
                 text = h.optString("text", ""),
                 due = h.getString("due"),
                 files = h.optInt("files", 0),
+                tone = parseToneSet(h.optJSONObject("tone")),
             )
         }
     }
 
     /** «#RRGGBB» → ARGB. Без android.graphics.Color, чтобы проверять обычными тестами. */
     fun parseHex(hex: String): Int = ("FF" + hex.removePrefix("#")).toLong(16).toInt()
+
+    private fun parseTone(json: JSONObject?): WidgetTone? {
+        if (json == null) return null
+        return try {
+            WidgetTone(parseHex(json.getString("accent")), parseHex(json.getString("container")), parseHex(json.getString("onContainer")))
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun parseToneSet(json: JSONObject?): WidgetToneSet? {
+        val light = parseTone(json?.optJSONObject("light")) ?: return null
+        val dark = parseTone(json?.optJSONObject("dark")) ?: return null
+        return WidgetToneSet(light, dark)
+    }
 
     private fun parseColors(json: JSONObject?): WidgetColors? {
         if (json == null) return null

@@ -27,6 +27,7 @@ Future<void> pushWidgets(ProviderContainer c) async {
         palette: c.read(settingsProvider).useDynamicColor ? null : c.read(settingsProvider).palette,
         amoled: c.read(settingsProvider).amoled,
         compactNameOf: styles.compactName,
+        toneOf: styles.tone,
       );
 }
 
