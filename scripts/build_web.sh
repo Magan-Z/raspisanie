@@ -4,7 +4,7 @@
 # Переменные (необязательно):
 #   BASE_HREF  — где лежит приложение на сайте (по умолчанию /raspisanie/app/)
 #   SITE_URL   — адрес сайта с расписанием (по умолчанию из data/config.json)
-#   NEXT=1     — тестовое оформление («новый вид»): другой кэш и название, флаг NEXT_DESIGN
+#   NEXT=1     — отдельная тестовая сборка (другой кэш и название, пометка «Тестовый вид»); для обычной публикации не нужна
 set -e
 cd "$(dirname "$0")/../app"
 
@@ -26,7 +26,7 @@ rm -f web/drift_worker.js.deps web/drift_worker.js.map
 NEXT_FLAGS=""
 CACHE_PREFIX="raspisanie-app-"
 if [ "${NEXT:-}" = "1" ]; then
-  NEXT_FLAGS="--dart-define=NEXT_DESIGN=true"
+  NEXT_FLAGS="--dart-define=NEXT_BADGE=true"
   CACHE_PREFIX="raspisanie-next-"
 fi
 flutter build web --release --base-href "$BASE_HREF" --no-web-resources-cdn \

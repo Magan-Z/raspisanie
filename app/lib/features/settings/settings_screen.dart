@@ -48,7 +48,7 @@ class SettingsScreen extends ConsumerWidget {
           child: Text('Настройки', style: theme.textTheme.headlineMedium),
         ),
         const SizedBox(height: Gap.lg),
-        if (kNextDesign) ...[
+        if (kTestBadge) ...[
           // Тестовое оформление: понятно, что это пробная версия, и где обычная
           Container(
             padding: const EdgeInsets.all(Gap.lg),
