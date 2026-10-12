@@ -9,8 +9,11 @@ import '../../core/bells.dart';
 import '../../core/formatting.dart';
 import '../../domain/models.dart';
 import '../../domain/search.dart';
+import '../../theme/app_theme.dart' show roomTextStyle;
 import '../../theme/tokens.dart';
 import '../common/lesson_widgets.dart';
+import '../common/reveal.dart';
+import '../common/sliding_segments.dart';
 
 enum _Mode { teacher, room, free }
 
@@ -63,9 +66,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            _ModeChips(
+            SlidingSegments<_Mode>(
+              segments: const [
+                Segment(_Mode.teacher, 'Преподаватель'),
+                Segment(_Mode.room, 'Аудитория'),
+                Segment(_Mode.free, 'Свободные'),
+              ],
               selected: _mode,
-              onSelected: (m) => setState(() => _mode = m),
+              onChanged: (m) => setState(() => _mode = m),
             ),
             const SizedBox(height: 12),
             _DayChips(
@@ -74,11 +82,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               onSelected: (i) => setState(() => _dayOffset = i),
             ),
             const SizedBox(height: 12),
-            ...switch (_mode) {
-              _Mode.teacher => _teacherView(schedules, index, dayLessons, day),
-              _Mode.room => _roomView(schedules, index, dayLessons, day),
-              _Mode.free => _freeView(schedules, index, dayLessons),
-            },
+            // Ключ по режиму: при переключении содержимое появляется заново (волной), а не «щёлкает» на месте
+            KeyedSubtree(
+              key: ValueKey(_mode),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: switch (_mode) {
+                  _Mode.teacher => _teacherView(
+                    schedules,
+                    index,
+                    dayLessons,
+                    day,
+                  ),
+                  _Mode.room => _roomView(schedules, index, dayLessons, day),
+                  _Mode.free => _freeView(schedules, index, dayLessons),
+                },
+              ),
+            ),
           ],
         );
       },
@@ -102,20 +122,35 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final now = ref.watch(nowProvider).value ?? ref.read(clockProvider).now();
 
     return [
-      _Autocomplete(
-        key: const ValueKey('teacher'),
-        label: 'Фамилия или имя',
-        options: names,
-        onSelected: (v) => setState(() => _teacher = v),
+      Reveal(
+        index: 0,
+        child: _Autocomplete(
+          key: const ValueKey('teacher'),
+          label: 'Фамилия или имя',
+          options: names,
+          onSelected: (v) => setState(() => _teacher = v),
+        ),
       ),
       const SizedBox(height: 12),
-      if (teacher != null) ...[
-        if (_dayOffset == 0) _teacherNow(lessons, index, now),
+      if (teacher == null)
+        const Reveal(
+          index: 1,
+          child: _SearchHint(
+            icon: Icons.person_search_rounded,
+            title: 'Найдите преподавателя',
+            text:
+                'Введите фамилию: покажем, где он сейчас и какие у него пары.',
+          ),
+        )
+      else ...[
+        if (_dayOffset == 0)
+          Reveal(index: 1, child: _teacherNow(lessons, index, now)),
         _LessonList(
           lessons: lessons,
           index: index,
           directory: directory,
           emptyText: 'В этот день занятий нет',
+          replayKey: '$teacher-$_dayOffset',
         ),
       ],
     ];
@@ -127,11 +162,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     DateTime now,
   ) {
     var status = 'Сейчас занятий нет';
+    var live = false;
     for (final l in lessons) {
       final (start, end) = pairTimes(moscowToday(now), l.pair, index.bells);
       if (!now.isBefore(start) && now.isBefore(end)) {
         status =
             'Сейчас ведёт: ${l.subject}${l.room != null ? ' · ${l.room}' : ''}';
+        live = true;
         break;
       }
       if (start.isAfter(now)) {
@@ -142,11 +179,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        status,
-        style: Theme.of(context).textTheme.titleMedium
-            ?.copyWith(fontWeight: FontWeight.w700),
-      ),
+      child: _StatusCard(text: status, live: live),
     );
   }
 
@@ -160,19 +193,33 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   ) {
     final room = _room;
     return [
-      _Autocomplete(
-        key: const ValueKey('room'),
-        label: 'Аудитория, например 2-05',
-        options: allRooms(schedules),
-        onSelected: (v) => setState(() => _room = v),
+      Reveal(
+        index: 0,
+        child: _Autocomplete(
+          key: const ValueKey('room'),
+          label: 'Аудитория, например 2-05',
+          options: allRooms(schedules),
+          onSelected: (v) => setState(() => _room = v),
+        ),
       ),
       const SizedBox(height: 12),
-      if (room != null)
+      if (room == null)
+        const Reveal(
+          index: 1,
+          child: _SearchHint(
+            icon: Icons.meeting_room_rounded,
+            title: 'Найдите аудиторию',
+            text:
+                'Введите номер, например 2-05: покажем, кто в ней занимается.',
+          ),
+        )
+      else
         _LessonList(
           lessons: lessonsInRoom(room, dayLessons),
           index: index,
           directory: index.teachers,
           emptyText: 'В этот день аудитория свободна',
+          replayKey: '$room-$_dayOffset',
         ),
     ];
   }
@@ -194,23 +241,34 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
 
     return [
-      Wrap(
-        spacing: 8,
-        children: [
-          for (var p = 1; p <= index.bells.length; p++)
-            ChoiceChip(
-              label: Text('$p пара'),
-              selected: _pair == p,
-              onSelected: (_) => setState(() => _pair = p),
-            ),
-        ],
+      Reveal(
+        index: 0,
+        child: SlidingSegments<int>(
+          segments: [
+            for (var p = 1; p <= index.bells.length; p++) Segment(p, '$p пара'),
+          ],
+          selected: _pair,
+          onChanged: (p) => setState(() => _pair = p),
+        ),
       ),
-      const SizedBox(height: 8),
-      Text(
-        '${bell.startText}–${bell.endText} · свободно ${free.length} ${plural(free.length, 'аудитория', 'аудитории', 'аудиторий')}',
-        style: theme.textTheme.bodyMedium,
+      const SizedBox(height: 12),
+      Reveal(
+        index: 1,
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: '${bell.startText}–${bell.endText} · свободно '),
+              TextSpan(
+                text:
+                    '${free.length} ${plural(free.length, 'аудитория', 'аудитории', 'аудиторий')}',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          style: theme.textTheme.bodyMedium,
+        ),
       ),
-      for (final entry in byFloor.entries) ...[
+      for (final (i, entry) in byFloor.entries.indexed) ...[
         Padding(
           padding: const EdgeInsets.only(top: 16, bottom: 8),
           child: Text(
@@ -220,10 +278,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
         ),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [for (final r in entry.value) Chip(label: Text(r))],
+        Reveal(
+          // ключ с парой и днём: при смене пары таблички появляются заново
+          key: ValueKey('floor-${entry.key}-$_pair-$_dayOffset'),
+          index: i + 2,
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [for (final r in entry.value) _RoomTag(r)],
+          ),
         ),
       ],
       const SizedBox(height: 12),
@@ -235,60 +298,119 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 }
 
-/// Три кнопки режима («Преподаватель», «Аудитория», «Свободные») всегда в одну строку:
-/// делят ширину поровну, а длинное слово чуть уменьшается, если не влезает.
-/// При крупном шрифте в настройках телефона слова уже не ужимаем — тогда кнопки переносятся на вторую строку.
-class _ModeChips extends StatelessWidget {
-  const _ModeChips({required this.selected, required this.onSelected});
-  final _Mode selected;
-  final ValueChanged<_Mode> onSelected;
-
-  static const _items = [
-    (_Mode.teacher, 'Преподаватель'),
-    (_Mode.room, 'Аудитория'),
-    (_Mode.free, 'Свободные'),
-  ];
+/// Подсказка, пока ничего не выбрано: что искать и что получится.
+class _SearchHint extends StatelessWidget {
+  const _SearchHint({
+    required this.icon,
+    required this.title,
+    required this.text,
+  });
+  final IconData icon;
+  final String title;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final bigText = MediaQuery.textScalerOf(context).scale(14) > 14 * 1.3;
-    if (bigText) {
-      return Wrap(
-        spacing: 8,
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        vertical: Gap.xxl,
+        horizontal: Gap.lg,
+      ),
+      child: Column(
         children: [
-          for (final (mode, label) in _items)
-            ChoiceChip(
-              label: Text(label),
-              showCheckmark: false,
-              selected: selected == mode,
-              onSelected: (_) => onSelected(mode),
-            ),
-        ],
-      );
-    }
-    return Row(
-      children: [
-        for (var i = 0; i < _items.length; i++) ...[
-          if (i > 0) const SizedBox(width: 8),
-          Expanded(
-            child: ChoiceChip(
-              // без галочки: иначе выбранная кнопка становится шире и ряд «прыгает»
-              showCheckmark: false,
-              padding: EdgeInsets.zero,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-              label: SizedBox(
-                width: double.infinity,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(_items[i].$2),
-                ),
+          ExcludeSemantics(
+            child: Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: scheme.tertiaryContainer,
+                shape: BoxShape.circle,
               ),
-              selected: selected == _items[i].$1,
-              onSelected: (_) => onSelected(_items[i].$1),
+              child: Icon(icon, size: 34, color: scheme.onTertiaryContainer),
+            ),
+          ),
+          const SizedBox(height: Gap.lg),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(height: Gap.xs),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
             ),
           ),
         ],
-      ],
+      ),
+    );
+  }
+}
+
+/// Строка состояния преподавателя: «Сейчас ведёт…» (с янтарной точкой) или «Следующая пара в…».
+class _StatusCard extends StatelessWidget {
+  const _StatusCard({required this.text, required this.live});
+  final String text;
+  final bool live;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Gap.lg, vertical: Gap.md),
+      decoration: BoxDecoration(
+        color: live ? scheme.tertiaryContainer : scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(Radii.md),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: live ? scheme.tertiary : scheme.outline,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: Gap.md),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: live ? scheme.onTertiaryContainer : scheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Номер свободной аудитории: маленькая «табличка», как на двери.
+class _RoomTag extends StatelessWidget {
+  const _RoomTag(this.room);
+  final String room;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Gap.md, vertical: Gap.sm),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(Radii.sm),
+        border: Border.all(
+          color: scheme.primary.withValues(alpha: 0.55),
+          width: 1.5,
+        ),
+      ),
+      child: Text(room, style: roomTextStyle(16, color: scheme.onSurface)),
     );
   }
 }
@@ -313,6 +435,7 @@ class _DayChips extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
+                showCheckmark: false,
                 label: Text(
                   i == 0
                       ? 'Сегодня'
@@ -343,20 +466,64 @@ class _Autocomplete extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Autocomplete<String>(
-      optionsBuilder: (value) {
-        final q = value.text.trim().toLowerCase();
-        if (q.isEmpty) return const Iterable<String>.empty();
-        return options.where((o) => o.toLowerCase().contains(q)).take(8);
-      },
-      onSelected: onSelected,
-      fieldViewBuilder: (context, controller, focus, submit) => TextField(
-        controller: controller,
-        focusNode: focus,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          prefixIcon: const Icon(Icons.search),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return LayoutBuilder(
+      builder: (context, constraints) => Autocomplete<String>(
+        optionsBuilder: (value) {
+          final q = value.text.trim().toLowerCase();
+          if (q.isEmpty) return const Iterable<String>.empty();
+          return options.where((o) => o.toLowerCase().contains(q)).take(8);
+        },
+        onSelected: onSelected,
+        // Список подсказок: скруглённая карточка под полем той же ширины (а не квадрат на весь экран)
+        optionsViewBuilder: (context, onPick, items) => Align(
+          alignment: Alignment.topLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(top: Gap.xs),
+            child: Material(
+              elevation: 4,
+              shadowColor: Colors.black54,
+              color: scheme.surfaceContainerHigh,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
+              clipBehavior: Clip.antiAlias,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: constraints.maxWidth, maxHeight: 320),
+                child: SizedBox(
+                  width: constraints.maxWidth,
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(vertical: Gap.xs),
+                    shrinkWrap: true,
+                    children: [
+                      for (final o in items)
+                        InkWell(
+                          onTap: () => onPick(o),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: minTouch),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: Gap.lg, vertical: Gap.md),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(o, style: theme.textTheme.bodyLarge),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        fieldViewBuilder: (context, controller, focus, submit) => TextField(
+          controller: controller,
+          focusNode: focus,
+          decoration: InputDecoration(
+            labelText: label,
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.search),
+          ),
         ),
       ),
     );
@@ -369,11 +536,15 @@ class _LessonList extends StatelessWidget {
     required this.index,
     required this.directory,
     required this.emptyText,
+    required this.replayKey,
   });
   final List<CampusLesson> lessons;
   final ScheduleIndex index;
   final List<String> directory; // полные ФИО преподавателей
   final String emptyText;
+
+  /// Что именно показано (кто и в какой день): при смене пары появляются заново.
+  final String replayKey;
 
   @override
   Widget build(BuildContext context) {
@@ -399,19 +570,25 @@ class _LessonList extends StatelessWidget {
     }
     return Column(
       children: [
-        for (final l in lessons)
-          Padding(
-            padding: const EdgeInsets.only(bottom: Gap.sm),
-            child: LessonTile(
-              timeLabel:
-                  '${index.bells[l.pair - 1].startText}–${index.bells[l.pair - 1].endText} · ${l.pair} пара',
-              subject: l.subject,
-              kind: l.kind,
-              teacher: l.teacher == null
-                  ? null
-                  : teacherFullName(l.teacher!, directory),
-              room: l.room,
-              footer: l.groups.join(', '),
+        for (final (i, l) in lessons.indexed)
+          Reveal(
+            key: ValueKey(
+              '$replayKey-${l.pair}-${l.subject}-${l.groups.join(',')}',
+            ),
+            index: i + 2,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: Gap.sm),
+              child: LessonTile(
+                timeLabel:
+                    '${index.bells[l.pair - 1].startText}–${index.bells[l.pair - 1].endText} · ${l.pair} пара',
+                subject: l.subject,
+                kind: l.kind,
+                teacher: l.teacher == null
+                    ? null
+                    : teacherFullName(l.teacher!, directory),
+                room: l.room,
+                footer: l.groups.join(', '),
+              ),
             ),
           ),
       ],

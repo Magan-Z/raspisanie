@@ -12,6 +12,8 @@ import '../../domain/homework.dart';
 import '../../domain/models.dart';
 import '../../theme/tokens.dart';
 import '../common/word_fit_text.dart';
+import '../common/reveal.dart';
+import '../common/sliding_segments.dart';
 import '../../data/remote/shared_api.dart';
 import '../../domain/group_shared.dart';
 import '../../group_actions.dart';
@@ -87,48 +89,76 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
               ),
               if (hasGroupTab) ...[
                 const SizedBox(height: Gap.sm),
-                Wrap(spacing: Gap.sm, children: [
-                  ChoiceChip(
-                    label: Text('Мои (${items.where((i) => !i.done).length})'),
-                    showCheckmark: false,
-                    selected: !showGroup,
-                    onSelected: (_) => setState(() => _showGroup = false),
-                  ),
-                  ChoiceChip(
-                    avatar: const Icon(Icons.groups_rounded, size: 18),
-                    label: Text('От старосты (${groupRows.where((g) => !done.contains(g.id)).length})'),
-                    showCheckmark: false,
-                    selected: showGroup,
-                    onSelected: (_) => setState(() => _showGroup = true),
-                  ),
-                ]),
+                SlidingSegments<bool>(
+                  segments: [
+                    Segment(false, 'Мои (${items.where((i) => !i.done).length})'),
+                    Segment(true, 'От старосты (${groupRows.where((g) => !done.contains(g.id)).length})', icon: Icons.groups_rounded),
+                  ],
+                  selected: showGroup,
+                  onChanged: (v) => setState(() => _showGroup = v),
+                ),
               ],
-              const SizedBox(height: Gap.xs),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
-                child: Text(
-                  shownItems.isEmpty ? (showGroup ? 'Староста пока ничего не задал' : 'Своих заданий пока нет') : (open == 0 ? 'Всё сделано' : 'Не сделано: $open'),
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(height: Gap.sm),
+              // Ключ по вкладке: при переключении «Мои / От старосты» карточки появляются заново волной
+              KeyedSubtree(
+                key: ValueKey(showGroup),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
+                      child: Text(
+                        shownItems.isEmpty ? (showGroup ? 'Староста пока ничего не задал' : 'Своих заданий пока нет') : (open == 0 ? 'Всё сделано' : 'Не сделано: $open'),
+                        style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ),
+                    if (shownItems.isEmpty)
+                      Reveal(
+                        index: 1,
+                        child: _TabEmpty(
+                          icon: showGroup ? Icons.groups_rounded : Icons.task_alt_rounded,
+                          text: showGroup ? 'Когда староста добавит задание, оно появится здесь.' : 'Кнопка «Добавить ДЗ» ниже — или нажмите на пару на экране «Сегодня».',
+                        ),
+                      ),
+                    for (final (n, entry) in groups.entries.indexed) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.xl, Gap.xs, Gap.sm),
+                        child: Row(children: [
+                          if (entry.key == HomeworkBucket.overdue) ...[
+                            Icon(Icons.error_rounded, size: 18, color: theme.colorScheme.error),
+                            const SizedBox(width: Gap.xs),
+                          ],
+                          Text(
+                            entry.key.title,
+                            style: theme.textTheme.titleSmall?.copyWith(color: entry.key == HomeworkBucket.overdue ? theme.colorScheme.error : null),
+                          ),
+                          const SizedBox(width: Gap.sm),
+                          // число — в маленькой плашке: сразу видно, сколько заданий в разделе
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: Gap.sm, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: entry.key == HomeworkBucket.overdue ? theme.colorScheme.errorContainer : theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              '${entry.value.length}',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: entry.key == HomeworkBucket.overdue ? theme.colorScheme.onErrorContainer : theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ]),
+                      ),
+                      for (final (k, item) in entry.value.indexed)
+                        Reveal(
+                          key: ValueKey('rv-${showGroup ? rowOf[item]!.id : item.id}'),
+                          index: n + k,
+                          child: showGroup ? _GroupHomeworkTile(row: rowOf[item]!, done: item.done, canEdit: isEditor) : _HomeworkTile(item: item),
+                        ),
+                    ],
+                  ],
                 ),
               ),
-              for (final entry in groups.entries) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(Gap.xs, Gap.xl, Gap.xs, Gap.sm),
-                  child: Row(children: [
-                    if (entry.key == HomeworkBucket.overdue) ...[
-                      Icon(Icons.error_rounded, size: 18, color: theme.colorScheme.error),
-                      const SizedBox(width: Gap.xs),
-                    ],
-                    Text(
-                      entry.key.title,
-                      style: theme.textTheme.titleSmall?.copyWith(color: entry.key == HomeworkBucket.overdue ? theme.colorScheme.error : null),
-                    ),
-                    const SizedBox(width: Gap.sm),
-                    Text('${entry.value.length}', style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                  ]),
-                ),
-                for (final item in entry.value) showGroup ? _GroupHomeworkTile(row: rowOf[item]!, done: item.done, canEdit: isEditor) : _HomeworkTile(item: item),
-              ],
             ],
           );
         },
@@ -157,14 +187,17 @@ class _GroupHomeworkTile extends ConsumerWidget {
         color: done ? scheme.surfaceContainerLow : tone.container,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.lg)),
         clipBehavior: Clip.antiAlias,
-        child: DecoratedBox(
+        child: AnimatedContainer(
+          duration: Motion.of(context, Motion.base),
           decoration: BoxDecoration(border: Border(left: BorderSide(color: done ? scheme.outlineVariant : tone.accent, width: 6))),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Padding(
               padding: const EdgeInsets.only(left: Gap.xs),
               child: Semantics(
                 label: done ? 'Выполнено. Нажмите, чтобы вернуть' : 'Отметить выполненным',
-                child: Checkbox(
+                child: _CheckPop(
+                  done: done,
+                  child: Checkbox(
                   value: done,
                   shape: const CircleBorder(),
                   side: BorderSide(color: tone.accent, width: 2),
@@ -173,6 +206,7 @@ class _GroupHomeworkTile extends ConsumerWidget {
                     done ? HapticFeedback.selectionClick() : HapticFeedback.lightImpact();
                     ref.read(groupHomeworkDoneProvider.notifier).toggle(row.id);
                   },
+                ),
                 ),
               ),
             ),
@@ -286,7 +320,8 @@ class _HomeworkTile extends ConsumerWidget {
           color: item.done ? scheme.surfaceContainerLow : tone.container,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.lg)),
           clipBehavior: Clip.antiAlias,
-          child: DecoratedBox(
+          child: AnimatedContainer(
+            duration: Motion.of(context, Motion.base),
             // цветная полоса слева — граница карточки (без IntrinsicHeight, внутри есть LayoutBuilder)
             decoration: BoxDecoration(border: Border(left: BorderSide(color: item.done ? scheme.outlineVariant : tone.accent, width: 6))),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -294,12 +329,15 @@ class _HomeworkTile extends ConsumerWidget {
                 padding: const EdgeInsets.only(left: Gap.xs),
                 child: Semantics(
                   label: item.done ? 'Выполнено. Нажмите, чтобы вернуть' : 'Отметить выполненным',
-                  child: Checkbox(
-                    value: item.done,
-                    shape: const CircleBorder(),
-                    side: BorderSide(color: tone.accent, width: 2),
-                    activeColor: tone.accent,
-                    onChanged: (_) => toggle(),
+                  child: _CheckPop(
+                    done: item.done,
+                    child: Checkbox(
+                      value: item.done,
+                      shape: const CircleBorder(),
+                      side: BorderSide(color: tone.accent, width: 2),
+                      activeColor: tone.accent,
+                      onChanged: (_) => toggle(),
+                    ),
                   ),
                 ),
               ),
@@ -358,4 +396,68 @@ class _HomeworkTile extends ConsumerWidget {
           Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: onColor)),
         ]),
       );
+}
+
+/// Когда задание отмечают выполненным, кружок на мгновение «хлопает» (чуть увеличивается и возвращается).
+class _CheckPop extends StatefulWidget {
+  const _CheckPop({required this.done, required this.child});
+  final bool done;
+  final Widget child;
+
+  @override
+  State<_CheckPop> createState() => _CheckPopState();
+}
+
+class _CheckPopState extends State<_CheckPop> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
+
+  @override
+  void didUpdateWidget(_CheckPop old) {
+    super.didUpdateWidget(old);
+    if (widget.done && !old.done && !MediaQuery.disableAnimationsOf(context)) _c.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ScaleTransition(
+        // 1 → 1,3 → 1: быстрый подъём и мягкий возврат
+        scale: TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3).chain(CurveTween(curve: Curves.easeOut)), weight: 30),
+          TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0).chain(CurveTween(curve: Curves.elasticOut)), weight: 70),
+        ]).animate(_c),
+        child: widget.child,
+      );
+}
+
+/// Пустая вкладка «ДЗ»: мягкая подсказка вместо пустого места.
+class _TabEmpty extends StatelessWidget {
+  const _TabEmpty({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Gap.xxl, horizontal: Gap.lg),
+      child: Column(children: [
+        ExcludeSemantics(
+          child: Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(color: scheme.tertiaryContainer, shape: BoxShape.circle),
+            child: Icon(icon, size: 34, color: scheme.onTertiaryContainer),
+          ),
+        ),
+        const SizedBox(height: Gap.lg),
+        Text(text, textAlign: TextAlign.center, style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+      ]),
+    );
+  }
 }

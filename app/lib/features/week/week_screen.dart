@@ -14,6 +14,7 @@ import '../../theme/tokens.dart';
 import '../common/skeleton.dart';
 import '../common/lesson_widgets.dart';
 import '../common/reveal.dart';
+import '../common/sliding_segments.dart';
 import '../overrides/day_edits.dart';
 
 class WeekScreen extends ConsumerStatefulWidget {
@@ -77,15 +78,20 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
               child: Text('${dateText(monday)} – ${dateText(saturday)}', style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
             ),
             const SizedBox(height: Gap.lg),
-            SegmentedButton<int>(
-              showSelectedIcon: false,
+            SlidingSegments<int>(
               segments: [
-                ButtonSegment(value: 1, label: FittedBox(fit: BoxFit.scaleDown, child: Text(currentWeek == 1 ? '1 неделя · сейчас' : '1 неделя'))),
-                ButtonSegment(value: 2, label: FittedBox(fit: BoxFit.scaleDown, child: Text(currentWeek == 2 ? '2 неделя · сейчас' : '2 неделя'))),
+                Segment(1, currentWeek == 1 ? '1 неделя · сейчас' : '1 неделя'),
+                Segment(2, currentWeek == 2 ? '2 неделя · сейчас' : '2 неделя'),
               ],
-              selected: {week},
-              onSelectionChanged: (s) => setState(() => _week = s.first),
+              selected: week,
+              onChanged: (w) => setState(() => _week = w),
             ),
+            // Ключ по неделе: при переключении «1 / 2 неделя» пары появляются заново волной
+            KeyedSubtree(
+              key: ValueKey(week),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
             for (final entry in days) ...[
               _DayHeader(day: entry.day, isToday: entry.day == today),
               if (entry.lessons.isEmpty)
@@ -121,6 +127,9 @@ class _WeekScreenState extends ConsumerState<WeekScreen> {
                 ),
                 ),
             ],
+                ],
+              ),
+            ),
           ],
         );
       },

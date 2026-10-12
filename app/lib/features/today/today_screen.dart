@@ -278,11 +278,18 @@ class _DayPage extends ConsumerWidget {
     if (isToday && focus == null) {
       children.add(Padding(
         padding: const EdgeInsets.only(bottom: Gap.lg),
-        child: Row(children: [
-          Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary),
-          const SizedBox(width: Gap.sm),
-          Text('На сегодня всё', style: theme.textTheme.titleMedium),
-        ]),
+        child: Reveal(
+          index: 0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: Gap.lg, vertical: Gap.md),
+            decoration: BoxDecoration(color: theme.colorScheme.primaryContainer, borderRadius: BorderRadius.circular(Radii.md)),
+            child: Row(children: [
+              Icon(Icons.check_circle_rounded, color: theme.colorScheme.onPrimaryContainer),
+              const SizedBox(width: Gap.md),
+              Text('На сегодня всё', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onPrimaryContainer)),
+            ]),
+          ),
+        ),
       ));
     }
 
