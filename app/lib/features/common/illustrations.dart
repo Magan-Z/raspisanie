@@ -11,6 +11,9 @@ enum IllustrationKind {
   noHomework, // планшет с галочкой: ДЗ нет
   welcome, // стопка карточек и звонок: первый запуск
   nothingFound, // лупа: ничего не найдено
+  searchTeacher, // визитка с человечком и лупа: поиск преподавателя
+  searchRoom, // дверь с табличкой: поиск аудитории
+  groupHomework, // облачко с заданиями: ДЗ от старосты
 }
 
 class Illustration extends StatelessWidget {
@@ -58,6 +61,15 @@ class _IllustrationPainter extends CustomPainter {
       case IllustrationKind.nothingFound:
         _backdrop(canvas);
         _magnifier(canvas);
+      case IllustrationKind.searchTeacher:
+        _backdrop(canvas);
+        _teacherCard(canvas);
+      case IllustrationKind.searchRoom:
+        _backdrop(canvas);
+        _door(canvas);
+      case IllustrationKind.groupHomework:
+        _backdrop(canvas);
+        _bubble(canvas);
     }
   }
 
@@ -156,6 +168,82 @@ class _IllustrationPainter extends CustomPainter {
       ..cubicTo(c.dx + 7, c.dy - 2, c.dx, c.dy, c.dx, c.dy + 6);
     canvas.drawPath(q, _stroke(s.tertiary, 4.5));
     canvas.drawCircle(c.translate(0, 15), 2.8, _fill(s.tertiary));
+  }
+
+  /// Визитка с человечком и лупа.
+  void _teacherCard(Canvas canvas) {
+    final card = RRect.fromRectAndRadius(const Rect.fromLTWH(34, 28, 92, 68), const Radius.circular(12));
+    canvas.drawRRect(card.shift(const Offset(0, 3)), _fill(s.onTertiaryContainer.withValues(alpha: 0.12)));
+    canvas.drawRRect(card, _fill(s.surface));
+    canvas.drawRRect(card, _stroke(s.primary, 3));
+    // человечек: голова и плечи
+    canvas.drawCircle(const Offset(61, 54), 11, _fill(s.primary));
+    canvas.drawRRect(
+      RRect.fromRectAndCorners(const Rect.fromLTWH(45, 69, 32, 17), topLeft: const Radius.circular(15), topRight: const Radius.circular(15), bottomLeft: const Radius.circular(3), bottomRight: const Radius.circular(3)),
+      _fill(s.primary),
+    );
+    // строки справа
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(88, 46, 28, 5), const Radius.circular(2.5)), _fill(s.outlineVariant));
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(88, 57, 20, 4), const Radius.circular(2)), _fill(s.outlineVariant));
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(88, 68, 24, 9), const Radius.circular(4.5)), _fill(s.tertiary.withValues(alpha: 0.75)));
+    // лупа поверх правого нижнего угла
+    const c = Offset(113, 88);
+    canvas.drawLine(c + const Offset(12, 12), c + const Offset(24, 24), _stroke(s.primary, 7));
+    canvas.drawCircle(c, 17, _fill(s.surface.withValues(alpha: 0.92)));
+    canvas.drawCircle(c, 17, _stroke(s.primary, 5.5));
+    canvas.drawArc(Rect.fromCircle(center: c, radius: 9), 3.5, 1.2, false, _stroke(s.tertiary, 3));
+  }
+
+  /// Дверь с табличкой аудитории.
+  void _door(Canvas canvas) {
+    // пол
+    canvas.drawLine(const Offset(36, 108), const Offset(132, 108), _stroke(s.outline.withValues(alpha: 0.7), 3));
+    final door = RRect.fromRectAndCorners(const Rect.fromLTWH(54, 20, 60, 88), topLeft: const Radius.circular(10), topRight: const Radius.circular(10));
+    canvas.drawRRect(door.shift(const Offset(0, 3)), _fill(s.onTertiaryContainer.withValues(alpha: 0.12)));
+    canvas.drawRRect(door, _fill(s.primary));
+    // филёнки
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(62, 60, 20, 40), const Radius.circular(4)), _fill(s.onPrimary.withValues(alpha: 0.14)));
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(86, 60, 20, 40), const Radius.circular(4)), _fill(s.onPrimary.withValues(alpha: 0.14)));
+    // ручка
+    canvas.drawCircle(const Offset(106, 82), 3.5, _fill(s.tertiary));
+    // табличка
+    final plate = RRect.fromRectAndRadius(const Rect.fromLTWH(66, 30, 36, 22), const Radius.circular(6));
+    canvas.drawRRect(plate, _fill(s.surface));
+    canvas.drawRRect(plate, _stroke(s.tertiary, 2.5));
+    final tp = TextPainter(
+      text: TextSpan(text: '2-05', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: s.onSurface, letterSpacing: -0.3)),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, Offset(84 - tp.width / 2, 41 - tp.height / 2));
+  }
+
+  /// Облачко-сообщение с двумя заданиями.
+  void _bubble(Canvas canvas) {
+    final tail = Path()
+      ..moveTo(52, 84)
+      ..lineTo(46, 102)
+      ..lineTo(72, 86)
+      ..close();
+    canvas.drawPath(tail, _fill(s.surface));
+    canvas.drawPath(tail, _stroke(s.primary, 3));
+    final bubble = RRect.fromRectAndRadius(const Rect.fromLTWH(32, 26, 104, 62), const Radius.circular(14));
+    canvas.drawRRect(bubble.shift(const Offset(0, 3)), _fill(s.onTertiaryContainer.withValues(alpha: 0.12)));
+    canvas.drawRRect(bubble, _fill(s.surface));
+    canvas.drawRRect(bubble, _stroke(s.primary, 3));
+    // шов хвостика закрываем заливкой
+    canvas.drawRect(const Rect.fromLTWH(54, 84.5, 16, 3), _fill(s.surface));
+    for (var i = 0; i < 2; i++) {
+      final y = 46.0 + i * 22;
+      canvas.drawCircle(Offset(52, y), 6, i == 0 ? _fill(s.tertiary) : _stroke(s.outline, 1.8));
+      if (i == 0) {
+        final tick = Path()
+          ..moveTo(49, y + 0.3)
+          ..lineTo(51.3, y + 2.6)
+          ..lineTo(55.4, y - 2.2);
+        canvas.drawPath(tick, _stroke(s.onTertiary, 2));
+      }
+      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(65, y - 2.5, i == 0 ? 54 : 40, 5), const Radius.circular(2.5)), _fill(s.outlineVariant));
+    }
   }
 
   void _welcome(Canvas canvas) {

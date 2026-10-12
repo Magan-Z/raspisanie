@@ -108,16 +108,18 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
                       child: Text(
-                        shownItems.isEmpty ? (showGroup ? 'Староста пока ничего не задал' : 'Своих заданий пока нет') : (open == 0 ? 'Всё сделано' : 'Не сделано: $open'),
+                        shownItems.isEmpty ? '' : (open == 0 ? 'Всё сделано' : 'Не сделано: $open'),
                         style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ),
                     if (shownItems.isEmpty)
-                      Reveal(
-                        index: 1,
-                        child: _TabEmpty(
-                          icon: showGroup ? Icons.groups_rounded : Icons.task_alt_rounded,
-                          text: showGroup ? 'Когда староста добавит задание, оно появится здесь.' : 'Кнопка «Добавить ДЗ» ниже — или нажмите на пару на экране «Сегодня».',
+                      // как пустой день на «Сегодня»: рисунок, заголовок и пояснение по центру свободного места
+                      SizedBox(
+                        height: (MediaQuery.sizeOf(context).height - 330).clamp(300.0, 640.0),
+                        child: EmptyState(
+                          illustration: showGroup ? IllustrationKind.groupHomework : IllustrationKind.noHomework,
+                          title: showGroup ? 'Староста пока ничего не задал' : 'Домашки нет',
+                          subtitle: showGroup ? 'Когда староста добавит задание, оно появится здесь.' : 'Задание можно добавить кнопкой «Добавить ДЗ» или нажатием на пару на экране «Сегодня».',
                         ),
                       ),
                     for (final (n, entry) in groups.entries.indexed) ...[
@@ -432,32 +434,4 @@ class _CheckPopState extends State<_CheckPop> with SingleTickerProviderStateMixi
         ]).animate(_c),
         child: widget.child,
       );
-}
-
-/// Пустая вкладка «ДЗ»: мягкая подсказка вместо пустого места.
-class _TabEmpty extends StatelessWidget {
-  const _TabEmpty({required this.icon, required this.text});
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: Gap.xxl, horizontal: Gap.lg),
-      child: Column(children: [
-        ExcludeSemantics(
-          child: Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(color: scheme.tertiaryContainer, shape: BoxShape.circle),
-            child: Icon(icon, size: 34, color: scheme.onTertiaryContainer),
-          ),
-        ),
-        const SizedBox(height: Gap.lg),
-        Text(text, textAlign: TextAlign.center, style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
-      ]),
-    );
-  }
 }

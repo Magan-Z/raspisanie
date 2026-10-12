@@ -11,6 +11,8 @@ import '../../domain/models.dart';
 import '../../domain/search.dart';
 import '../../theme/app_theme.dart' show roomTextStyle;
 import '../../theme/tokens.dart';
+import '../common/empty_state.dart';
+import '../common/illustrations.dart';
 import '../common/lesson_widgets.dart';
 import '../common/reveal.dart';
 import '../common/sliding_segments.dart';
@@ -136,7 +138,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         const Reveal(
           index: 1,
           child: _SearchHint(
-            icon: Icons.person_search_rounded,
+            illustration: IllustrationKind.searchTeacher,
             title: 'Найдите преподавателя',
             text:
                 'Введите фамилию: покажем, где он сейчас и какие у него пары.',
@@ -207,7 +209,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         const Reveal(
           index: 1,
           child: _SearchHint(
-            icon: Icons.meeting_room_rounded,
+            illustration: IllustrationKind.searchRoom,
             title: 'Найдите аудиторию',
             text:
                 'Введите номер, например 2-05: покажем, кто в ней занимается.',
@@ -298,55 +300,20 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 }
 
-/// Подсказка, пока ничего не выбрано: что искать и что получится.
+/// Подсказка, пока ничего не выбрано: тот же вид, что у пустого дня на «Сегодня» (рисунок, заголовок, пояснение), по центру свободного места.
 class _SearchHint extends StatelessWidget {
-  const _SearchHint({
-    required this.icon,
-    required this.title,
-    required this.text,
-  });
-  final IconData icon;
+  const _SearchHint({required this.illustration, required this.title, required this.text});
+  final IllustrationKind illustration;
   final String title;
   final String text;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: Gap.xxl,
-        horizontal: Gap.lg,
-      ),
-      child: Column(
-        children: [
-          ExcludeSemantics(
-            child: Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: scheme.tertiaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 34, color: scheme.onTertiaryContainer),
-            ),
-          ),
-          const SizedBox(height: Gap.lg),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium,
-          ),
-          const SizedBox(height: Gap.xs),
-          Text(
-            text,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
+    // место под полем поиска и до нижней панели (≈ 360 dp занято сверху и снизу)
+    final height = (MediaQuery.sizeOf(context).height - 360).clamp(300.0, 640.0);
+    return SizedBox(
+      height: height,
+      child: EmptyState(illustration: illustration, title: title, subtitle: text),
     );
   }
 }
