@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Сборка «release» вырезает ресурсы, на которые никто не ссылается в коде.
+     Значок уведомлений в коде указан только строкой 'ic_notification' (lib/notifications/notification_gateway.dart),
+     поэтому без этого файла он пропадает из APK, и уведомления не запускаются вовсе (в том числе окно с разрешением). -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification" />
