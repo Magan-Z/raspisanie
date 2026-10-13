@@ -144,6 +144,7 @@ void main() {
         ('code_used', 'уже использован'),
         ('bad_token', 'отозван'),
         ('too_many', 'Слишком много'),
+        ('download_limit', 'Попробуйте завтра'),
       ]) {
         server.failWith = 400;
         server.failMessage = message;

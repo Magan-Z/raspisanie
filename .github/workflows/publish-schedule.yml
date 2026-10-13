@@ -81,7 +81,7 @@ jobs:
 
       # Веб-версия приложения для iPhone: тот же интерфейс, что на Android, но в браузере (кроме виджетов и напоминаний).
       # Собирается с самым свежим расписанием внутри, лежит на сайте по адресу /app/.
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
           cache: true

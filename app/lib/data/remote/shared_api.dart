@@ -25,6 +25,7 @@ class SharedApiException implements Exception {
         'quota' => 'У группы закончилось место для файлов. Удалите старые ДЗ с файлами',
         'too_many_files' => 'К одному ДЗ можно прикрепить не больше 5 файлов',
         'no_file' => 'Файл не найден на сервере: возможно, староста удалил это ДЗ',
+        'download_limit' => 'Сегодня скачали слишком много файлов, лимит исчерпан. Попробуйте завтра',
         'network' => 'Нет связи с сервером. Проверьте интернет и повторите',
         _ => 'Ошибка сервера${details == null ? '' : ': $details'}',
       };
@@ -71,7 +72,7 @@ class SharedApi {
     try {
       message = (jsonDecode(text) as Map<String, dynamic>)['message'] as String?;
     } catch (_) {}
-    const known = {'bad_code', 'code_used', 'bad_token', 'too_many', 'bad_group', 'file_too_big', 'quota', 'too_many_files', 'no_file'};
+    const known = {'bad_code', 'code_used', 'bad_token', 'too_many', 'bad_group', 'file_too_big', 'quota', 'too_many_files', 'no_file', 'download_limit'};
     if (message != null && known.contains(message)) throw SharedApiException(message);
     throw SharedApiException('server', message ?? 'HTTP ${response.statusCode}');
   }

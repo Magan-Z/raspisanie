@@ -10,6 +10,8 @@ on:
 permissions:
   contents: write   # нужно, чтобы создать Release
   actions: write    # нужно, чтобы после выпуска запустить публикацию сайта (на сайте лежит копия APK)
+# Сторонние действия (subosito, softprops) закреплены по отпечатку коммита, а не по имени версии: так их нельзя подменить задним числом.
+# Чтобы обновить, найдите новый отпечаток: gh api repos/<автор>/<действие>/commits/<версия> --jq .sha
 
 jobs:
   apk:
@@ -25,7 +27,7 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
         with:
           channel: stable
           cache: true
@@ -69,9 +71,15 @@ jobs:
       - name: Переименовать
         run: cp build/app/outputs/flutter-apk/app-release.apk raspisanie.apk
 
+      # Ключ подписи больше не нужен: стираем его с диска ДО шагов со сторонними действиями (выпуск, загрузка файла),
+      # чтобы они не могли его прочитать. Выполняется, даже если сборка упала.
+      - name: Стереть ключ подписи
+        if: always()
+        run: rm -f android/release.jks android/key.properties
+
       - name: Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           files: app/raspisanie.apk
           generate_release_notes: true

@@ -307,3 +307,48 @@ begin
   perform public.purge_group_files(g);
   return v_id;
 end $$;
+
+-- ============================================================================
+-- Часть 4 (миграция group_files_download_ceiling): суточный потолок на скачивание файлов ДЗ.
+-- Защита от многократной загрузки одних и тех же файлов (бесплатный план: 5 ГБ трафика в месяц).
+-- Не больше 100 скачиваний одного файла в сутки и не больше 160 МБ в сутки на весь проект.
+-- Когда потолок достигнут, get_group_file отвечает ошибкой download_limit (приложение пишет «Попробуйте завтра»);
+-- остальное (расписание, правки, ДЗ без файлов, уже скачанные файлы) работает. Изменить потолки: числа в функции ниже.
+-- ============================================================================
+create table public.download_day (
+  day   date primary key,
+  bytes bigint not null default 0
+);
+create table public.download_file_day (
+  day     date not null,
+  file_id uuid not null,
+  n       int  not null default 0,
+  primary key (day, file_id)
+);
+alter table public.download_day enable row level security;
+alter table public.download_file_day enable row level security;
+revoke all on public.download_day, public.download_file_day from anon, authenticated;
+
+create or replace function public.get_group_file(p_group text, p_id uuid) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare r public.group_files%rowtype; cnt int; total bigint;
+begin
+  if p_group is null or p_group !~ '^[a-z0-9-]{3,40}$' then raise exception 'bad_group'; end if;
+  select * into r from public.group_files where id = p_id and group_id = p_group;
+  if not found then raise exception 'no_file'; end if;
+  -- потолок на один файл: не больше 100 скачиваний в сутки (в группе обычно 20-30 человек, каждый качает один раз)
+  insert into public.download_file_day (day, file_id, n) values (current_date, p_id, 1)
+    on conflict (day, file_id) do update set n = public.download_file_day.n + 1
+    returning n into cnt;
+  if cnt > 100 then raise exception 'download_limit'; end if;
+  -- общий потолок на весь проект: 160 МБ в сутки (бесплатный план: 5 ГБ трафика в месяц)
+  insert into public.download_day (day, bytes) values (current_date, r.size)
+    on conflict (day) do update set bytes = public.download_day.bytes + excluded.bytes
+    returning bytes into total;
+  if total > 167772160 then raise exception 'download_limit'; end if;
+  -- старые счётчики не копим
+  delete from public.download_day where day < current_date - 7;
+  delete from public.download_file_day where day < current_date - 7;
+  return jsonb_build_object('name', r.name, 'data', encode(r.data, 'base64'));
+end $$;
+
