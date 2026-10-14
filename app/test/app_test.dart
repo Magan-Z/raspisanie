@@ -927,8 +927,8 @@ void main() {
 
       // среда 07.10.2026 13:30: идёт общая лекция, на карточке группы
       expect(find.text('Технологическое предпринимательство'), findsWidgets);
-      expect(find.textContaining('1 БИ-25'), findsWidgets);
-      expect(find.textContaining('2 БИ-25'), findsWidgets);
+      expect(find.textContaining('1\u00A0БИ-25'), findsWidgets);
+      expect(find.textContaining('2\u00A0БИ-25'), findsWidgets);
       expect(find.text('Мои правки'), findsNothing); // личных правок у преподавателя нет
       expect(tester.takeException(), isNull);
     });
@@ -1057,7 +1057,7 @@ void main() {
       // теперь расписание преподавателя
       await tester.tap(find.text('Сегодня').last);
       await _settle(tester);
-      expect(find.textContaining('1 БИ-25'), findsWidgets);
+      expect(find.textContaining('1\u00A0БИ-25'), findsWidgets);
       expect(find.text('ЧТК и этика'), findsNothing);
 
       await tester.tap(find.text('Настройки').last);

@@ -24,7 +24,7 @@ void main() {
     test('лекция для четырёх групп — одна пара, а в «teacher» — группы по порядку', () {
       final lecture = view.schedule.lessons.where((l) => l.weekday == 1 && l.pair == 1 && l.subject == 'Информатика' && l.kind == LessonKind.lecture);
       expect(lecture, hasLength(1));
-      expect(lecture.single.teacher, '1 ИТиСС-26, 2 ИТиСС-26, 3 ИТиСС-26, 4 ИТиСС-26');
+      expect(lecture.single.teacher!.replaceAll('\u00A0', ' '), '1 ИТиСС-26, 2 ИТиСС-26, 3 ИТиСС-26, 4 ИТиСС-26');
       expect(lecture.single.room, '2-05');
       expect(lecture.single.week, 0);
     });
@@ -35,13 +35,13 @@ void main() {
       final practice = view.schedule.lessons.where((l) => l.weekday == 4 && l.week == 2 && l.pair == 1 && l.subject == 'Информатика');
       expect(practice, isNotEmpty);
       expect(practice.first.teacher, contains(label));
-      expect(practice.first.teacher, isNot(contains('1 ИТиСС-26,')));
+      expect(practice.first.teacher!.replaceAll('\u00A0', ' '), isNot(contains('1 ИТиСС-26,')));
     });
 
     test('физкультура девушек: в группах пометка «(девушки)»', () {
       final pe = buildTeacherView('Магомадова Я.Г.', schedules).schedule.lessons.where((l) => l.kind == LessonKind.pe);
       expect(pe, isNotEmpty);
-      expect(pe.first.teacher, contains('(девушки)'));
+      expect(pe.first.teacher!.replaceAll('\u00A0', ' '), contains('(девушки)'));
     });
 
     test('инициалы без отчества и полное ФИО дают то же расписание', () {
@@ -59,7 +59,7 @@ void main() {
 
     test('проходит через общий расчёт дня: понедельник 12.10.2026 (1 неделя) и воскресенье', () {
       final monday = resolve(DateTime.utc(2026, 10, 12), index, view.schedule, teacherProfile);
-      expect(monday.any((l) => l.subject == 'Информатика' && l.teacher!.contains('4 ИТиСС-26') && l.room == '2-05'), isTrue);
+      expect(monday.any((l) => l.subject == 'Информатика' && l.teacher!.replaceAll('\u00A0', ' ').contains('4 ИТиСС-26') && l.room == '2-05'), isTrue);
       expect(resolve(DateTime.utc(2026, 10, 11), index, view.schedule, teacherProfile), isEmpty);
       // пары по порядку
       final pairs = [for (final l in monday) l.pair];

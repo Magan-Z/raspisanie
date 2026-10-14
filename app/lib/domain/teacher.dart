@@ -115,7 +115,8 @@ TeacherView buildTeacherView(String teacher, List<GroupSchedule> schedules) {
         subgroups: const [1],
         kind: lesson.kind,
         subject: lesson.subject,
-        teacher: (groups.toList()..sort(_naturalCompare)).join(', '),
+        // неразрывный пробел внутри названия группы: на карточке строка переносится по запятым, а не посреди «1 БИ-25»
+        teacher: (groups.toList()..sort(_naturalCompare)).map((g) => g.replaceAll(' ', '\u00A0')).join(', '),
         room: lesson.room,
         tags: const [],
         raw: lesson.raw,

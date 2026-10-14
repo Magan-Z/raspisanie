@@ -308,4 +308,102 @@ void main() {
     await tester.runAsync(loadFonts);
     await shoot(tester, '7-today-bigfont', dark: false, textScale: 1.6);
   });
+
+  // Режим преподавателя (запуск: flutter test tool/screenshots_test.dart --plain-name teacher → /tmp/claude-shots/teacher/)
+  group('teacher', () {
+    const teacherDir = '/tmp/claude-shots/teacher';
+    const teacherPrefs = {'role': 'teacher', 'teacherName': 'Халиев Магомед Сайд-Усманович'};
+    const session = {'teacherToken': 'tok-teacher-TEACHCODE', 'teacherCodeName': 'Халиев М.С-У.', 'teacherCodeGroups': ['ofo-1-bi-25', 'ofo-2-bi-25']};
+
+    FakeBackend sentBackend() {
+      final b = FakeBackend();
+      for (final g in ['ofo-1-bi-25', 'ofo-2-bi-25']) {
+        b.teacherRows['b1/$g'] = {
+          'id': 'b1/$g', 'group_id': g, 'batch_id': 'b1', 'author': 'Халиев М.С-У.', 'subject': 'Технологическое предпринимательство',
+          'body': 'Подготовить доклад на 5 минут по бизнес-модели', 'due_date': '2026-10-14', 'kind': null, 'subgroup': null,
+          'files': <Map<String, dynamic>>[], 'deleted': false, 'updated_at': '2026-10-09T12:00:00+00:00',
+        };
+      }
+      b.teacherRows['b2/ofo-1-bi-25'] = {
+        'id': 'b2/ofo-1-bi-25', 'group_id': 'ofo-1-bi-25', 'batch_id': 'b2', 'author': 'Халиев М.С-У.', 'subject': 'Технологическое предпринимательство',
+        'body': 'Прочитать главу 3 учебника', 'due_date': '2026-10-21', 'kind': 'lecture', 'subgroup': null,
+        'files': [{'id': 'f1', 'name': 'Глава 3.pdf', 'size': 1800000}], 'deleted': false, 'updated_at': '2026-10-09T12:00:01+00:00',
+      };
+      return b;
+    }
+
+    for (final dark in [false, true]) {
+      final suffix = dark ? 'dark' : 'light';
+      testWidgets('teacher today $suffix', (tester) async {
+        await tester.runAsync(loadFonts);
+        await shoot(tester, '1-today-$suffix', dark: dark, noProfile: true, prefs: teacherPrefs, dir: teacherDir);
+      });
+      testWidgets('teacher week $suffix', (tester) async {
+        await tester.runAsync(loadFonts);
+        await shoot(tester, '2-week-$suffix', dark: dark, noProfile: true, prefs: teacherPrefs, dir: teacherDir, act: () async {
+          await tester.tap(find.text('Неделя').last);
+        });
+      });
+      testWidgets('teacher homework $suffix', (tester) async {
+        await tester.runAsync(loadFonts);
+        await shoot(tester, '3-homework-$suffix', dark: dark, noProfile: true, prefs: {...teacherPrefs, ...session}, sharedApi: sentBackend().api(), dir: teacherDir, act: () async {
+          await tester.tap(find.text('ДЗ').last);
+        });
+      });
+    }
+
+    testWidgets('teacher homework without code', (tester) async {
+      await tester.runAsync(loadFonts);
+      await shoot(tester, '4-homework-nocode', dark: false, noProfile: true, prefs: teacherPrefs, sharedApi: FakeBackend().api(), dir: teacherDir, act: () async {
+        await tester.tap(find.text('ДЗ').last);
+      });
+    });
+
+    testWidgets('teacher send sheet', (tester) async {
+      await tester.runAsync(loadFonts);
+      await shoot(tester, '5-send-sheet', dark: false, noProfile: true, prefs: {...teacherPrefs, ...session}, sharedApi: sentBackend().api(), dir: teacherDir, act: () async {
+        await tester.ensureVisible(find.text('Технологическое предпринимательство').last);
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.longPress(find.text('Технологическое предпринимательство').last);
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.tap(find.text('Отправить ДЗ студентам'));
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.enterText(find.byType(TextField).last, 'Подготовить доклад на 5 минут');
+      });
+    });
+
+    testWidgets('teacher lesson menu', (tester) async {
+      await tester.runAsync(loadFonts);
+      await shoot(tester, '6-menu', dark: false, noProfile: true, prefs: teacherPrefs, dir: teacherDir, act: () async {
+        await tester.ensureVisible(find.text('Технологическое предпринимательство').last);
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.longPress(find.text('Технологическое предпринимательство').last);
+        await tester.pump(const Duration(milliseconds: 400));
+      });
+    });
+
+    testWidgets('teacher onboarding', (tester) async {
+      await tester.runAsync(loadFonts);
+      await shoot(tester, '7-onboarding', dark: false, noProfile: true, dir: teacherDir, act: () async {
+        await tester.tap(find.text('Я преподаватель'));
+      });
+    });
+
+    testWidgets('teacher settings', (tester) async {
+      await tester.runAsync(loadFonts);
+      await shoot(tester, '8-settings', dark: false, noProfile: true, prefs: {...teacherPrefs, ...session}, sharedApi: sentBackend().api(), dir: teacherDir, act: () async {
+        await tester.tap(find.text('Настройки').last);
+      });
+    });
+
+    testWidgets('student sees teacher homework', (tester) async {
+      await tester.runAsync(loadFonts);
+      await shoot(tester, '9-student-teacher-tab', dark: false, sharedApi: sentBackend().api(), dir: teacherDir, act: () async {
+        await tester.tap(find.text('ДЗ').last);
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.tap(find.textContaining('От преподавателей'));
+      });
+    });
+  });
 }
+
