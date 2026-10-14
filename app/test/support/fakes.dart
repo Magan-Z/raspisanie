@@ -183,6 +183,14 @@ class FakeBackend {
   final validCodes = {'GOODCODE': 'ofo-1-bi-25'};
   final usedCodes = <String>{};
 
+  /// Режим преподавателя: коды (имя и разрешённые группы), строки ДЗ преподавателей (по одной на группу).
+  final teacherCodes = <String, ({String name, List<String> groups})>{
+    'TEACHCODE': (name: 'Халиев М.С-У.', groups: ['ofo-1-bi-25', 'ofo-2-bi-25']),
+  };
+  final usedTeacherCodes = <String>{};
+  final teacherRows = <String, Map<String, dynamic>>{}; // id строки → строка (с group_id, batch_id, author)
+  var _batch = 0;
+
   String _stamp() => DateTime.utc(2026, 10, 9, 12, 0, _clock++).toIso8601String();
 
   Map<String, dynamic> override({String id = 'o1', int pair = 4, String type = 'replace', String? room = '3-33', String? hash, String date = '2026-10-07', String? note}) => {
@@ -210,12 +218,75 @@ class FakeBackend {
               'server_time': DateTime.utc(2026, 10, 9, 12, 5).toIso8601String(),
               'overrides': overrides.values.where(wanted).toList(),
               'homework': homework.values.where(wanted).toList(),
+              'teacher_homework': [
+                for (final r in teacherRows.values)
+                  if (r['group_id'] == args['p_group'] && wanted(r)) {...r}..remove('group_id')..remove('batch_id'),
+              ],
             });
           case 'redeem_code':
             final code = (args['p_code'] as String).trim().toUpperCase();
             if (!validCodes.containsKey(code)) return fail('bad_code');
             if (!usedCodes.add(code)) return fail('code_used');
             return ok({'group_id': validCodes[code], 'token': 'tok-$code'});
+          case 'redeem_teacher_code':
+            final code = (args['p_code'] as String).trim().toUpperCase();
+            final t = teacherCodes[code];
+            if (t == null) return fail('bad_code');
+            if (!usedTeacherCodes.add(code)) return fail('code_used');
+            return ok({'teacher': t.name, 'groups': t.groups, 'token': 'tok-teacher-$code'});
+          case 'put_teacher_homework':
+            final code = (args['p_token'] as String).replaceFirst('tok-teacher-', '');
+            final t = teacherCodes[code];
+            if (t == null) return fail('bad_token');
+            final row = Map<String, dynamic>.from(args['p_row'] as Map);
+            final targets = [for (final g in (row['groups'] as List)) Map<String, dynamic>.from(g as Map)];
+            if (targets.isEmpty) return fail('bad_groups');
+            if (targets.any((g) => !t.groups.contains(g['id']))) return fail('forbidden_group');
+            final batch = (row['batch_id'] as String?) ?? 'batch-${_batch++}';
+            for (final r in teacherRows.values.where((r) => r['batch_id'] == batch)) {
+              if (!targets.any((g) => g['id'] == r['group_id'])) {
+                r['deleted'] = true;
+                r['updated_at'] = '2026-10-09T13:00:${(_clock++).toString().padLeft(2, '0')}+00:00';
+              }
+            }
+            for (final g in targets) {
+              final id = '$batch/${g['id']}';
+              teacherRows[id] = {
+                'id': id, 'group_id': g['id'], 'batch_id': batch, 'author': t.name,
+                'subject': row['subject'], 'body': row['body'], 'due_date': row['due_date'], 'kind': row['kind'],
+                'subgroup': g['subgroup'], 'files': row['files'] ?? const [], 'deleted': false,
+                'updated_at': '2026-10-09T13:00:${(_clock++).toString().padLeft(2, '0')}+00:00',
+              };
+            }
+            return ok(batch);
+          case 'delete_teacher_homework':
+            for (final r in teacherRows.values.where((r) => r['batch_id'] == args['p_batch'])) {
+              r['deleted'] = true;
+              r['updated_at'] = '2026-10-09T13:30:${(_clock++).toString().padLeft(2, '0')}+00:00';
+            }
+            return http.Response('', 204);
+          case 'get_teacher_homework':
+            final live = teacherRows.values.where((r) => r['deleted'] != true).toList();
+            final batches = <String, List<Map<String, dynamic>>>{};
+            for (final r in live) {
+              batches.putIfAbsent(r['batch_id'] as String, () => []).add(r);
+            }
+            return ok([
+              for (final e in batches.entries)
+                {
+                  'batch_id': e.key,
+                  'subject': e.value.first['subject'],
+                  'body': e.value.first['body'],
+                  'due_date': e.value.first['due_date'],
+                  'kind': e.value.first['kind'],
+                  'files': e.value.first['files'],
+                  'groups': [for (final r in e.value) {'id': r['group_id'], 'subgroup': r['subgroup']}],
+                },
+            ]);
+          case 'put_teacher_file':
+            if (args['p_token'] == null) return fail('bad_token');
+            files[args['p_id'] as String] = (name: args['p_name'] as String, bytes: base64Decode(args['p_data'] as String));
+            return http.Response('', 204);
           case 'put_group_override':
             final row = Map<String, dynamic>.from(args['p_row'] as Map)..['deleted'] = false..['updated_at'] = '2026-10-09T13:00:${(_clock++).toString().padLeft(2, '0')}+00:00';
             overrides[row['id'] as String] = row;

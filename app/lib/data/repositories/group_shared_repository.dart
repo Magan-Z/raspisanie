@@ -9,8 +9,11 @@ import '../remote/shared_api.dart';
 
 /// Результат обновления: что нового пришло.
 class GroupSyncResult {
-  const GroupSyncResult({required this.state, this.newHomework = const []});
+  const GroupSyncResult({required this.state, this.newHomework = const [], this.newTeacherHomework = const []});
   final GroupSharedState state;
+
+  /// ДЗ преподавателей, которых раньше в телефоне не было.
+  final List<GroupHomeworkRow> newTeacherHomework;
 
   /// ДЗ старосты, которых раньше в телефоне не было (для уведомления «староста добавил ДЗ»).
   final List<GroupHomeworkRow> newHomework;
@@ -56,7 +59,8 @@ class GroupSharedRepository {
     await _save(groupId, after);
 
     final newHomework = [for (final h in after.homework.values) if (!before.homework.containsKey(h.id)) h];
-    return GroupSyncResult(state: after, newHomework: newHomework);
+    final newTeacher = [for (final h in after.teacherHomework.values) if (!before.teacherHomework.containsKey(h.id)) h];
+    return GroupSyncResult(state: after, newHomework: newHomework, newTeacherHomework: newTeacher);
   }
 
   /// Забыть всё (например, студент сменил группу).

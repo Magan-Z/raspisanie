@@ -2,6 +2,7 @@
 // Экраны только читают эти провайдеры — логика живёт здесь и в domain/.
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -29,6 +30,8 @@ import 'domain/diff_summary.dart';
 import 'domain/homework.dart';
 import 'domain/models.dart';
 import 'domain/subject_styles.dart';
+import 'domain/teacher.dart';
+import 'domain/teacher_homework.dart';
 import 'notifications/notification_gateway.dart';
 import 'theme/brand_colors.dart';
 import 'widget_bridge/deep_links.dart';
@@ -68,6 +71,8 @@ class Settings {
     this.amoled = false,
     this.customSubjects = true,
     this.showGroupData = true,
+    this.role = UserRole.student,
+    this.teacherName,
   });
 
   final UserProfile? profile; // null — первый запуск, профиль ещё не выбран
@@ -80,6 +85,14 @@ class Settings {
   final bool amoled; // чёрный фон в тёмной теме
   final bool customSubjects; // показывать свои названия и цвета предметов
   final bool showGroupData; // показывать правки и ДЗ старосты
+  final UserRole role; // кто пользуется: студент или преподаватель
+  final String? teacherName; // как преподаватель записан в списке (полное ФИО или с инициалами)
+
+  /// Режим преподавателя включён и имя выбрано.
+  bool get isTeacher => role == UserRole.teacher && teacherName != null;
+
+  /// Нужен ли первый экран выбора (кто вы / какая группа / какой преподаватель).
+  bool get needsOnboarding => role == UserRole.teacher ? teacherName == null : profile == null;
 }
 
 class SettingsNotifier extends Notifier<Settings> {
@@ -107,6 +120,8 @@ class SettingsNotifier extends Notifier<Settings> {
       amoled: prefs.getBool('amoled') ?? false,
       customSubjects: prefs.getBool('customSubjects') ?? true,
       showGroupData: prefs.getBool('showGroupData') ?? true,
+      role: prefs.getString('role') == 'teacher' ? UserRole.teacher : UserRole.student,
+      teacherName: prefs.getString('teacherName'),
     );
   }
 
@@ -115,6 +130,19 @@ class SettingsNotifier extends Notifier<Settings> {
     await _prefs.setString('groupId', profile.groupId);
     await _prefs.setInt('subgroup', profile.subgroup);
     await _prefs.setString('pe', profile.pe.name);
+    ref.invalidateSelf();
+  }
+
+  /// Переключает режим. Профиль студента и имя преподавателя хранятся отдельно и не стираются.
+  Future<void> setRole(UserRole role) async {
+    await _prefs.setString('role', role.name);
+    ref.invalidateSelf();
+  }
+
+  /// Выбрать себя в списке преподавателей (и сразу включить режим преподавателя).
+  Future<void> setTeacher(String name) async {
+    await _prefs.setString('teacherName', name);
+    await _prefs.setString('role', UserRole.teacher.name);
     ref.invalidateSelf();
   }
 
@@ -202,6 +230,13 @@ class MySchedule {
 
 final myScheduleProvider = FutureProvider<MySchedule?>((ref) async {
   final settings = ref.watch(settingsProvider);
+  // Преподаватель: расписание собирается из пар во всех группах; правки студента и данные группы не используются
+  if (settings.isTeacher) {
+    final index = await ref.watch(indexProvider.future);
+    final view = await ref.watch(teacherViewProvider.future);
+    if (view == null) return null;
+    return MySchedule(index: index, schedule: view.schedule, profile: teacherProfile, forcedWeek: settings.forcedWeek);
+  }
   final profile = settings.profile;
   if (profile == null) return null;
   final index = await ref.watch(indexProvider.future);
@@ -243,12 +278,13 @@ final lastFetchedProvider = FutureProvider<DateTime?>((ref) => ref.watch(reposit
 /// Проверить обновления на сайте и, если что-то изменилось, перечитать расписание.
 Future<SyncResult> syncSchedule(ProviderContainer ref) async {
   final repo = ref.read(repositoryProvider);
-  final groupId = ref.read(settingsProvider).profile?.groupId;
+  final settings = ref.read(settingsProvider);
+  final groupId = settings.isTeacher ? null : settings.profile?.groupId;
   final result = await repo.sync(groupId: groupId);
   if (result.indexChanged || result.groupChanged) {
     ref.invalidate(indexProvider);
   }
-  final profile = ref.read(settingsProvider).profile;
+  final profile = settings.isTeacher ? null : settings.profile;
   if (result.groupChanged && result.diffJson != null && profile != null) {
     final items = summarizeDiff(result.diffJson!, profile);
     if (items.isNotEmpty) {
@@ -360,7 +396,7 @@ final groupSharedRepositoryProvider = Provider<GroupSharedRepository?>((ref) {
 
 /// Правки и ДЗ старосты для моей группы (из кэша телефона). После обновления с сервера — ref.invalidate(groupSharedProvider).
 final groupSharedProvider = FutureProvider<GroupSharedState>((ref) async {
-  final groupId = ref.watch(settingsProvider.select((s) => s.profile?.groupId));
+  final groupId = ref.watch(settingsProvider.select((s) => s.isTeacher ? null : s.profile?.groupId));
   final repo = ref.watch(groupSharedRepositoryProvider);
   if (groupId == null || repo == null) return GroupSharedState.empty;
   return repo.cached(groupId);
@@ -396,7 +432,7 @@ final editorProvider = NotifierProvider<EditorNotifier, EditorSession?>(EditorNo
 /// Староста этой группы (его права действуют, только если он смотрит расписание той же группы).
 final isGroupEditorProvider = Provider<bool>((ref) {
   final editor = ref.watch(editorProvider);
-  final groupId = ref.watch(settingsProvider.select((s) => s.profile?.groupId));
+  final groupId = ref.watch(settingsProvider.select((s) => s.isTeacher ? null : s.profile?.groupId));
   return editor != null && editor.groupId == groupId && ref.watch(sharedApiProvider) != null;
 });
 
@@ -433,8 +469,10 @@ final groupHomeworkProvider = Provider<List<GroupHomeworkRow>>((ref) {
 /// Все невыполненные ДЗ вместе: личные и ДЗ старосты (для виджетов, уведомлений и значков на парах).
 /// Выполнено ли ДЗ старосты, студент решает сам (хранится только у него).
 final homeworkWithGroupProvider = FutureProvider<List<HomeworkItem>>((ref) async {
+  // Преподавателю личные ДЗ студента не показываем (ни на виджетах, ни в напоминаниях)
+  if (ref.watch(isTeacherModeProvider)) return const [];
   final personal = await ref.watch(homeworkProvider.future);
-  final group = ref.watch(groupHomeworkProvider);
+  final group = [...ref.watch(groupHomeworkProvider), ...ref.watch(teacherHomeworkProvider)];
   final done = ref.watch(groupHomeworkDoneProvider);
   return [
     ...personal,
@@ -443,12 +481,30 @@ final homeworkWithGroupProvider = FutureProvider<List<HomeworkItem>>((ref) async
   ];
 });
 
+/// ДЗ преподавателей, видимое студенту: для всей группы и для его подгруппы.
+final teacherHomeworkProvider = Provider<List<GroupHomeworkRow>>((ref) {
+  if (!ref.watch(settingsProvider.select((s) => s.showGroupData))) return const [];
+  final mine = ref.watch(settingsProvider.select((s) => s.profile?.subgroup));
+  final all = ref.watch(groupSharedProvider).value?.teacherHomeworkList ?? const <GroupHomeworkRow>[];
+  return mine == null ? all : [for (final h in all) if (h.visibleTo(mine)) h];
+});
+
+/// Что нового пришло с сервера: ДЗ старосты и ДЗ преподавателей (для уведомлений).
+class GroupNews {
+  const GroupNews({this.homework = const [], this.teacherHomework = const []});
+  final List<GroupHomeworkRow> homework;
+  final List<GroupHomeworkRow> teacherHomework;
+  bool get isEmpty => homework.isEmpty && teacherHomework.isEmpty;
+  static const none = GroupNews();
+}
+
 /// Обновить общие данные группы с сервера. Ошибки связи молча игнорируются (остаётся кэш).
-/// Возвращает ДЗ старосты, которых раньше не было (для уведомления).
-Future<List<GroupHomeworkRow>> syncGroupShared(ProviderContainer c) async {
+/// Возвращает ДЗ, которых раньше не было (для уведомления). В режиме преподавателя данных группы нет.
+Future<GroupNews> syncGroupShared(ProviderContainer c) async {
   final repo = c.read(groupSharedRepositoryProvider);
-  final groupId = c.read(settingsProvider).profile?.groupId;
-  if (repo == null || groupId == null) return const [];
+  final settings = c.read(settingsProvider);
+  final groupId = settings.isTeacher ? null : settings.profile?.groupId;
+  if (repo == null || groupId == null) return GroupNews.none;
   try {
     final result = await repo.sync(groupId);
     // Староста стирает с сервера правки к устаревшему расписанию (новое расписание точнее)
@@ -465,12 +521,82 @@ Future<List<GroupHomeworkRow>> syncGroupShared(ProviderContainer c) async {
     }
     c.invalidate(groupSharedProvider);
     // Уведомление только о ДЗ, которое относится ко мне (общее или для моей подгруппы)
-    final mine = c.read(settingsProvider).profile?.subgroup;
-    return mine == null ? result.newHomework : [for (final h in result.newHomework) if (h.visibleTo(mine)) h];
+    final mine = settings.profile?.subgroup;
+    bool visible(GroupHomeworkRow h) => mine == null || h.visibleTo(mine);
+    return GroupNews(
+      homework: [for (final h in result.newHomework) if (visible(h)) h],
+      teacherHomework: [for (final h in result.newTeacherHomework) if (visible(h)) h],
+    );
   } on SharedApiException {
-    return const [];
+    return GroupNews.none;
   }
 }
+
+// ---------- режим преподавателя ----------
+
+/// Включён ли режим преподавателя (и выбрано имя).
+final isTeacherModeProvider = Provider<bool>((ref) => ref.watch(settingsProvider.select((s) => s.isTeacher)));
+
+/// Расписание и адресаты ДЗ выбранного преподавателя (собираются из файлов всех групп). null — режим выключен.
+final teacherViewProvider = FutureProvider<TeacherView?>((ref) async {
+  final name = ref.watch(settingsProvider.select((s) => s.isTeacher ? s.teacherName : null));
+  if (name == null) return null;
+  final schedules = await ref.watch(allGroupsProvider.future);
+  return buildTeacherView(name, schedules);
+});
+
+/// Код преподавателя на этом телефоне: токен, имя из кода и разрешённые группы (хранится в настройках телефона).
+class TeacherSessionNotifier extends Notifier<TeacherSession?> {
+  SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
+
+  @override
+  TeacherSession? build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final token = prefs.getString('teacherToken');
+    final name = prefs.getString('teacherCodeName');
+    if (token == null || name == null) return null;
+    return TeacherSession(token: token, teacher: name, groups: prefs.getStringList('teacherCodeGroups') ?? const []);
+  }
+
+  Future<void> set(TeacherSession session) async {
+    await _prefs.setString('teacherToken', session.token);
+    await _prefs.setString('teacherCodeName', session.teacher);
+    await _prefs.setStringList('teacherCodeGroups', session.groups);
+    state = session;
+  }
+
+  Future<void> clear() async {
+    await _prefs.remove('teacherToken');
+    await _prefs.remove('teacherCodeName');
+    await _prefs.remove('teacherCodeGroups');
+    await _prefs.remove('teacherSentCache');
+    state = null;
+  }
+}
+
+final teacherSessionProvider = NotifierProvider<TeacherSessionNotifier, TeacherSession?>(TeacherSessionNotifier.new);
+
+/// Что преподаватель уже отправил студентам (с сервера; без связи показывается последняя сохранённая копия).
+/// После изменения вызываем ref.invalidate(teacherSentProvider).
+final teacherSentProvider = FutureProvider<List<TeacherHomeworkBatch>>((ref) async {
+  final session = ref.watch(teacherSessionProvider);
+  final api = ref.watch(sharedApiProvider);
+  if (session == null || api == null) return const [];
+  final prefs = ref.read(sharedPreferencesProvider);
+  try {
+    final list = await api.getTeacherHomework(session.token);
+    await prefs.setString('teacherSentCache', jsonEncode([for (final b in list) b.toJson()]));
+    return list;
+  } on SharedApiException catch (e) {
+    if (e.code == 'network') {
+      try {
+        final cached = jsonDecode(prefs.getString('teacherSentCache') ?? 'null');
+        if (cached is List) return [for (final b in cached) TeacherHomeworkBatch.fromJson(b as Map<String, dynamic>)];
+      } catch (_) {}
+    }
+    rethrow;
+  }
+});
 
 // ---------- личные правки ----------
 

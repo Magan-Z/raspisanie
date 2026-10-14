@@ -908,4 +908,166 @@ void main() {
     await _settle(tester);
     expect(find.text('ЧТК и этика'), findsWidgets);
   });
+
+
+  group('Режим преподавателя', () {
+    // Преподаватель, у которого в среду 7 октября 13:00 общая лекция «Технологическое предпринимательство» у двух групп БИ-25
+    const teacher = 'Халиев Магомед Сайд-Усманович';
+    const teacherPrefs = {'role': 'teacher', 'teacherName': teacher};
+    const teacherSession = {'teacherToken': 'tok-teacher-TEACHCODE', 'teacherCodeName': 'Халиев М.С-У.', 'teacherCodeGroups': ['ofo-1-bi-25', 'ofo-2-bi-25']};
+
+    testWidgets('первый запуск: «Я преподаватель» → поиск себя в списке → расписание, где вместо преподавателя группы', (tester) async {
+      await _start(tester);
+      await tester.tap(find.text('Я преподаватель'));
+      await _settle(tester);
+      await tester.enterText(find.byType(TextField).first, 'Халиев');
+      await _settle(tester);
+      await tester.tap(find.text(teacher));
+      await _settle(tester);
+
+      // среда 07.10.2026 13:30: идёт общая лекция, на карточке группы
+      expect(find.text('Технологическое предпринимательство'), findsWidgets);
+      expect(find.textContaining('1 БИ-25'), findsWidgets);
+      expect(find.textContaining('2 БИ-25'), findsWidgets);
+      expect(find.text('Мои правки'), findsNothing); // личных правок у преподавателя нет
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('меню пары у преподавателя: группы, «Отправить ДЗ студентам», без «Отменить/Перенести/Изменить»', (tester) async {
+      await _start(tester, prefs: teacherPrefs);
+      await _settle(tester);
+      await tester.longPress(find.text('Технологическое предпринимательство').last);
+      await _settle(tester);
+      expect(find.text('Группы'), findsOneWidget);
+      expect(find.text('Отправить ДЗ студентам'), findsOneWidget);
+      expect(find.text('Название и цвет'), findsOneWidget);
+      expect(find.text('Отменить пару'), findsNothing);
+      expect(find.text('Перенести'), findsNothing);
+      expect(find.text('Изменить'), findsNothing);
+    });
+
+    testWidgets('вкладка «ДЗ» без кода предлагает ввести код: неверный — ошибка, верный — открывается отправка', (tester) async {
+      final backend = FakeBackend();
+      await _start(tester, prefs: teacherPrefs, sharedApi: backend.api());
+      await tester.tap(find.text('ДЗ').last);
+      await _settle(tester);
+      expect(find.text('Домашка студентам'), findsOneWidget);
+      expect(find.text('Ввести код'), findsOneWidget);
+
+      await tester.tap(find.text('Ввести код'));
+      await _settle(tester);
+      await tester.enterText(find.byType(TextField).last, 'WRONG');
+      await tester.tap(find.text('Подтвердить'));
+      await _settle(tester);
+      expect(find.textContaining('Код не подошёл'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField).last, 'teachcode'); // регистр не важен
+      await tester.tap(find.text('Подтвердить'));
+      await _settle(tester);
+      expect(find.textContaining('Подпись для студентов: Халиев М.С-У.'), findsOneWidget);
+      expect(find.text('Отправить ДЗ'), findsOneWidget);
+      expect(find.text('Вы пока ничего не отправляли'), findsOneWidget);
+    });
+
+    testWidgets('отправка ДЗ: уходит всем разрешённым группам предмета и появляется в списке отправленного', (tester) async {
+      final backend = FakeBackend();
+      await _start(tester, prefs: {...teacherPrefs, ...teacherSession}, sharedApi: backend.api());
+      await _settle(tester);
+
+      await tester.longPress(find.text('Технологическое предпринимательство').last);
+      await _settle(tester);
+      await tester.tap(find.text('Отправить ДЗ студентам'));
+      await _settle(tester);
+      expect(find.text('1 БИ-25'), findsWidgets); // кнопки групп
+      await tester.enterText(find.byType(TextField).last, 'Подготовить доклад');
+      await tester.pump();
+      await tester.tap(find.text('Отправить'));
+      await _settle(tester);
+
+      expect(backend.calls, contains('put_teacher_homework'));
+      expect(backend.teacherRows.values.map((r) => r['group_id']).toSet(), {'ofo-1-bi-25', 'ofo-2-bi-25'});
+      final row = backend.teacherRows.values.first;
+      expect(row['body'], 'Подготовить доклад');
+      expect(row['subject'], 'Технологическое предпринимательство');
+      expect(row['author'], 'Халиев М.С-У.');
+
+      await tester.tap(find.text('ДЗ').last);
+      await _settle(tester);
+      expect(find.text('Подготовить доклад'), findsOneWidget);
+      expect(find.text('1 БИ-25'), findsWidgets);
+
+      // удалить у студентов
+      await tester.tap(find.byTooltip('Действия с заданием'));
+      await _settle(tester);
+      await tester.tap(find.text('Удалить у студентов'));
+      await _settle(tester);
+      await tester.tap(find.text('Удалить'));
+      await _settle(tester);
+      expect(backend.teacherRows.values.every((r) => r['deleted'] == true), isTrue);
+      expect(find.text('Подготовить доклад'), findsNothing);
+    });
+
+    testWidgets('группа, которой нет в коде преподавателя, не предлагается и объясняется', (tester) async {
+      final backend = FakeBackend()..teacherCodes['TEACHCODE'] = (name: 'Халиев М.С-У.', groups: ['ofo-1-bi-25']);
+      await _start(tester, prefs: {...teacherPrefs, 'teacherToken': 'tok-teacher-TEACHCODE', 'teacherCodeName': 'Халиев М.С-У.', 'teacherCodeGroups': ['ofo-1-bi-25']}, sharedApi: backend.api());
+      await _settle(tester);
+      await tester.longPress(find.text('Технологическое предпринимательство').last);
+      await _settle(tester);
+      await tester.tap(find.text('Отправить ДЗ студентам'));
+      await _settle(tester);
+      expect(find.textContaining('Нет разрешения на отправку'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).last, 'Текст');
+      await tester.pump();
+      await tester.tap(find.text('Отправить'));
+      await _settle(tester);
+      expect(backend.teacherRows.values.map((r) => r['group_id']).toSet(), {'ofo-1-bi-25'});
+    });
+
+    testWidgets('студент видит ДЗ преподавателя во вкладке «От преподавателей» с именем автора', (tester) async {
+      final backend = FakeBackend();
+      backend.teacherRows['b/ofo-1-bi-25'] = {
+        'id': 'b/ofo-1-bi-25', 'group_id': 'ofo-1-bi-25', 'batch_id': 'b', 'author': 'Халиев М.С-У.', 'subject': 'Философия',
+        'body': 'Прочитать главу 5', 'due_date': '2026-10-14', 'kind': null, 'subgroup': null, 'files': <Map<String, dynamic>>[],
+        'deleted': false, 'updated_at': '2026-10-09T12:00:00+00:00',
+      };
+      await _start(tester, prefs: profile, sharedApi: backend.api());
+      await _settle(tester);
+      await tester.tap(find.text('ДЗ').last);
+      await _settle(tester);
+      await tester.tap(find.textContaining('От преподавателей'));
+      await _settle(tester);
+      expect(find.text('Прочитать главу 5'), findsOneWidget);
+      expect(find.textContaining('от преподавателя: Халиев Магомед Сайд-Усманович'), findsOneWidget);
+      expect(find.byTooltip('Удалить для всей группы'), findsNothing); // удалять может только преподаватель
+    });
+
+    testWidgets('переключение ролей: студент → преподаватель → студент, профиль студента сохраняется', (tester) async {
+      await _start(tester, prefs: profile);
+      expect(find.text('ЧТК и этика'), findsWidgets);
+
+      await tester.tap(find.text('Настройки').last);
+      await _settle(tester);
+      await tester.tap(find.text('Я преподаватель'));
+      await _settle(tester);
+      await tester.enterText(find.byType(TextField).first, 'Халиев');
+      await _settle(tester);
+      await tester.tap(find.text(teacher));
+      await _settle(tester);
+
+      // теперь расписание преподавателя
+      await tester.tap(find.text('Сегодня').last);
+      await _settle(tester);
+      expect(find.textContaining('1 БИ-25'), findsWidgets);
+      expect(find.text('ЧТК и этика'), findsNothing);
+
+      await tester.tap(find.text('Настройки').last);
+      await _settle(tester);
+      expect(find.text('Режим студента'), findsOneWidget);
+      await tester.tap(find.text('Режим студента'));
+      await _settle(tester);
+      await tester.tap(find.text('Сегодня').last);
+      await _settle(tester);
+      expect(find.text('ЧТК и этика'), findsWidgets); // группа студента на месте
+    });
+  });
 }

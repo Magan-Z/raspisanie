@@ -11,6 +11,7 @@ import 'package:raspisanie/data/remote/shared_api.dart';
 import 'package:raspisanie/data/repositories/group_shared_repository.dart';
 import 'package:raspisanie/domain/group_shared.dart';
 import 'package:raspisanie/domain/models.dart';
+import 'package:raspisanie/domain/teacher_homework.dart';
 
 /// Поддельный сервер: запоминает вызовы и отвечает заранее заданным.
 class FakeServer {
@@ -252,6 +253,143 @@ void main() {
       final a = newUuid(), b = newUuid();
       expect(a, matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')));
       expect(a, isNot(b));
+    });
+  });
+
+  group('ДЗ преподавателей', () {
+    Map<String, dynamic> teacherRow(String id, {String author = 'Халиев М.С-У.', bool deleted = false, String text = 'Номера 1-5'}) => {
+          'id': id,
+          'subject': 'Математика',
+          'body': text,
+          'due_date': '2026-10-20',
+          'kind': null,
+          'subgroup': null,
+          'files': <Map<String, dynamic>>[],
+          'author': author,
+          'deleted': deleted,
+          'updated_at': '2026-10-09T12:00:00+00:00',
+        };
+
+    test('дельта: ДЗ преподавателей читаются отдельно от ДЗ старосты, у них есть автор; удалённое пропадает', () {
+      var state = const GroupSharedState().merge({
+        'server_time': 't1',
+        'overrides': [],
+        'homework': [_homework('h1')],
+        'teacher_homework': [teacherRow('t1'), teacherRow('t2')],
+      });
+      expect(state.homework.keys, ['h1']);
+      expect(state.teacherHomework.keys, containsAll(['t1', 't2']));
+      expect(state.teacherHomework['t1']!.author, 'Халиев М.С-У.');
+      expect(state.homework['h1']!.author, isNull);
+
+      state = state.merge({'server_time': 't2', 'teacher_homework': [teacherRow('t1', deleted: true), teacherRow('t2', text: 'Новое')]});
+      expect(state.teacherHomework.keys, ['t2']);
+      expect(state.teacherHomework['t2']!.text, 'Новое');
+    });
+
+    test('сервер старой версии без ключа teacher_homework не ломает разбор', () {
+      final state = const GroupSharedState().merge({'server_time': 't', 'overrides': [], 'homework': [_homework('h1')]});
+      expect(state.teacherHomework, isEmpty);
+    });
+
+    test('кэш: сохраняется с ДЗ преподавателей, а кэш прежних версий (без этого поля) читается', () {
+      final state = const GroupSharedState().merge({'server_time': 't', 'teacher_homework': [teacherRow('t1')]});
+      final again = GroupSharedState.decode(state.encode());
+      expect(again.teacherHomework['t1']!.author, 'Халиев М.С-У.');
+
+      final old = jsonEncode({'since': 't', 'syncedAt': null, 'overrides': [], 'homework': [_homework('h1')]});
+      expect(GroupSharedState.decode(old).teacherHomework, isEmpty);
+    });
+
+    test('обновление: новое ДЗ преподавателя попадает в newTeacherHomework (для уведомления)', () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final server = FakeServer();
+      final repo = GroupSharedRepository(db, SharedApi('https://example.test', 'test-key', client: server.client));
+      server.responses['get_group_data'] = (_) => {'server_time': '2026-10-09T12:05:00+00:00', 'overrides': [], 'homework': [], 'teacher_homework': [teacherRow('t1')]};
+      final first = await repo.sync('ofo-1-bi-25');
+      expect(first.newTeacherHomework.single.id, 't1');
+      expect(first.newHomework, isEmpty);
+      final second = await repo.sync('ofo-1-bi-25');
+      expect(second.newTeacherHomework, isEmpty); // уже известно
+    });
+  });
+
+  group('SharedApi: преподаватель', () {
+    late FakeServer server;
+    late SharedApi api;
+    setUp(() {
+      server = FakeServer();
+      api = SharedApi('https://example.test', 'test-key', client: server.client);
+    });
+
+    test('ввод кода: имя, группы и токен', () async {
+      server.responses['redeem_teacher_code'] = (_) => {'teacher': 'Халиев М.С-У.', 'groups': ['ofo-1-bi-25', 'ofo-2-bi-25'], 'token': 'tok'};
+      final session = await api.redeemTeacher('ABC');
+      expect(session.teacher, 'Халиев М.С-У.');
+      expect(session.groups, ['ofo-1-bi-25', 'ofo-2-bi-25']);
+      expect(session.token, 'tok');
+      expect(server.calls['redeem_teacher_code']!.single['p_code'], 'ABC');
+    });
+
+    test('отправка: токен, группы с подгруппой и файлы уходят строкой; возвращается номер отправки', () async {
+      server.responses['put_teacher_homework'] = (_) => 'batch-1';
+      final id = await api.putTeacherHomework(
+        'tok',
+        TeacherHomeworkBatch(
+          subject: 'Математика',
+          text: 'Номера 1-5',
+          dueDate: DateTime.utc(2026, 10, 20),
+          targets: const [TeacherSentTarget(groupId: 'ofo-1-bi-25'), TeacherSentTarget(groupId: 'ofo-2-bi-25', subgroup: 2)],
+        ),
+      );
+      expect(id, 'batch-1');
+      final sent = server.calls['put_teacher_homework']!.single;
+      expect(sent['p_token'], 'tok');
+      final row = sent['p_row'] as Map;
+      expect(row['due_date'], '2026-10-20');
+      expect(row['groups'], [
+        {'id': 'ofo-1-bi-25'},
+        {'id': 'ofo-2-bi-25', 'subgroup': 2},
+      ]);
+      expect(row.containsKey('batch_id'), isFalse); // новая отправка
+    });
+
+    test('список отправленного читается пачками', () async {
+      server.responses['get_teacher_homework'] = (_) => [
+            {
+              'batch_id': 'b1',
+              'subject': 'Математика',
+              'body': 'Номера 1-5',
+              'due_date': '2026-10-20',
+              'kind': null,
+              'files': [],
+              'groups': [
+                {'id': 'ofo-1-bi-25', 'subgroup': null},
+              ],
+            },
+          ];
+      final list = await api.getTeacherHomework('tok');
+      expect(list.single.id, 'b1');
+      expect(list.single.targets.single.groupId, 'ofo-1-bi-25');
+    });
+
+    test('ошибки сервера преподавателя превращаются в понятные сообщения', () async {
+      for (final (message, text) in [
+        ('forbidden_group', 'не входит в ваш список'),
+        ('bad_groups', 'хотя бы одну группу'),
+        ('rate_limit', 'Слишком много отправок'),
+        ('bad_token', 'Доступ отозван'),
+        ('code_used', 'уже использован'),
+        ('bad_code', 'Код не подошёл'),
+      ]) {
+        server.failWith = 400;
+        server.failMessage = message;
+        await expectLater(
+          api.redeemTeacher('x'),
+          throwsA(isA<SharedApiException>().having((e) => e.code, 'code', message).having((e) => e.message, 'message', contains(text))),
+        );
+      }
     });
   });
 }

@@ -16,15 +16,25 @@ const _taskName = 'syncSchedule';
 /// Сама работа — отдельной функцией, чтобы её можно было проверить тестом.
 Future<void> runBackgroundSync(ProviderContainer container) async {
   await syncSchedule(container);
-  // Правки и ДЗ старосты. Если появилось новое ДЗ — сообщаем уведомлением (приложение может быть закрыто)
+  // Правки и ДЗ старосты и преподавателей. Если появилось новое ДЗ, сообщаем уведомлением (приложение может быть закрыто)
   final fresh = await syncGroupShared(container);
-  if (fresh.isNotEmpty && container.read(settingsProvider).showGroupData) {
+  if (!fresh.isEmpty && container.read(settingsProvider).showGroupData) {
+    final gateway = container.read(notificationGatewayProvider);
     try {
-      await container.read(notificationGatewayProvider).showNow(
-            id: 2,
-            title: fresh.length == 1 ? 'Староста добавил ДЗ' : 'Староста добавил ДЗ: ${fresh.length}',
-            body: fresh.take(3).map((h) => '${h.subject}: ${h.text}').join('\n'),
-          );
+      if (fresh.homework.isNotEmpty) {
+        await gateway.showNow(
+          id: 2,
+          title: fresh.homework.length == 1 ? 'Староста добавил ДЗ' : 'Староста добавил ДЗ: ${fresh.homework.length}',
+          body: fresh.homework.take(3).map((h) => '${h.subject}: ${h.text}').join('\n'),
+        );
+      }
+      if (fresh.teacherHomework.isNotEmpty) {
+        await gateway.showNow(
+          id: 3,
+          title: fresh.teacherHomework.length == 1 ? 'Преподаватель добавил ДЗ' : 'Преподаватели добавили ДЗ: ${fresh.teacherHomework.length}',
+          body: fresh.teacherHomework.take(3).map((h) => '${h.subject}${h.author == null ? '' : ' (${h.author})'}: ${h.text}').join('\n'),
+        );
+      }
     } catch (_) {}
   }
   await refreshOutputs(container);

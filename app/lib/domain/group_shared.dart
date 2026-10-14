@@ -121,6 +121,7 @@ class GroupHomeworkRow {
     this.kind,
     this.subgroup,
     this.files = const [],
+    this.author,
   });
 
   final String id;
@@ -133,6 +134,9 @@ class GroupHomeworkRow {
   final int? subgroup;
   final List<GroupFileRef> files;
 
+  /// Кто задал: имя преподавателя (его проставляет сервер по коду). null — задал староста.
+  final String? author;
+
   /// Видно ли это ДЗ студенту из подгруппы [mine]: общее — всем, подгрупповое — только своей подгруппе.
   bool visibleTo(int mine) => subgroup == null || subgroup == mine;
 
@@ -144,6 +148,7 @@ class GroupHomeworkRow {
         kind: j['kind'] == null ? null : LessonKind.parse(j['kind'] as String),
         subgroup: (j['subgroup'] as num?)?.toInt(),
         files: [for (final f in (j['files'] as List? ?? const [])) GroupFileRef.fromJson(f as Map<String, dynamic>)],
+        author: j['author'] as String?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -154,15 +159,17 @@ class GroupHomeworkRow {
         'kind': kind?.name,
         'subgroup': subgroup,
         'files': [for (final f in files) f.toJson()],
+        if (author != null) 'author': author,
       };
 }
 
 /// Всё, что известно телефону об общих данных группы.
 class GroupSharedState {
-  const GroupSharedState({this.overrides = const {}, this.homework = const {}, this.since, this.syncedAt});
+  const GroupSharedState({this.overrides = const {}, this.homework = const {}, this.teacherHomework = const {}, this.since, this.syncedAt});
 
   final Map<String, GroupOverrideRow> overrides;
-  final Map<String, GroupHomeworkRow> homework;
+  final Map<String, GroupHomeworkRow> homework; // ДЗ старосты
+  final Map<String, GroupHomeworkRow> teacherHomework; // ДЗ преподавателей (с именем автора)
 
   /// Время сервера, с которого нужно просить следующие изменения.
   final String? since;
@@ -180,6 +187,8 @@ class GroupSharedState {
   List<GroupOverrideRow> staleOverrides(String currentHash) => [for (final o in overrides.values) if (o.baseHash != currentHash) o];
 
   List<GroupHomeworkRow> get homeworkList => homework.values.toList()..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+
+  List<GroupHomeworkRow> get teacherHomeworkList => teacherHomework.values.toList()..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
   /// Применяет «дельту» с сервера: новые и изменённые строки добавляются, удалённые (deleted = true) убираются.
   GroupSharedState merge(Map<String, dynamic> delta, {DateTime? now}) {
@@ -201,9 +210,19 @@ class GroupSharedState {
         newHomework[j['id'] as String] = GroupHomeworkRow.fromJson(j);
       }
     }
+    final newTeacher = {...teacherHomework};
+    for (final raw in (delta['teacher_homework'] as List? ?? const [])) {
+      final j = raw as Map<String, dynamic>;
+      if (j['deleted'] == true) {
+        newTeacher.remove(j['id']);
+      } else {
+        newTeacher[j['id'] as String] = GroupHomeworkRow.fromJson(j);
+      }
+    }
     return GroupSharedState(
       overrides: newOverrides,
       homework: newHomework,
+      teacherHomework: newTeacher,
       since: delta['server_time'] as String? ?? since,
       syncedAt: now ?? syncedAt,
     );
@@ -217,6 +236,7 @@ class GroupSharedState {
         'syncedAt': syncedAt?.toUtc().toIso8601String(),
         'overrides': [for (final o in overrides.values) o.toJson()],
         'homework': [for (final h in homework.values) h.toJson()],
+        'teacherHomework': [for (final h in teacherHomework.values) h.toJson()],
       });
 
   factory GroupSharedState.decode(String text) {
@@ -226,6 +246,8 @@ class GroupSharedState {
       syncedAt: j['syncedAt'] == null ? null : DateTime.parse(j['syncedAt'] as String),
       overrides: {for (final o in (j['overrides'] as List)) (o as Map<String, dynamic>)['id'] as String: GroupOverrideRow.fromJson(o)},
       homework: {for (final h in (j['homework'] as List)) (h as Map<String, dynamic>)['id'] as String: GroupHomeworkRow.fromJson(h)},
+      // в кэше прежних версий этого поля нет — тогда ДЗ преподавателей просто ещё не загружены
+      teacherHomework: {for (final h in (j['teacherHomework'] as List? ?? const [])) (h as Map<String, dynamic>)['id'] as String: GroupHomeworkRow.fromJson(h)},
     );
   }
 }

@@ -10,6 +10,7 @@ import '../../app_state.dart';
 import '../../core/formatting.dart';
 import '../../domain/homework.dart';
 import '../../domain/models.dart';
+import '../../domain/search.dart' show teacherFullName;
 import '../../theme/tokens.dart';
 import '../common/word_fit_text.dart';
 import '../common/reveal.dart';
@@ -22,6 +23,9 @@ import '../common/empty_state.dart';
 import '../common/illustrations.dart';
 import 'add_homework_sheet.dart';
 
+/// Вкладки экрана «ДЗ» у студента.
+enum _Tab { mine, group, teacher }
+
 class HomeworkScreen extends ConsumerStatefulWidget {
   const HomeworkScreen({super.key});
 
@@ -30,7 +34,7 @@ class HomeworkScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
-  bool _showGroup = false; // вкладка «От старосты»
+  _Tab _tab = _Tab.mine;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +47,14 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
     // Студент видит ДЗ для всей группы и для своей подгруппы; староста — все, чтобы мог управлять любым
     final groupRows = ref.watch(isEditor ? groupHomeworkAllProvider : groupHomeworkProvider);
     final hasGroupTab = ref.watch(sharedApiProvider) != null && ref.watch(settingsProvider.select((s) => s.showGroupData)) && (groupRows.isNotEmpty || isEditor);
-    final showGroup = hasGroupTab && _showGroup;
+    // Вкладка «От преподавателей» есть, если преподаватели что-то задали (видно ДЗ для всей группы и для своей подгруппы)
+    final teacherRows = ref.watch(teacherHomeworkProvider);
+    final hasTeacherTab = ref.watch(sharedApiProvider) != null && ref.watch(settingsProvider.select((s) => s.showGroupData)) && teacherRows.isNotEmpty;
+    final anyTab = hasGroupTab || hasTeacherTab;
+    final tab = (_tab == _Tab.group && hasGroupTab) || (_tab == _Tab.teacher && hasTeacherTab) ? _tab : _Tab.mine;
+    final showGroup = tab == _Tab.group;
+    final showTeacher = tab == _Tab.teacher;
+    final showShared = showGroup || showTeacher; // ДЗ с сервера (староста или преподаватели)
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -56,7 +67,7 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(icon: Icons.error_outline_rounded, title: 'Не удалось прочитать ДЗ', subtitle: '$e'),
         data: (items) {
-          if (items.isEmpty && !hasGroupTab) {
+          if (items.isEmpty && !anyTab) {
             return const EmptyState(
               illustration: IllustrationKind.noHomework,
               title: 'Домашки нет',
@@ -68,8 +79,8 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
           final done = ref.watch(groupHomeworkDoneProvider);
           final shownItems = <HomeworkItem>[];
           final rowOf = Map<HomeworkItem, GroupHomeworkRow>.identity();
-          if (showGroup) {
-            for (final g in groupRows) {
+          if (showShared) {
+            for (final g in (showTeacher ? teacherRows : groupRows)) {
               final item = HomeworkItem(subject: g.subject, text: g.text, dueDate: g.dueDate, kind: g.kind, done: done.contains(g.id), createdAt: g.dueDate);
               shownItems.add(item);
               rowOf[item] = g;
@@ -87,21 +98,22 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: Gap.xs),
                 child: Text('Домашка', style: theme.textTheme.headlineMedium),
               ),
-              if (hasGroupTab) ...[
+              if (anyTab) ...[
                 const SizedBox(height: Gap.sm),
-                SlidingSegments<bool>(
+                SlidingSegments<_Tab>(
                   segments: [
-                    Segment(false, 'Мои (${items.where((i) => !i.done).length})'),
-                    Segment(true, 'От старосты (${groupRows.where((g) => !done.contains(g.id)).length})', icon: Icons.groups_rounded),
+                    Segment(_Tab.mine, 'Мои (${items.where((i) => !i.done).length})'),
+                    if (hasGroupTab) Segment(_Tab.group, 'От старосты (${groupRows.where((g) => !done.contains(g.id)).length})', icon: Icons.groups_rounded),
+                    if (hasTeacherTab) Segment(_Tab.teacher, 'От преподавателей (${teacherRows.where((g) => !done.contains(g.id)).length})', icon: Icons.school_rounded),
                   ],
-                  selected: showGroup,
-                  onChanged: (v) => setState(() => _showGroup = v),
+                  selected: tab,
+                  onChanged: (v) => setState(() => _tab = v),
                 ),
               ],
               const SizedBox(height: Gap.sm),
               // Ключ по вкладке: при переключении «Мои / От старосты» карточки появляются заново волной
               KeyedSubtree(
-                key: ValueKey(showGroup),
+                key: ValueKey(tab),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -117,9 +129,13 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
                       SizedBox(
                         height: (MediaQuery.sizeOf(context).height - 330).clamp(300.0, 640.0),
                         child: EmptyState(
-                          illustration: showGroup ? IllustrationKind.groupHomework : IllustrationKind.noHomework,
-                          title: showGroup ? 'Староста пока ничего не задал' : 'Домашки нет',
-                          subtitle: showGroup ? 'Когда староста добавит задание, оно появится здесь.' : 'Задание можно добавить кнопкой «Добавить ДЗ» или нажатием на пару на экране «Сегодня».',
+                          illustration: showShared ? IllustrationKind.groupHomework : IllustrationKind.noHomework,
+                          title: showTeacher ? 'Преподаватели пока ничего не задали' : showGroup ? 'Староста пока ничего не задал' : 'Домашки нет',
+                          subtitle: showTeacher
+                              ? 'Когда преподаватель отправит задание, оно появится здесь.'
+                              : showGroup
+                                  ? 'Когда староста добавит задание, оно появится здесь.'
+                                  : 'Задание можно добавить кнопкой «Добавить ДЗ» или нажатием на пару на экране «Сегодня».',
                         ),
                       ),
                     for (final (n, entry) in groups.entries.indexed) ...[
@@ -153,9 +169,9 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
                       ),
                       for (final (k, item) in entry.value.indexed)
                         Reveal(
-                          key: ValueKey('rv-${showGroup ? rowOf[item]!.id : item.id}'),
+                          key: ValueKey('rv-${showShared ? rowOf[item]!.id : item.id}'),
                           index: n + k,
-                          child: showGroup ? _GroupHomeworkTile(row: rowOf[item]!, done: item.done, canEdit: isEditor) : _HomeworkTile(item: item),
+                          child: showShared ? _GroupHomeworkTile(row: rowOf[item]!, done: item.done, canEdit: isEditor && showGroup, fromTeacher: showTeacher) : _HomeworkTile(item: item),
                         ),
                     ],
                   ],
@@ -171,10 +187,11 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
 
 /// ДЗ, которое задал староста: отметить «сделано» можно у себя, удалить для всех — только староста.
 class _GroupHomeworkTile extends ConsumerWidget {
-  const _GroupHomeworkTile({required this.row, required this.done, required this.canEdit});
+  const _GroupHomeworkTile({required this.row, required this.done, required this.canEdit, this.fromTeacher = false});
   final GroupHomeworkRow row;
   final bool done;
   final bool canEdit;
+  final bool fromTeacher; // ДЗ задал преподаватель (а не староста)
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -235,7 +252,10 @@ class _GroupHomeworkTile extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: Gap.sm, vertical: 2),
                       decoration: BoxDecoration(color: scheme.tertiaryContainer, borderRadius: BorderRadius.circular(8)),
-                      child: Text('от старосты', style: theme.textTheme.labelSmall?.copyWith(color: scheme.onTertiaryContainer)),
+                      child: Text(
+                        fromTeacher ? 'от преподавателя${row.author == null ? '' : ': ${teacherFullName(row.author!, ref.watch(indexProvider).value?.teachers ?? const [])}'}' : 'от старосты',
+                        style: theme.textTheme.labelSmall?.copyWith(color: scheme.onTertiaryContainer),
+                      ),
                     ),
                     if (row.subgroup != null)
                       Container(

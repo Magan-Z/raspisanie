@@ -56,7 +56,7 @@ class GroupFiles {
   }
 
   /// Загружает файлы на сервер. Возвращает описания для записи ДЗ и пары «номер → локальная копия» (чтобы староста не качал своё же).
-  Future<({List<GroupFileRef> refs, Map<String, Attachment> local})> upload(String token, List<Attachment> files, String Function() newId) async {
+  Future<({List<GroupFileRef> refs, Map<String, Attachment> local})> upload(String token, List<Attachment> files, String Function() newId, {bool teacher = false}) async {
     if (files.length > maxGroupFilesPerHomework) throw const SharedApiException('too_many_files');
     final refs = <GroupFileRef>[];
     final local = <String, Attachment>{};
@@ -65,7 +65,7 @@ class GroupFiles {
       if (bytes == null) throw const SharedApiException('server', 'файл не найден в памяти телефона');
       if (bytes.length > maxGroupFileBytes) throw const SharedApiException('file_too_big');
       final id = newId();
-      await api.putFile(token, id, a.name, bytes);
+      await (teacher ? api.putTeacherFile(token, id, a.name, bytes) : api.putFile(token, id, a.name, bytes));
       refs.add(GroupFileRef(id: id, name: a.name, size: bytes.length));
       local[id] = a;
     }

@@ -22,6 +22,9 @@ import 'subjects_screen.dart';
 import '../common/brand_mark.dart';
 import '../common/widget_picker.dart';
 import '../onboarding/onboarding_screen.dart';
+import '../../domain/teacher.dart';
+import '../teacher/teacher_code_dialog.dart';
+import '../teacher/teacher_picker.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -68,6 +71,22 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: Gap.lg),
         ],
 
+        if (settings.isTeacher)
+          _Section(title: 'Профиль', children: [
+            _Row(
+              icon: Icons.school_rounded,
+              title: settings.teacherName ?? 'Преподаватель',
+              subtitle: 'Сменить преподавателя (кто вы в списке)',
+              onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TeacherPickerScreen())),
+            ),
+            _Row(
+              icon: Icons.groups_rounded,
+              title: 'Режим студента',
+              subtitle: 'Вернуться к расписанию своей группы',
+              onTap: () => notifier.setRole(UserRole.student),
+            ),
+          ])
+        else
         _Section(title: 'Профиль', children: [
           _Row(
             icon: Icons.groups_rounded,
@@ -95,6 +114,18 @@ class SettingsScreen extends ConsumerWidget {
                 if (picked != null) notifier.setProfile(profile.copyWith(pe: picked));
               },
             ),
+          _Row(
+            icon: Icons.school_rounded,
+            title: 'Я преподаватель',
+            subtitle: 'Расписание всех ваших групп и отправка ДЗ студентам',
+            onTap: () async {
+              if (settings.teacherName != null) {
+                await notifier.setRole(UserRole.teacher);
+              } else {
+                await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TeacherPickerScreen()));
+              }
+            },
+          ),
         ]),
 
         _Section(title: 'Оформление', children: [
@@ -147,7 +178,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ]),
 
-        if (sharedApiUrl.isNotEmpty) const _StarostaSection(),
+        if (sharedApiUrl.isNotEmpty) settings.isTeacher ? const _TeacherSection() : const _StarostaSection(),
 
         if (!kIsWeb)
           _Section(title: 'Виджеты', children: [
@@ -605,5 +636,56 @@ class _SwitchRow extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// «Преподаватель»: ввод кода (чтобы отправлять ДЗ студентам) и выход из режима отправки.
+class _TeacherSection extends ConsumerWidget {
+  const _TeacherSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(teacherSessionProvider);
+    final titles = {for (final f in ref.watch(indexProvider).value?.forms ?? const <FormInfo>[]) for (final g in f.groups) g.id: g.title};
+    return _Section(title: 'Преподаватель', children: [
+      if (session == null)
+        _Row(
+          icon: Icons.vpn_key_rounded,
+          title: 'Ввести код преподавателя',
+          subtitle: 'С кодом можно отправлять ДЗ студентам. Код выдаёт автор приложения',
+          onTap: () async {
+            final got = await showTeacherCodeDialog(context);
+            if (got == null || !context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Код принят: ${got.teacher}. Вкладка «ДЗ» теперь отправляет задания студентам')));
+          },
+        )
+      else ...[
+        _Row(
+          icon: Icons.verified_rounded,
+          title: 'Код принят: ${session.teacher}',
+          subtitle: 'Групп, которым можно отправлять ДЗ: ${session.groups.length}'
+              '${session.groups.isEmpty ? '' : ' (${session.groups.take(4).map((g) => titles[g] ?? g).join(', ')}${session.groups.length > 4 ? '…' : ''})'}',
+        ),
+        _Row(
+          icon: Icons.logout_rounded,
+          title: 'Выйти из режима отправки',
+          subtitle: 'На этом телефоне. Отправленные ДЗ останутся у студентов. Тот же код второй раз ввести не получится',
+          onTap: () async {
+            final ok = await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Выйти из режима отправки?'),
+                content: const Text('Отправленные ДЗ останутся у студентов, но отправлять и менять их с этого телефона больше нельзя. Тот же код второй раз ввести не получится: понадобится новый.'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена')),
+                  FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Выйти')),
+                ],
+              ),
+            );
+            if (ok == true) await ref.read(teacherSessionProvider.notifier).clear();
+          },
+        ),
+      ],
+    ]);
   }
 }

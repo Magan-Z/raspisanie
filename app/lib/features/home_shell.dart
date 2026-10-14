@@ -14,6 +14,7 @@ import '../theme/next_design.dart';
 import '../widget_bridge/deep_links.dart';
 import 'homework/add_homework_sheet.dart';
 import 'homework/homework_screen.dart';
+import 'teacher/teacher_homework_screen.dart';
 import 'search/search_screen.dart';
 import 'settings/settings_screen.dart';
 import 'today/today_screen.dart';
@@ -161,12 +162,14 @@ class _HomeShellState extends ConsumerState<HomeShell>
 
   @override
   Widget build(BuildContext context) {
-    const pages = [
-      TodayScreen(),
-      WeekScreen(),
-      HomeworkScreen(),
-      SearchScreen(),
-      SettingsScreen(),
+    // У преподавателя вкладка «ДЗ» — отправка заданий студентам
+    final teacher = ref.watch(isTeacherModeProvider);
+    final pages = [
+      const TodayScreen(),
+      const WeekScreen(),
+      teacher ? const TeacherHomeworkScreen() : const HomeworkScreen(),
+      const SearchScreen(),
+      const SettingsScreen(),
     ];
     return Scaffold(
       body: SafeArea(

@@ -38,6 +38,8 @@ Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
 
   // Староста: те же действия, но для всей группы (уходят на сервер и видны всем)
   final isEditor = container.read(isGroupEditorProvider);
+  // Преподаватель: пары приходят из расписания групп, личные правки в версии 1 не поддерживаются
+  final isTeacher = container.read(isTeacherModeProvider);
   Future<void> saveForGroup(List<Override> items) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -79,9 +81,9 @@ Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
             ),
             if (teacherName != null)
               ListTile(
-                leading: const Icon(Icons.person_rounded),
+                leading: Icon(isTeacher ? Icons.groups_rounded : Icons.person_rounded),
                 title: Text(teacherName),
-                subtitle: const Text('Преподаватель'),
+                subtitle: Text(isTeacher ? 'Группы' : 'Преподаватель'),
               ),
             if (lesson.withGroups.isNotEmpty)
               ListTile(
@@ -90,8 +92,8 @@ Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
                 subtitle: Text(lesson.withGroups.join(', ')),
               ),
             ListTile(
-              leading: const Icon(Icons.assignment_add),
-              title: const Text('Добавить ДЗ'),
+              leading: Icon(isTeacher ? Icons.send_rounded : Icons.assignment_add),
+              title: Text(isTeacher ? 'Отправить ДЗ студентам' : 'Добавить ДЗ'),
               onTap: () {
                 close();
                 showAddHomework(context, subject: lesson.subject);
@@ -106,6 +108,7 @@ Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
                 showSubjectStyleEditor(context, lesson.subject);
               },
             ),
+            if (!isTeacher) ...[
             ListTile(
               leading: const Icon(Icons.edit_rounded),
               title: const Text('Изменить'),
@@ -257,6 +260,7 @@ Future<void> showLessonActions(BuildContext context, ResolvedLesson lesson) {
                     await removeGroupEdits();
                   },
                 ),
+            ],
             ],
             const SizedBox(height: Gap.sm),
           ]),

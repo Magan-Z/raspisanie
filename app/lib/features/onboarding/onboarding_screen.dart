@@ -8,6 +8,9 @@ import '../../domain/models.dart';
 import '../../theme/tokens.dart';
 import '../common/brand_mark.dart';
 import '../common/illustrations.dart';
+import '../common/sliding_segments.dart';
+import '../../domain/teacher.dart';
+import '../teacher/teacher_picker.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key, this.changing = false});
@@ -24,6 +27,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int? _course;
   GroupInfo? _group;
   int? _subgroup;
+  late UserRole _role = ref.read(settingsProvider).role; // кто вы: студент или преподаватель
 
   Future<void> _finish(PeChoice pe) async {
     await ref.read(settingsProvider.notifier).setProfile(UserProfile(
@@ -88,9 +92,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ]),
           ),
           const SizedBox(height: Gap.xl),
-          Text('Выберите свою группу — это займёт несколько секунд', style: theme.textTheme.titleMedium),
+          SlidingSegments<UserRole>(
+            segments: const [Segment(UserRole.student, 'Я студент'), Segment(UserRole.teacher, 'Я преподаватель')],
+            selected: _role,
+            onChanged: (r) => setState(() => _role = r),
+          ),
+          const SizedBox(height: Gap.lg),
+          Text(
+            _role == UserRole.teacher ? 'Найдите себя в списке — это займёт несколько секунд' : 'Выберите свою группу — это займёт несколько секунд',
+            style: theme.textTheme.titleMedium,
+          ),
+          if (_role == UserRole.teacher)
+            Padding(
+              padding: const EdgeInsets.only(top: Gap.xs),
+              child: Text(
+                'Увидите свои пары во всех группах. Чтобы отправлять ДЗ студентам, понадобится код преподавателя (позже, в настройках).',
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+            ),
           const SizedBox(height: Gap.lg),
         ],
+        if (!widget.changing && _role == UserRole.teacher)
+          TeacherPicker(onPicked: (name) => ref.read(settingsProvider.notifier).setTeacher(name))
+        else ...[
         _Step(
           title: 'Форма обучения',
           choices: [for (final f in index.forms) _Choice(f.title, selected: f == form, onTap: () => setState(() {
@@ -146,6 +170,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               for (final p in PeChoice.values) _Choice(p.title, selected: false, onTap: () => _finish(p)),
             ],
           ),
+        ],
       ],
     );
   }

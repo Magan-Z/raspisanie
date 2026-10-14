@@ -126,6 +126,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
             ),
             const SizedBox(height: Gap.sm),
             const _UpdateBanner(),
+            const _TeacherEmptyHint(),
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -242,7 +243,7 @@ class _DayPage extends ConsumerWidget {
                     illustration: holiday ? IllustrationKind.holiday : IllustrationKind.freeDay,
                     title: holiday ? 'Праздничный день' : 'Пар нет',
                     subtitle: sunday ? 'Воскресенье — отдыхаем' : 'Можно заняться своими делами',
-                    action: _EditsButton(day: day, count: editsCount),
+                    action: ref.watch(isTeacherModeProvider) ? null : _EditsButton(day: day, count: editsCount),
                   ),
                   const SizedBox(height: Gap.md),
                   const _SyncLabel(),
@@ -340,10 +341,12 @@ class _DayPage extends ConsumerWidget {
       ));
     }
 
-    children.add(Padding(
-      padding: const EdgeInsets.only(top: Gap.sm),
-      child: Center(child: _EditsButton(day: day, count: editsCount)),
-    ));
+    if (!ref.watch(isTeacherModeProvider)) {
+      children.add(Padding(
+        padding: const EdgeInsets.only(top: Gap.sm),
+        child: Center(child: _EditsButton(day: day, count: editsCount)),
+      ));
+    }
     // «Расписание от 9 октября» — в конце списка, а не отдельной строкой снизу: так она не обрезает карточки пар
     children.add(const Padding(padding: EdgeInsets.only(top: Gap.md), child: Center(child: _SyncLabel())));
 
@@ -746,6 +749,34 @@ class _FillRail extends StatelessWidget {
           ),
         ]);
       }),
+    );
+  }
+}
+
+/// Преподаватель: в расписании не нашлось ни одной пары (имя записано иначе или в этом семестре занятий нет).
+class _TeacherEmptyHint extends ConsumerWidget {
+  const _TeacherEmptyHint();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final view = ref.watch(teacherViewProvider).value;
+    if (view == null || !view.isEmpty) return const SizedBox();
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(Gap.lg, 0, Gap.lg, Gap.sm),
+      padding: const EdgeInsets.all(Gap.lg),
+      decoration: BoxDecoration(color: scheme.tertiaryContainer, borderRadius: BorderRadius.circular(Radii.lg)),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(Icons.search_off_rounded, color: scheme.onTertiaryContainer),
+        const SizedBox(width: Gap.md),
+        Expanded(
+          child: Text(
+            'В расписании не нашлось ваших пар. Возможно, ваше имя записано иначе: выберите себя ещё раз в «Настройки → Профиль».',
+            style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onTertiaryContainer),
+          ),
+        ),
+      ]),
     );
   }
 }

@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import '../../domain/group_shared.dart';
+import '../../domain/teacher_homework.dart';
 
 /// Ошибка обращения к серверу. [code] — машинное имя (bad_code, code_used, bad_token, too_many, network, server).
 class SharedApiException implements Exception {
@@ -19,12 +20,16 @@ class SharedApiException implements Exception {
   String get message => switch (code) {
         'bad_code' => 'Код не подошёл. Проверьте, что он введён без ошибок',
         'code_used' => 'Этот код уже использован. Попросите выдать новый',
-        'bad_token' => 'Доступ старосты отозван. Введите код заново',
+        'bad_token' => 'Доступ отозван. Введите код заново',
         'too_many' => 'Слишком много записей у группы. Удалите ненужные',
         'file_too_big' => 'Файл слишком большой для общего сервера (не больше 8 МБ)',
         'quota' => 'У группы закончилось место для файлов. Удалите старые ДЗ с файлами',
         'too_many_files' => 'К одному ДЗ можно прикрепить не больше 5 файлов',
         'no_file' => 'Файл не найден на сервере: возможно, староста удалил это ДЗ',
+        'forbidden_group' => 'Эта группа не входит в ваш список. Напишите автору приложения, чтобы её добавили',
+        'bad_groups' => 'Выберите хотя бы одну группу',
+        'rate_limit' => 'Слишком много отправок за час. Подождите немного и повторите',
+        'bad_batch' => 'Не удалось изменить это ДЗ. Отправьте его заново',
         'download_limit' => 'Сегодня скачали слишком много файлов, лимит исчерпан. Попробуйте завтра',
         'network' => 'Нет связи с сервером. Проверьте интернет и повторите',
         _ => 'Ошибка сервера${details == null ? '' : ': $details'}',
@@ -72,7 +77,7 @@ class SharedApi {
     try {
       message = (jsonDecode(text) as Map<String, dynamic>)['message'] as String?;
     } catch (_) {}
-    const known = {'bad_code', 'code_used', 'bad_token', 'too_many', 'bad_group', 'file_too_big', 'quota', 'too_many_files', 'no_file', 'download_limit'};
+    const known = {'bad_code', 'code_used', 'bad_token', 'too_many', 'bad_group', 'file_too_big', 'quota', 'too_many_files', 'no_file', 'download_limit', 'forbidden_group', 'bad_groups', 'rate_limit', 'bad_batch'};
     if (message != null && known.contains(message)) throw SharedApiException(message);
     throw SharedApiException('server', message ?? 'HTTP ${response.statusCode}');
   }
@@ -121,4 +126,32 @@ class SharedApi {
     final r = _asMap(await _rpc('get_group_file', {'p_group': group, 'p_id': id}, timeout: _fileTimeout));
     return base64Decode(r['data'] as String);
   }
+
+  // ---------- преподаватель ----------
+
+  /// Ввод кода преподавателя: имя, группы и секретный токен для этого телефона.
+  Future<TeacherSession> redeemTeacher(String code) async {
+    final r = _asMap(await _rpc('redeem_teacher_code', {'p_code': code}));
+    return TeacherSession.fromJson(r);
+  }
+
+  /// Отправляет ДЗ группам (или меняет прежнее, если у [batch] есть номер). Возвращает номер пачки.
+  Future<String> putTeacherHomework(String token, TeacherHomeworkBatch batch) async {
+    final r = await _rpc('put_teacher_homework', {'p_token': token, 'p_row': batch.toJson()});
+    if (r is String) return r;
+    throw const SharedApiException('server', 'неожиданный ответ');
+  }
+
+  Future<void> deleteTeacherHomework(String token, String batchId) => _rpc('delete_teacher_homework', {'p_token': token, 'p_batch': batchId});
+
+  /// Всё, что преподаватель отправил (по пачкам, свежие сроки сверху).
+  Future<List<TeacherHomeworkBatch>> getTeacherHomework(String token) async {
+    final r = await _rpc('get_teacher_homework', {'p_token': token});
+    if (r is! List) throw const SharedApiException('server', 'неожиданный ответ');
+    return [for (final b in r) TeacherHomeworkBatch.fromJson(b as Map<String, dynamic>)];
+  }
+
+  /// Загружает файл преподавателя (один раз для всех групп отправки).
+  Future<void> putTeacherFile(String token, String id, String name, Uint8List bytes) =>
+      _rpc('put_teacher_file', {'p_token': token, 'p_id': id, 'p_name': name, 'p_data': base64Encode(bytes)}, timeout: _fileTimeout);
 }

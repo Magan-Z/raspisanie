@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_state.dart';
+import 'domain/teacher.dart';
 import 'background/background_sync.dart';
 import 'features/home_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
@@ -42,7 +43,9 @@ class RaspisanieApp extends ConsumerWidget {
     // Если выбранной группы больше нет в расписании (например, новый семестр) — снова предлагаем выбрать группу
     final index = ref.watch(indexProvider).value;
     final profile = settings.profile;
-    final needsOnboarding = profile == null || (index != null && index.findGroup(profile.groupId) == null);
+    final needsOnboarding = settings.role == UserRole.teacher
+        ? settings.teacherName == null
+        : profile == null || (index != null && index.findGroup(profile.groupId) == null);
 
     // По умолчанию — фирменные цвета; в настройках можно включить цвета из обоев (Material You, Android 12+)
     return DynamicColorBuilder(

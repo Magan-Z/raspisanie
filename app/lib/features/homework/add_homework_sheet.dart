@@ -9,6 +9,7 @@ import '../../group_actions.dart';
 import '../../data/attachments/attachment_store.dart';
 import '../../data/attachments/group_files.dart';
 import '../../domain/attachment.dart';
+import '../teacher/teacher_homework_sheet.dart';
 import 'attachment_widgets.dart';
 import '../../core/formatting.dart';
 import '../../domain/homework.dart';
@@ -19,6 +20,10 @@ import '../../theme/tokens.dart';
 
 /// Открывает окно добавления. [subject] — предмет, если уже известен (например, по долгому нажатию на пару).
 Future<void> showAddHomework(BuildContext context, {String? subject}) {
+  // Преподаватель: вместо личного ДЗ студента открывается отправка ДЗ студентам
+  if (ProviderScope.containerOf(context).read(isTeacherModeProvider)) {
+    return showTeacherHomeworkSheet(context, subject: subject);
+  }
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,

@@ -139,10 +139,13 @@ Future<void> openAttachment(BuildContext context, WidgetRef ref, Attachment a) a
 /// Файлы и фото от старосты на карточке ДЗ. Пока файл не скачан, показана плитка со значком «скачать»;
 /// нажатие скачивает файл (один раз) и открывает его. Скачанные фото показываются миниатюрами.
 class GroupAttachmentStrip extends ConsumerStatefulWidget {
-  const GroupAttachmentStrip({super.key, required this.files, this.color});
+  const GroupAttachmentStrip({super.key, required this.files, this.color, this.groupId});
 
   final List<GroupFileRef> files;
   final Color? color;
+
+  /// Из какой группы качать (у преподавателя своей группы нет: берётся группа из отправки). По умолчанию — группа студента.
+  final String? groupId;
 
   @override
   ConsumerState<GroupAttachmentStrip> createState() => _GroupAttachmentStripState();
@@ -153,7 +156,7 @@ class _GroupAttachmentStripState extends ConsumerState<GroupAttachmentStrip> {
 
   Future<void> _tap(GroupFileRef f) async {
     final service = ref.read(groupFilesProvider);
-    final groupId = ref.read(settingsProvider).profile?.groupId;
+    final groupId = widget.groupId ?? ref.read(settingsProvider).profile?.groupId;
     if (service == null || groupId == null || _loading.contains(f.id)) return;
     var a = service.cached(f.id);
     if (a == null) {
