@@ -352,3 +352,242 @@ begin
   return jsonb_build_object('name', r.name, 'data', encode(r.data, 'base64'));
 end $$;
 
+
+-- ============================================================================
+-- Часть 5 (миграция teacher_mode): режим преподавателя и ДЗ от преподавателя.
+-- Код преподавателя выдаёт владелец (на преподавателя и список его групп):
+--   select public.owner_issue_teacher_code('Фамилия И.О.', array['ofo-1-bi-25', 'ofo-2-bi-25']);
+-- Список групп строит скрипт data/tools/teacher_codes_sql.py из расписания.
+-- Отозвать: delete from public.teacher_codes where code = 'КОД';  (токены уже введённых кодов тоже перестают работать)
+-- Выдать заново: update public.teacher_codes set token = null, used_at = null where code = 'КОД';
+-- Изменить список групп: update public.teacher_codes set groups = array[...] where teacher = 'Фамилия И.О.';
+-- ДЗ преподавателей: group_homework.author (имя) и batch_id (одна отправка нескольким группам); студенты читают их
+-- отдельным ключом teacher_homework в get_group_data (старые версии приложения его не видят).
+-- ============================================================================
+create table public.teacher_codes (
+  code       text primary key,
+  teacher    text not null check (length(teacher) between 3 and 80),
+  groups     text[] not null check (cardinality(groups) between 1 and 80),
+  token      text unique,
+  used_at    timestamptz,
+  created_at timestamptz not null default now()
+);
+alter table public.teacher_codes enable row level security;
+revoke all on public.teacher_codes from anon, authenticated;
+
+create function public.limit_teacher_codes() returns trigger
+language plpgsql set search_path = '' as $$
+begin
+  if (select count(*) from public.teacher_codes where lower(teacher) = lower(new.teacher)) >= 2 then
+    raise exception 'У преподавателя % уже два кода', new.teacher;
+  end if;
+  if exists (select 1 from unnest(new.groups) g where g !~ '^[a-z0-9-]{3,40}$') then
+    raise exception 'bad_group';
+  end if;
+  return new;
+end $$;
+create trigger teacher_codes_limit before insert on public.teacher_codes
+  for each row execute function public.limit_teacher_codes();
+
+alter table public.group_homework add column author text check (length(author) <= 80);
+alter table public.group_homework add column batch_id uuid;
+create index group_homework_batch on public.group_homework (batch_id) where batch_id is not null;
+create index group_homework_author on public.group_homework (author) where author is not null;
+
+create function public.teacher_row(p_token text) returns public.teacher_codes
+language plpgsql security definer set search_path = '' as $$
+declare r public.teacher_codes%rowtype;
+begin
+  select * into r from public.teacher_codes where token = p_token and p_token is not null;
+  if not found then raise exception 'bad_token'; end if;
+  return r;
+end $$;
+
+create function public.redeem_teacher_code(p_code text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare r public.teacher_codes%rowtype; t text;
+begin
+  select * into r from public.teacher_codes where code = upper(trim(p_code));
+  if not found then raise exception 'bad_code'; end if;
+  if r.token is not null then raise exception 'code_used'; end if;
+  t := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+  update public.teacher_codes set token = t, used_at = now() where code = r.code;
+  return jsonb_build_object('teacher', r.teacher, 'groups', to_jsonb(r.groups), 'token', t);
+end $$;
+
+create function public.check_teacher(p_token text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare r public.teacher_codes%rowtype;
+begin
+  r := public.teacher_row(p_token);
+  return jsonb_build_object('teacher', r.teacher, 'groups', to_jsonb(r.groups));
+end $$;
+
+-- Файлы преподавателя хранятся один раз (для всех групп пачки) под служебным «группой» teacher-XXXXXXXX
+create function public.purge_teacher_files(p_gid text) returns void
+language sql security definer set search_path = '' as $$
+  delete from public.group_files f
+   where f.group_id = p_gid
+     and f.created_at < now() - interval '1 hour'
+     and not exists (
+       select 1 from public.group_homework h, jsonb_array_elements(h.files) e
+        where h.author is not null and not h.deleted and e->>'id' = f.id::text);
+$$;
+
+create function public.put_teacher_file(p_token text, p_id uuid, p_name text, p_data text) returns void
+language plpgsql security definer set search_path = '' as $$
+declare t public.teacher_codes%rowtype; g text; bytes bytea; used bigint;
+begin
+  t := public.teacher_row(p_token);
+  g := 'teacher-' || substr(md5(lower(t.teacher)), 1, 8);
+  if length(p_data) > 11500000 then raise exception 'file_too_big'; end if;
+  bytes := decode(p_data, 'base64');
+  if octet_length(bytes) > 8388608 or octet_length(bytes) = 0 then raise exception 'file_too_big'; end if;
+  perform public.purge_teacher_files(g);
+  select coalesce(sum(size), 0) into used from public.group_files where group_id = g;
+  if used + octet_length(bytes) > 157286400 then raise exception 'quota'; end if;
+  insert into public.group_files (id, group_id, name, size, data)
+  values (p_id, g, left(p_name, 200), octet_length(bytes), bytes)
+  on conflict (id) do nothing;
+end $$;
+
+create function public.put_teacher_homework(p_token text, p_row jsonb) returns uuid
+language plpgsql security definer set search_path = '' as $$
+declare
+  t public.teacher_codes%rowtype; v_batch uuid; fl jsonb; tg jsonb; e record; ids text[] := '{}'; gid text; sg smallint;
+  is_new boolean; n int; g text;
+begin
+  t := public.teacher_row(p_token);
+  perform public.purge_tombstones();
+  fl := coalesce(p_row->'files', '[]'::jsonb);
+  if jsonb_typeof(fl) <> 'array' or jsonb_array_length(fl) > 5 then raise exception 'too_many_files'; end if;
+  tg := p_row->'groups';
+  if tg is null or jsonb_typeof(tg) <> 'array' or jsonb_array_length(tg) < 1 or jsonb_array_length(tg) > 80 then raise exception 'bad_groups'; end if;
+  -- каждая цель: {id, subgroup?}; только группы из списка преподавателя, без повторов
+  for e in select value from jsonb_array_elements(tg) loop
+    gid := e.value->>'id';
+    if gid is null or not (gid = any (t.groups)) then raise exception 'forbidden_group'; end if;
+    if gid = any (ids) then raise exception 'bad_groups'; end if;
+    ids := ids || gid;
+  end loop;
+
+  v_batch := coalesce((p_row->>'batch_id')::uuid, gen_random_uuid());
+  if exists (select 1 from public.group_homework where batch_id = v_batch and author is distinct from t.teacher) then raise exception 'bad_batch'; end if;
+  is_new := not exists (select 1 from public.group_homework where batch_id = v_batch and author = t.teacher);
+  if is_new then
+    select count(distinct batch_id) into n from public.group_homework where author = t.teacher and not deleted;
+    if n >= 300 then raise exception 'too_many'; end if;
+    select count(distinct batch_id) into n from public.group_homework where author = t.teacher and updated_at > now() - interval '1 hour';
+    if n >= 30 then raise exception 'rate_limit'; end if;
+  end if;
+
+  -- группы, которых больше нет в пачке, снимаем
+  update public.group_homework set deleted = true, updated_at = now()
+   where batch_id = v_batch and author = t.teacher and not deleted and not (group_id = any (ids));
+
+  foreach g in array ids loop
+    sg := null;
+    select nullif(x.value->>'subgroup', '')::smallint into sg from jsonb_array_elements(tg) x where x.value->>'id' = g;
+    update public.group_homework set subject = p_row->>'subject', body = p_row->>'body', due_date = (p_row->>'due_date')::date,
+           kind = nullif(p_row->>'kind', ''), subgroup = sg, files = fl, deleted = false, updated_at = now()
+     where batch_id = v_batch and author = t.teacher and group_id = g;
+    if not found then
+      select count(*) into n from public.group_homework where group_id = g and author is not null and not deleted;
+      if n >= 100 then raise exception 'too_many'; end if;
+      insert into public.group_homework (group_id, subject, body, due_date, kind, subgroup, files, deleted, updated_at, author, batch_id)
+      values (g, p_row->>'subject', p_row->>'body', (p_row->>'due_date')::date, nullif(p_row->>'kind', ''), sg, fl, false, now(), t.teacher, v_batch);
+    end if;
+  end loop;
+  perform public.purge_teacher_files('teacher-' || substr(md5(lower(t.teacher)), 1, 8));
+  return v_batch;
+end $$;
+
+create function public.delete_teacher_homework(p_token text, p_batch uuid) returns void
+language plpgsql security definer set search_path = '' as $$
+declare t public.teacher_codes%rowtype;
+begin
+  t := public.teacher_row(p_token);
+  update public.group_homework set deleted = true, updated_at = now() where batch_id = p_batch and author = t.teacher;
+  perform public.purge_teacher_files('teacher-' || substr(md5(lower(t.teacher)), 1, 8));
+end $$;
+
+create function public.get_teacher_homework(p_token text) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare t public.teacher_codes%rowtype;
+begin
+  t := public.teacher_row(p_token);
+  return coalesce((
+    select jsonb_agg(b order by (b->>'due_date') desc, b->>'batch_id') from (
+      select jsonb_build_object(
+        'batch_id', batch_id, 'subject', min(subject), 'body', min(body), 'due_date', min(due_date), 'kind', min(kind),
+        'files', (array_agg(files))[1],
+        'groups', jsonb_agg(jsonb_build_object('id', group_id, 'subgroup', subgroup) order by group_id),
+        'updated_at', max(updated_at)) as b
+        from public.group_homework
+       where author = t.teacher and not deleted and batch_id is not null
+       group by batch_id) s), '[]'::jsonb);
+end $$;
+
+-- Читает группа: ДЗ старосты отдельно, ДЗ преподавателей — отдельным ключом (старые версии приложения его просто не видят)
+create or replace function public.get_group_data(p_group text, p_since timestamptz default null) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+begin
+  if p_group is null or p_group !~ '^[a-z0-9-]{3,40}$' then raise exception 'bad_group'; end if;
+  return jsonb_build_object(
+    'server_time', now(),
+    'overrides', coalesce((
+      select jsonb_agg(to_jsonb(o) - 'group_id')
+      from public.group_overrides o
+      where o.group_id = p_group and (p_since is null and not o.deleted or p_since is not null and o.updated_at > p_since)
+    ), '[]'::jsonb),
+    'homework', coalesce((
+      select jsonb_agg(to_jsonb(h) - 'group_id' - 'author' - 'batch_id')
+      from public.group_homework h
+      where h.group_id = p_group and h.author is null and (p_since is null and not h.deleted or p_since is not null and h.updated_at > p_since)
+    ), '[]'::jsonb),
+    'teacher_homework', coalesce((
+      select jsonb_agg(to_jsonb(h) - 'group_id' - 'batch_id')
+      from public.group_homework h
+      where h.group_id = p_group and h.author is not null and (p_since is null and not h.deleted or p_since is not null and h.updated_at > p_since)
+    ), '[]'::jsonb)
+  );
+end $$;
+
+-- Файл отдаётся, если он лежит в этой группе или прикреплён к живому ДЗ этой группы (файлы преподавателя хранятся один раз)
+create or replace function public.get_group_file(p_group text, p_id uuid) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare r public.group_files%rowtype; cnt int; total bigint;
+begin
+  if p_group is null or p_group !~ '^[a-z0-9-]{3,40}$' then raise exception 'bad_group'; end if;
+  select * into r from public.group_files f
+   where f.id = p_id and (f.group_id = p_group or (f.group_id like 'teacher-%' and exists (
+     select 1 from public.group_homework h, jsonb_array_elements(h.files) e
+      where h.group_id = p_group and h.author is not null and not h.deleted and e->>'id' = p_id::text)));
+  if not found then raise exception 'no_file'; end if;
+  insert into public.download_file_day (day, file_id, n) values (current_date, p_id, 1)
+    on conflict (day, file_id) do update set n = public.download_file_day.n + 1
+    returning n into cnt;
+  if cnt > 100 then raise exception 'download_limit'; end if;
+  insert into public.download_day (day, bytes) values (current_date, r.size)
+    on conflict (day) do update set bytes = public.download_day.bytes + excluded.bytes
+    returning bytes into total;
+  if total > 167772160 then raise exception 'download_limit'; end if;
+  delete from public.download_day where day < current_date - 7;
+  delete from public.download_file_day where day < current_date - 7;
+  return jsonb_build_object('name', r.name, 'data', encode(r.data, 'base64'));
+end $$;
+
+create function public.owner_issue_teacher_code(p_teacher text, p_groups text[]) returns text
+language plpgsql security definer set search_path = '' as $$
+declare c text;
+begin
+  c := upper(substr(translate(replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''), '01ilo', 'wxyzv'), 1, 10));
+  insert into public.teacher_codes (code, teacher, groups) values (c, p_teacher, p_groups);
+  return c;
+end $$;
+
+revoke execute on function public.teacher_row(text), public.purge_teacher_files(text), public.limit_teacher_codes(),
+                           public.owner_issue_teacher_code(text, text[]) from public, anon, authenticated;
+grant execute on function public.redeem_teacher_code(text), public.check_teacher(text), public.put_teacher_file(text, uuid, text, text),
+                          public.put_teacher_homework(text, jsonb), public.delete_teacher_homework(text, uuid), public.get_teacher_homework(text)
+  to anon, authenticated;
