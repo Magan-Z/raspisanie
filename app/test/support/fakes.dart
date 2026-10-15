@@ -310,7 +310,9 @@ class FakeBackend {
           case 'get_group_file':
             final f = files[args['p_id']];
             if (f == null) return fail('no_file');
-            return ok({'name': f.name, 'data': base64Encode(f.bytes)});
+            // как настоящий Postgres: encode(..., 'base64') ставит перенос строки каждые 76 знаков
+            final wrapped = base64Encode(f.bytes).replaceAllMapped(RegExp(r'.{1,76}'), (m) => '${m[0]}\n').trim();
+            return ok({'name': f.name, 'data': wrapped});
           case 'clear_stale_group_overrides':
             var n = 0;
             for (final o in overrides.values) {

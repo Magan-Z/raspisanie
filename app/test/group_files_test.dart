@@ -109,6 +109,22 @@ void main() {
       expect(backend.calls.where((c) => c == 'get_group_file'), hasLength(1));
     });
 
+    test('большой файл скачивается целиком, хотя сервер ставит переносы строк в base64 (раньше такие файлы не скачивались)', () async {
+      final big = List<int>.generate(300000, (i) => i % 251);
+      backend.files['big'] = (name: 'Фото.jpg', bytes: big);
+      final saved = await service.download('ofo-1-bi-25', const GroupFileRef(id: 'big', name: 'Фото.jpg', size: 300000));
+      expect(File(saved.path).readAsBytesSync(), big);
+    });
+
+    test('закодированное имя файла показывается читаемо: %D0%A1… → Создание', () {
+      expect(cleanFileName('%D0%A1%D0%BE%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5_Telegram.pptx'), 'Создание_Telegram.pptx');
+      expect(cleanFileName('Задачи 100%.pdf'), 'Задачи 100%.pdf'); // обычный знак процента не трогаем
+      expect(cleanFileName('plain.pdf'), 'plain.pdf');
+      expect(cleanFileName('%ZZ%D0'), '%ZZ%D0'); // нечитаемое оставляем как есть
+      final row = GroupFileRef.fromJson({'id': 'x', 'name': '%D0%94%D0%97.docx', 'size': 5});
+      expect(row.name, 'ДЗ.docx');
+    });
+
     test('если скачанную копию удалили из памяти телефона — файл скачивается заново', () async {
       backend.files['f1'] = (name: 'a.txt', bytes: [1]);
       const ref = GroupFileRef(id: 'f1', name: 'a.txt', size: 1);

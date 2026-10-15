@@ -44,6 +44,15 @@ class SystemAttachmentPicker implements AttachmentPicker {
   Future<PickedFileInfo> _fromXFile(XFile f) async => PickedFileInfo(name: f.name, path: f.path, sizeBytes: await f.length());
 }
 
+/// Подсказка, что поставить, если для файла нет программы (на чистом телефоне нет просмотрщика презентаций и документов).
+String _installHint(String ext) => switch (ext) {
+      'ppt' || 'pptx' || 'odp' => ' Установите Google Презентации или WPS Office',
+      'doc' || 'docx' || 'odt' || 'rtf' => ' Установите Google Документы или WPS Office',
+      'xls' || 'xlsx' || 'ods' || 'csv' => ' Установите Google Таблицы или WPS Office',
+      'pdf' => ' Установите Google Drive или другой просмотрщик PDF',
+      _ => '',
+    };
+
 class DiskAttachmentStore implements AttachmentStore {
   Future<Directory> _dir() async {
     final base = await getApplicationDocumentsDirectory();
@@ -57,14 +66,14 @@ class DiskAttachmentStore implements AttachmentStore {
     final dir = await _dir();
     // Время в имени — чтобы два файла с одинаковым названием («Задачи.pdf») не затёрли друг друга
     final stamp = DateTime.now().microsecondsSinceEpoch;
-    final safeName = picked.name.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+    final safeName = cleanFileName(picked.name).replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
     final target = '${dir.path}/${stamp}_$safeName';
     if (picked.path != null) {
       await File(picked.path!).copy(target);
     } else {
       await File(target).writeAsBytes(await picked.readBytes!());
     }
-    return Attachment(name: picked.name, path: target, sizeBytes: picked.sizeBytes ?? File(target).lengthSync());
+    return Attachment(name: cleanFileName(picked.name), path: target, sizeBytes: picked.sizeBytes ?? File(target).lengthSync());
   }
 
   @override
@@ -85,7 +94,7 @@ class DiskAttachmentStore implements AttachmentStore {
     final result = await OpenFilex.open(attachment.path);
     return switch (result.type) {
       ResultType.done => null,
-      ResultType.noAppToOpen => 'На телефоне нет программы, которая откроет «${attachment.name}»',
+      ResultType.noAppToOpen => 'На телефоне нет программы, которая откроет «${attachment.name}».${_installHint(attachment.extension)}',
       ResultType.fileNotFound => 'Файл не найден',
       ResultType.permissionDenied => 'Нет доступа к файлу',
       ResultType.error => 'Не удалось открыть файл',

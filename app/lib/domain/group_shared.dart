@@ -103,7 +103,7 @@ class GroupFileRef {
   final int size;
 
   factory GroupFileRef.fromJson(Map<String, dynamic> j) =>
-      GroupFileRef(id: j['id'] as String, name: j['name'] as String, size: (j['size'] as num?)?.toInt() ?? 0);
+      GroupFileRef(id: j['id'] as String, name: cleanFileName(j['name'] as String), size: (j['size'] as num?)?.toInt() ?? 0);
 
   Map<String, dynamic> toJson() => {'id': id, 'name': name, 'size': size};
 

@@ -65,8 +65,9 @@ class GroupFiles {
       if (bytes == null) throw const SharedApiException('server', 'файл не найден в памяти телефона');
       if (bytes.length > maxGroupFileBytes) throw const SharedApiException('file_too_big');
       final id = newId();
-      await (teacher ? api.putTeacherFile(token, id, a.name, bytes) : api.putFile(token, id, a.name, bytes));
-      refs.add(GroupFileRef(id: id, name: a.name, size: bytes.length));
+      final name = cleanFileName(a.name);
+      await (teacher ? api.putTeacherFile(token, id, name, bytes) : api.putFile(token, id, name, bytes));
+      refs.add(GroupFileRef(id: id, name: name, size: bytes.length));
       local[id] = a;
     }
     return (refs: refs, local: local);

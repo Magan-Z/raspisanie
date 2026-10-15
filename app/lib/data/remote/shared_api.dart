@@ -124,7 +124,8 @@ class SharedApi {
   /// Скачивает файл группы по номеру. Читать может любой студент группы.
   Future<Uint8List> getFile(String group, String id) async {
     final r = _asMap(await _rpc('get_group_file', {'p_group': group, 'p_id': id}, timeout: _fileTimeout));
-    return base64Decode(r['data'] as String);
+    // Postgres вставляет в base64 переносы строк, а Dart их не читает: убираем пробелы и переносы перед разбором
+    return base64Decode((r['data'] as String).replaceAll(RegExp(r'\s'), ''));
   }
 
   // ---------- преподаватель ----------

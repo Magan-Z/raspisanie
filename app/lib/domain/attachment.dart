@@ -22,6 +22,18 @@ class Attachment {
   String get sizeText => sizeBytes == null ? '' : formatFileSize(sizeBytes!);
 }
 
+/// Имя файла без «%D0%A1…»: некоторые программы (мессенджеры, почта) отдают название в закодированном виде.
+/// Если имя не закодировано или не читается, возвращается как есть.
+String cleanFileName(String name) {
+  if (!RegExp(r'%[0-9A-Fa-f]{2}').hasMatch(name)) return name;
+  try {
+    final decoded = Uri.decodeComponent(name).replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
+    return decoded.isEmpty ? name : decoded;
+  } catch (_) {
+    return name;
+  }
+}
+
 String formatFileSize(int bytes) {
   if (bytes < 1024) return '$bytes Б';
   if (bytes < 1024 * 1024) return '${(bytes / 1024).round()} КБ';

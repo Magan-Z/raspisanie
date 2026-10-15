@@ -591,3 +591,39 @@ revoke execute on function public.teacher_row(text), public.purge_teacher_files(
 grant execute on function public.redeem_teacher_code(text), public.check_teacher(text), public.put_teacher_file(text, uuid, text, text),
                           public.put_teacher_homework(text, jsonb), public.delete_teacher_homework(text, uuid), public.get_teacher_homework(text)
   to anon, authenticated;
+
+-- ============================================================================
+-- Часть 6 (миграции fix_file_base64_newlines и file_functions_statement_timeout): исправления работы с файлами.
+-- 1) encode(..., 'base64') вставляет перенос строки каждые 76 знаков, а приложение (Dart) такой текст не читает:
+--    любой файл больше ~57 байт не скачивался («Не удалось скачать файл»). get_group_file теперь отдаёт base64 без переносов
+--    (функция выше в части 5 переопределена так: в конце translate(encode(r.data, 'base64'), E'\n\r', '')).
+-- 2) Роль anon обрывает запрос через 3 секунды; загрузка файла до 8 МБ иногда не успевала. Функциям работы с файлами
+--    выдан свой срок 25 секунд (настройка внутри функции действует), а столбец с файлами не сжимается повторно.
+-- ============================================================================
+alter function public.put_group_file(text, uuid, text, text) set statement_timeout = '25s';
+alter function public.put_teacher_file(text, uuid, text, text) set statement_timeout = '25s';
+alter function public.get_group_file(text, uuid) set statement_timeout = '25s';
+alter table public.group_files alter column data set storage external;
+
+create or replace function public.get_group_file(p_group text, p_id uuid) returns jsonb
+language plpgsql security definer set search_path = '' set statement_timeout = '25s' as $$
+declare r public.group_files%rowtype; cnt int; total bigint;
+begin
+  if p_group is null or p_group !~ '^[a-z0-9-]{3,40}$' then raise exception 'bad_group'; end if;
+  select * into r from public.group_files f
+   where f.id = p_id and (f.group_id = p_group or (f.group_id like 'teacher-%' and exists (
+     select 1 from public.group_homework h, jsonb_array_elements(h.files) e
+      where h.group_id = p_group and h.author is not null and not h.deleted and e->>'id' = p_id::text)));
+  if not found then raise exception 'no_file'; end if;
+  insert into public.download_file_day (day, file_id, n) values (current_date, p_id, 1)
+    on conflict (day, file_id) do update set n = public.download_file_day.n + 1
+    returning n into cnt;
+  if cnt > 100 then raise exception 'download_limit'; end if;
+  insert into public.download_day (day, bytes) values (current_date, r.size)
+    on conflict (day) do update set bytes = public.download_day.bytes + excluded.bytes
+    returning bytes into total;
+  if total > 167772160 then raise exception 'download_limit'; end if;
+  delete from public.download_day where day < current_date - 7;
+  delete from public.download_file_day where day < current_date - 7;
+  return jsonb_build_object('name', r.name, 'data', translate(encode(r.data, 'base64'), E'\n\r', ''));
+end $$;

@@ -54,7 +54,7 @@ class DatabaseAttachmentStore implements AttachmentStore {
     final bytes = await picked.readBytes!();
     final id = await db.into(db.attachmentBlobs).insert(AttachmentBlobsCompanion.insert(bytes: bytes));
     _cache[id] = bytes;
-    return Attachment(name: picked.name, path: 'blob:$id', sizeBytes: picked.sizeBytes ?? bytes.length);
+    return Attachment(name: cleanFileName(picked.name), path: 'blob:$id', sizeBytes: picked.sizeBytes ?? bytes.length);
   }
 
   @override
