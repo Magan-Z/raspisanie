@@ -46,4 +46,40 @@ void main() {
     await tester.pumpAndSettle();
     expect(selected, 'c');
   });
+
+  testWidgets('пропорциональные части: длинная подпись получает больше места и не ужимается сильнее других', (tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    var selected = 'a';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (context, setState) => Padding(
+              padding: const EdgeInsets.all(16),
+              child: SlidingSegments<String>(
+                proportional: true,
+                segments: const [
+                  Segment('a', 'Мои (0)'),
+                  Segment('b', 'От старосты (1)', icon: Icons.groups_rounded),
+                  Segment('c', 'От преподавателей (1)', icon: Icons.school_rounded),
+                ],
+                selected: selected,
+                onChanged: (v) => setState(() => selected = v),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    // высота подписей одинакова (шрифт не ужат): у ужатого текста высота меньше
+    double h(String t) => tester.getSize(find.text(t)).height;
+    expect(tester.getSize(find.text('От преподавателей (1)')).width, greaterThan(tester.getSize(find.text('Мои (0)')).width * 2));
+    expect(h('От преподавателей (1)'), closeTo(h('Мои (0)'), 0.5));
+    await tester.tap(find.text('От преподавателей (1)'));
+    await tester.pumpAndSettle();
+    expect(selected, 'c');
+  });
 }

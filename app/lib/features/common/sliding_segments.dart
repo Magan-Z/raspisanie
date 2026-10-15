@@ -23,11 +23,16 @@ class SlidingSegments<T> extends StatelessWidget {
     required this.segments,
     required this.selected,
     required this.onChanged,
+    this.proportional = false,
   });
 
   final List<Segment<T>> segments;
   final T selected;
   final ValueChanged<T> onChanged;
+
+  /// Ширина частей пропорциональна длине подписи (для разной длины подписей: «Мои (0)» и «От преподавателей (1)»);
+  /// по умолчанию части равны.
+  final bool proportional;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +44,13 @@ class SlidingSegments<T> extends StatelessWidget {
     final duration = Motion.of(context, const Duration(milliseconds: 380));
     // когда частей три и больше, шрифт чуть мельче у всех сразу: так длинное слово почти не ужимается и подписи выглядят одинаково
     final labelStyle = Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: n >= 3 ? 13 : null);
+
+    // «вес» каждой части: у равных частей одинаковый
+    final weights = [
+      for (final s in segments)
+        proportional ? (s.label.runes.length + (s.icon != null ? 3 : 0)).clamp(8, 40) : 1,
+    ];
+    final totalWeight = weights.fold<int>(0, (a, b) => a + b);
 
     // Material, а не Container: иначе всплеск от нажатия прячется под фоном
     return Material(
@@ -53,26 +65,33 @@ class SlidingSegments<T> extends StatelessWidget {
           children: [
             // ползунок: стоит под подписями и переезжает к выбранной части
             Positioned.fill(
-              child: AnimatedAlign(
-                duration: duration,
-                curve: kEaseOutExpo,
-                alignment: Alignment(n == 1 ? 0 : -1 + 2 * index / (n - 1), 0),
-                child: FractionallySizedBox(
-                  widthFactor: 1 / n,
-                  heightFactor: 1,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(Radii.sm),
+              child: LayoutBuilder(
+                builder: (context, box) {
+                  final before = weights.take(index).fold<int>(0, (a, b) => a + b);
+                  return Stack(children: [
+                    AnimatedPositioned(
+                      duration: duration,
+                      curve: kEaseOutExpo,
+                      left: box.maxWidth * before / totalWeight,
+                      width: box.maxWidth * weights[index] / totalWeight,
+                      top: 0,
+                      bottom: 0,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: scheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(Radii.sm),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  ]);
+                },
               ),
             ),
             Row(
               children: [
                 for (var i = 0; i < n; i++)
                   Expanded(
+                    flex: weights[i],
                     child: Semantics(
                       button: true,
                       selected: i == index,

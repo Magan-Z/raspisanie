@@ -101,6 +101,7 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
               if (anyTab) ...[
                 const SizedBox(height: Gap.sm),
                 SlidingSegments<_Tab>(
+                  proportional: true,
                   segments: [
                     Segment(_Tab.mine, 'Мои (${items.where((i) => !i.done).length})'),
                     if (hasGroupTab) Segment(_Tab.group, 'От старосты (${groupRows.where((g) => !done.contains(g.id)).length})', icon: Icons.groups_rounded),
