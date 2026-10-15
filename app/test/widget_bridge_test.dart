@@ -5,14 +5,14 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/domain/attachment.dart';
-import 'package:raspisanie/domain/homework.dart';
-import 'package:raspisanie/domain/models.dart';
-import 'package:raspisanie/domain/widget_snapshot.dart';
-import 'package:raspisanie/theme/brand_colors.dart';
-import 'package:raspisanie/theme/subject_palette.dart';
-import 'package:raspisanie/widget_bridge/deep_links.dart';
-import 'package:raspisanie/widget_bridge/widget_sync.dart';
+import 'package:unigraf/domain/attachment.dart';
+import 'package:unigraf/domain/homework.dart';
+import 'package:unigraf/domain/models.dart';
+import 'package:unigraf/domain/widget_snapshot.dart';
+import 'package:unigraf/theme/brand_colors.dart';
+import 'package:unigraf/theme/subject_palette.dart';
+import 'package:unigraf/widget_bridge/deep_links.dart';
+import 'package:unigraf/widget_bridge/widget_sync.dart';
 
 Map<String, dynamic> _fixture(String name) =>
     jsonDecode(File('test/fixtures/$name').readAsStringSync()) as Map<String, dynamic>;
@@ -22,31 +22,31 @@ void main() {
 
   group('Ссылки', () {
     test('«+ ДЗ» с предметом (в том числе с пробелами и кириллицей)', () {
-      final link = parseLink('raspisanie://homework/new?subject=${Uri.encodeQueryComponent('Аккаунтинг и аудит')}');
+      final link = parseLink('unigraf://homework/new?subject=${Uri.encodeQueryComponent('Аккаунтинг и аудит')}');
       expect(link?.subject, 'Аккаунтинг и аудит');
     });
     test('«+ ДЗ» без предмета', () {
-      expect(parseLink('raspisanie://homework/new'), isNotNull);
-      expect(parseLink('raspisanie://homework/new')?.subject, isNull);
-      expect(parseLink('raspisanie://homework/new?subject=')?.subject, isNull);
+      expect(parseLink('unigraf://homework/new'), isNotNull);
+      expect(parseLink('unigraf://homework/new')?.subject, isNull);
+      expect(parseLink('unigraf://homework/new?subject=')?.subject, isNull);
     });
     test('ссылка «открыть ДЗ» (виджет «Домашка»)', () {
-      expect(parseAnyLink('raspisanie://homework'), isA<OpenHomeworkLink>());
-      expect(parseAnyLink('raspisanie://homework/'), isA<OpenHomeworkLink>());
-      expect(parseAnyLink('raspisanie://homework/new?subject=X'), isA<AddHomeworkLink>());
-      expect(parseAnyLink('raspisanie://settings'), isNull);
+      expect(parseAnyLink('unigraf://homework'), isA<OpenHomeworkLink>());
+      expect(parseAnyLink('unigraf://homework/'), isA<OpenHomeworkLink>());
+      expect(parseAnyLink('unigraf://homework/new?subject=X'), isA<AddHomeworkLink>());
+      expect(parseAnyLink('unigraf://settings'), isNull);
     });
     test('быстрые действия на значке: Завтра, Неделя, Поиск', () {
-      expect(parseAnyLink('raspisanie://day/tomorrow'), isA<OpenTomorrowLink>());
-      expect((parseAnyLink('raspisanie://week') as OpenTabLink).tab, 1);
-      expect((parseAnyLink('raspisanie://search') as OpenTabLink).tab, 3);
-      expect(parseAnyLink('raspisanie://day/yesterday'), isNull);
-      expect(parseAnyLink('raspisanie://week/extra'), isNull);
+      expect(parseAnyLink('unigraf://day/tomorrow'), isA<OpenTomorrowLink>());
+      expect((parseAnyLink('unigraf://week') as OpenTabLink).tab, 1);
+      expect((parseAnyLink('unigraf://search') as OpenTabLink).tab, 3);
+      expect(parseAnyLink('unigraf://day/yesterday'), isNull);
+      expect(parseAnyLink('unigraf://week/extra'), isNull);
     });
     test('чужие и неправильные ссылки игнорируются', () {
       expect(parseLink(null), isNull);
       expect(parseLink('https://example.com/homework/new'), isNull);
-      expect(parseLink('raspisanie://settings'), isNull);
+      expect(parseLink('unigraf://settings'), isNull);
       expect(parseLink('не ссылка'), isNull);
     });
   });
@@ -76,8 +76,8 @@ void main() {
 
       expect(calls.map((c) => c.method), ['saveWidgetData', ...List.filled(7, 'updateWidget')]);
       expect(calls.first.arguments['id'], 'snapshot');
-      expect((calls[1].arguments as Map)['qualifiedAndroidName'], 'ru.raspisanie.raspisanie.widget.NowNextWidget');
-      expect((calls[2].arguments as Map)['qualifiedAndroidName'], 'ru.raspisanie.raspisanie.widget.TodayWidget');
+      expect((calls[1].arguments as Map)['qualifiedAndroidName'], 'ru.unigraf.unigraf.widget.NowNextWidget');
+      expect((calls[2].arguments as Map)['qualifiedAndroidName'], 'ru.unigraf.unigraf.widget.TodayWidget');
       final snapshot = jsonDecode(calls.first.arguments['data'] as String) as Map<String, dynamic>;
       expect(snapshot['weekLabel'], '2 неделя');
       expect((snapshot['days'] as List), hasLength(7));

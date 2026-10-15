@@ -5,10 +5,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/domain/models.dart';
-import 'package:raspisanie/domain/schedule_resolver.dart';
-import 'package:raspisanie/domain/teacher.dart';
-import 'package:raspisanie/domain/teacher_homework.dart';
+import 'package:unigraf/domain/models.dart';
+import 'package:unigraf/domain/schedule_resolver.dart';
+import 'package:unigraf/domain/teacher.dart';
+import 'package:unigraf/domain/teacher_homework.dart';
 
 Map<String, dynamic> _json(String path) => jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
 

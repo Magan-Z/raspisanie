@@ -18,7 +18,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "data" / "web"
 SHOTS = Path("/tmp/claude-shots/landing")
-SITE_URL = "https://magan-z.github.io/raspisanie/"
+SITE_URL = "https://magan-z.github.io/unigraf/"
 FONT = ROOT / "app" / "assets" / "fonts" / "Onest.ttf"
 
 PAPER, PETROL, INK, MUTED, AMBER = (251, 248, 243), (11, 85, 99), (26, 32, 34), (85, 98, 106), (242, 169, 59)

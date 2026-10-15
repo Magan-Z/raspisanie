@@ -1,4 +1,4 @@
-package ru.raspisanie.raspisanie
+package ru.unigraf.unigraf
 
 import android.content.Intent
 import android.provider.Settings
@@ -8,8 +8,8 @@ import io.flutter.plugin.common.MethodChannel
 
 /**
  * Мост между Flutter и нативной частью:
- * Ссылки raspisanie://… (кнопка «+ ДЗ» на виджете) доходят до приложения через канал «raspisanie/links».
- * Канал «raspisanie/system»: открыть системные настройки уведомлений приложения (если разрешение не выдано и окно с вопросом Android больше не показывает).
+ * Ссылки unigraf://… (кнопка «+ ДЗ» на виджете) доходят до приложения через канал «raspisanie/links».
+ * Канал «unigraf/system»: открыть системные настройки уведомлений приложения (если разрешение не выдано и окно с вопросом Android больше не показывает).
  * Данные для виджетов передаёт пакет home_widget (см. lib/widget_bridge/widget_sync.dart).
  */
 class MainActivity : FlutterActivity() {
@@ -20,7 +20,7 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         val messenger = flutterEngine.dartExecutor.binaryMessenger
 
-        MethodChannel(messenger, "raspisanie/system").setMethodCallHandler { call, result ->
+        MethodChannel(messenger, "unigraf/system").setMethodCallHandler { call, result ->
             when (call.method) {
                 "openNotificationSettings" -> {
                     val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
@@ -36,7 +36,7 @@ class MainActivity : FlutterActivity() {
             }
         }
 
-        linkChannel = MethodChannel(messenger, "raspisanie/links").also { channel ->
+        linkChannel = MethodChannel(messenger, "unigraf/links").also { channel ->
             channel.setMethodCallHandler { call, result ->
                 when (call.method) {
                     // Ссылка, которой приложение было запущено (отдаём один раз)

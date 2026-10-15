@@ -4,11 +4,11 @@ import 'dart:io';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/data/attachments/attachment_store.dart';
-import 'package:raspisanie/data/local/database.dart';
-import 'package:raspisanie/data/repositories/homework_repository.dart';
-import 'package:raspisanie/domain/attachment.dart';
-import 'package:raspisanie/domain/homework.dart';
+import 'package:unigraf/data/attachments/attachment_store.dart';
+import 'package:unigraf/data/local/database.dart';
+import 'package:unigraf/data/repositories/homework_repository.dart';
+import 'package:unigraf/domain/attachment.dart';
+import 'package:unigraf/domain/homework.dart';
 
 import 'support/fakes.dart';
 

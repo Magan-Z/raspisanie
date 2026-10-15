@@ -98,7 +98,7 @@ const _exportVersion = 1;
 
 /// ДЗ → текст JSON (для переноса на другой телефон). Фото в экспорт не входят.
 String exportHomework(List<HomeworkItem> items) => const JsonEncoder.withIndent(' ').convert({
-      'app': 'raspisanie',
+      'app': 'unigraf',
       'version': _exportVersion,
       'homework': [
         for (final i in items)
@@ -121,7 +121,7 @@ List<HomeworkItem> importHomework(String json) {
   } on FormatException {
     throw const FormatException('Это не файл с домашними заданиями');
   }
-  if (data is! Map || data['app'] != 'raspisanie' || data['homework'] is! List) {
+  if (data is! Map || (data['app'] != 'unigraf' && data['app'] != 'raspisanie') || data['homework'] is! List) {
     throw const FormatException('Это не файл с домашними заданиями');
   }
   try {

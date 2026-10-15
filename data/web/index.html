@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="UniGraf — приложение для студентов ИМФИТ">
 <meta property="og:description" content="Пары, аудитории и домашка в одном месте. Без регистрации, работает без интернета.">
-<meta property="og:image" content="https://magan-z.github.io/raspisanie/img/og.png">
+<meta property="og:image" content="https://magan-z.github.io/unigraf/img/og.png">
 <meta property="og:locale" content="ru_RU">
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
@@ -408,7 +408,7 @@
         <h1 class="a" style="--i:0">Пары, аудитории и домашка — <em>в одном месте</em></h1>
         <p class="lead a" style="--i:1">Для студентов ИМФИТ. Открыли телефон и сразу видно, где и когда ваша пара. Без регистрации, работает без интернета.</p>
         <div class="cta a" id="cta" style="--i:2">
-          <a class="btn primary" id="btn-android" href="raspisanie.apk" data-shared download data-os="android">
+          <a class="btn primary" id="btn-android" href="unigraf.apk" data-shared download data-os="android">
             Скачать для Android
             <small id="apk-meta">бесплатно · файл APK</small>
           </a>
@@ -555,7 +555,7 @@
     <div class="panel" id="panel-android" role="tabpanel" aria-labelledby="tab-android">
       <ol class="steps">
         <li><div><b>Скачайте файл</b><span>Нажмите «Скачать для Android». Если браузер спросит, оставить ли файл, ответьте «Скачать».</span></div></li>
-        <li><div><b>Откройте скачанный файл</b><span>Он называется <code>raspisanie.apk</code>. Его можно открыть из уведомления о загрузке или из папки «Загрузки».</span></div></li>
+        <li><div><b>Откройте скачанный файл</b><span>Он называется <code>unigraf.apk</code>. Его можно открыть из уведомления о загрузке или из папки «Загрузки».</span></div></li>
         <li><div><b>Разрешите установку</b><span>Телефон сообщит, что установка из этого источника запрещена. Нажмите «Настройки» и включите «Разрешить из этого источника», потом вернитесь назад.</span></div></li>
         <li><div><b>Нажмите «Установить»</b><span>Если Play Protect предупредит о неизвестном приложении, нажмите «Подробнее», затем «Всё равно установить».</span></div></li>
         <li><div><b>Выберите группу и подгруппу</b><span>Это всё. Дальше расписание откроется сразу, а на главном экране можно добавить виджет. Преподаватели выбирают «Я преподаватель» и находят себя в списке.</span></div></li>
@@ -696,7 +696,7 @@
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
-const PAGE_URL = "https://magan-z.github.io/raspisanie/";
+const PAGE_URL = "https://magan-z.github.io/unigraf/";
 // Корень сайта: на основной странице пусто; на тестовой (/site-next/) публикация ставит «../» (приложение, APK и расписание лежат на основном сайте)
 const ROOT = (document.querySelector('meta[name="site-root"]') || {}).content || "";
 document.querySelectorAll("a[data-shared]").forEach((a) => { if (ROOT) a.setAttribute("href", ROOT + a.getAttribute("href")); });
@@ -722,7 +722,7 @@ function setupPlatform() {
   const os = detectOs();
   // Верхняя и нижняя кнопки зовут к своей платформе; на компьютере ведут к инструкции
   const label = os === "ios" ? "Открыть на iPhone" : os === "android" ? "Скачать для Android" : "Установить";
-  const target = os === "ios" ? ROOT + "app/" : os === "android" ? ROOT + "raspisanie.apk" : "#install";
+  const target = os === "ios" ? ROOT + "app/" : os === "android" ? ROOT + "unigraf.apk" : "#install";
   for (const id of ["hdr-cta", "dock-cta"]) { $(id).textContent = label; $(id).href = target; if (os === "android") $(id).setAttribute("download", ""); }
   const android = $("btn-android"), ios = $("btn-ios");
   if (os === "ios") {
@@ -806,7 +806,7 @@ if (navigator.share) {
 // ---------- Календарь без приложения (подписка .ics) ----------
 const WEEKDAYS = ["", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
 const KIND_TITLES = { lecture: "Лекция", practice: "Практика", pe: "Физ-ра", curator: "Кураторский" };
-const STORAGE_KEY = "raspisanie.choice";
+const STORAGE_KEY = "unigraf.choice";
 function saveChoice() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: state.form, course: state.course, group: state.group, subgroup: state.subgroup, pe: state.pe })); } catch (e) { /* приватный режим */ }
 }

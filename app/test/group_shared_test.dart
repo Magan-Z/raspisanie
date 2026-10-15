@@ -6,12 +6,12 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:raspisanie/data/local/database.dart';
-import 'package:raspisanie/data/remote/shared_api.dart';
-import 'package:raspisanie/data/repositories/group_shared_repository.dart';
-import 'package:raspisanie/domain/group_shared.dart';
-import 'package:raspisanie/domain/models.dart';
-import 'package:raspisanie/domain/teacher_homework.dart';
+import 'package:unigraf/data/local/database.dart';
+import 'package:unigraf/data/remote/shared_api.dart';
+import 'package:unigraf/data/repositories/group_shared_repository.dart';
+import 'package:unigraf/domain/group_shared.dart';
+import 'package:unigraf/domain/models.dart';
+import 'package:unigraf/domain/teacher_homework.dart';
 
 /// Поддельный сервер: запоминает вызовы и отвечает заранее заданным.
 class FakeServer {

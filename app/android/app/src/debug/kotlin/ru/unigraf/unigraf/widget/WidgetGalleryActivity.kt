@@ -1,4 +1,4 @@
-package ru.raspisanie.raspisanie.widget
+package ru.unigraf.unigraf.widget
 
 import android.app.Activity
 import android.os.Bundle
@@ -12,12 +12,12 @@ import android.widget.ScrollView
 import android.widget.TextView
 import org.json.JSONArray
 import org.json.JSONObject
-import ru.raspisanie.raspisanie.R
+import ru.unigraf.unigraf.R
 
 /**
  * ТОЛЬКО ДЛЯ ОТЛАДОЧНОЙ СБОРКИ. «Витрина» виджетов: рисует настоящие RemoteViews всех виджетов на образцовых данных,
  * чтобы оценить внешний вид на эмуляторе без размещения виджетов на рабочем столе.
- * Запуск: adb shell am start -n ru.raspisanie.raspisanie/.widget.WidgetGalleryActivity --ez empty false
+ * Запуск: adb shell am start -n ru.unigraf.unigraf/.widget.WidgetGalleryActivity --ez empty false
  * Тёмная тема: adb shell cmd uimode night yes
  */
 class WidgetGalleryActivity : Activity() {

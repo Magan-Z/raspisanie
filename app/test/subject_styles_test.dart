@@ -3,10 +3,10 @@
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/data/local/database.dart';
-import 'package:raspisanie/data/repositories/subject_styles_repository.dart';
-import 'package:raspisanie/domain/subject_styles.dart';
-import 'package:raspisanie/theme/subject_palette.dart';
+import 'package:unigraf/data/local/database.dart';
+import 'package:unigraf/data/repositories/subject_styles_repository.dart';
+import 'package:unigraf/domain/subject_styles.dart';
+import 'package:unigraf/theme/subject_palette.dart';
 
 void main() {
   const subject = 'Технологическое предпринимательство';

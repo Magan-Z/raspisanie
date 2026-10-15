@@ -1,11 +1,11 @@
-/// Адрес сайта с расписанием (GitHub Pages), например `https://login.github.io/raspisanie/`.
+/// Адрес сайта с расписанием (GitHub Pages), например `https://login.github.io/unigraf/`.
 ///
 /// По умолчанию — настоящий адрес сайта, поэтому любая сборка (в том числе локальная) обновляет расписание из интернета.
 /// Другой адрес можно задать при сборке:
-///   flutter build apk --dart-define=SCHEDULE_BASE_URL=https://login.github.io/raspisanie/
+///   flutter build apk --dart-define=SCHEDULE_BASE_URL=https://login.github.io/unigraf/
 /// Пустой адрес (--dart-define=SCHEDULE_BASE_URL=) — приложение работает только со встроенной копией расписания
 /// (она лежит в assets/schedule и обновляется при каждой сборке).
-const scheduleBaseUrl = String.fromEnvironment('SCHEDULE_BASE_URL', defaultValue: 'https://magan-z.github.io/raspisanie/');
+const scheduleBaseUrl = String.fromEnvironment('SCHEDULE_BASE_URL', defaultValue: 'https://magan-z.github.io/unigraf/');
 
 /// Общий сервер для старост (Supabase): правки расписания и ДЗ для всей группы.
 /// Адрес и «публичный» ключ предназначены для приложений и не секретны: доступ к данным защищён на стороне сервера

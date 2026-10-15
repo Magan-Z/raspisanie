@@ -1,4 +1,4 @@
-package ru.raspisanie.raspisanie.widget
+package ru.unigraf.unigraf.widget
 
 import android.app.PendingIntent
 import android.content.Context
@@ -15,8 +15,8 @@ import android.graphics.Typeface
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
-import ru.raspisanie.raspisanie.MainActivity
-import ru.raspisanie.raspisanie.R
+import ru.unigraf.unigraf.MainActivity
+import ru.unigraf.unigraf.R
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -231,7 +231,7 @@ object WidgetRenderer {
             views.setTextViewText(R.id.title, "Откройте приложение")
             views.setTextViewText(R.id.week, "")
             for (r in rows) views.setViewVisibility(r.row, View.GONE)
-            views.setOnClickPendingIntent(R.id.add_homework, openApp(context, 3, "raspisanie://homework/new"))
+            views.setOnClickPendingIntent(R.id.add_homework, openApp(context, 3, "unigraf://homework/new"))
             return views
         }
 
@@ -261,7 +261,7 @@ object WidgetRenderer {
             views.setTextViewText(R.id.title, "Откройте приложение")
             views.setTextViewText(R.id.week, "")
             for (r in rows) views.setViewVisibility(r.row, View.GONE)
-            views.setOnClickPendingIntent(R.id.add_homework, openApp(context, 5, "raspisanie://homework/new"))
+            views.setOnClickPendingIntent(R.id.add_homework, openApp(context, 5, "unigraf://homework/new"))
             return views
         }
         val view = WidgetLogic.tomorrowView(snapshot, nowMs)
@@ -302,7 +302,7 @@ object WidgetRenderer {
 
         // «+ ДЗ» — открывает ввод домашки с предметом ближайшей (или идущей) пары
         val subject = view.lessons.firstOrNull { it.endMs > nowMs }?.subject ?: view.lessons.lastOrNull()?.subject
-        val uri = "raspisanie://homework/new" + if (subject != null) "?subject=" + Uri.encode(subject) else ""
+        val uri = "unigraf://homework/new" + if (subject != null) "?subject=" + Uri.encode(subject) else ""
         views.setOnClickPendingIntent(R.id.add_homework, openApp(context, request, uri))
     }
 
@@ -424,7 +424,7 @@ object WidgetRenderer {
         appContext = context.applicationContext
         val views = RemoteViews(context.packageName, R.layout.widget_homework)
         views.setOnClickPendingIntent(R.id.widget_root, openMenu(context, 9))
-        views.setOnClickPendingIntent(R.id.add_homework, openApp(context, 10, "raspisanie://homework/new"))
+        views.setOnClickPendingIntent(R.id.add_homework, openApp(context, 10, "unigraf://homework/new"))
         val ids = (1..4).map { listOf(idByName("hw_row_$it"), idByName("hw_title_$it"), idByName("hw_due_$it"), idByName("hw_dot_$it")) }
         val colors = colorsFor(context, snapshot)
         paint(views, colors, text = listOf(R.id.title) + ids.map { it[1] },

@@ -69,7 +69,7 @@ jobs:
             --dart-define=SCHEDULE_BASE_URL=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
 
       - name: Переименовать
-        run: cp build/app/outputs/flutter-apk/app-release.apk raspisanie.apk
+        run: cp build/app/outputs/flutter-apk/app-release.apk unigraf.apk
 
       # Ключ подписи больше не нужен: стираем его с диска ДО шагов со сторонними действиями (выпуск, загрузка файла),
       # чтобы они не могли его прочитать. Выполняется, даже если сборка упала.
@@ -81,7 +81,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
-          files: app/raspisanie.apk
+          files: app/unigraf.apk
           generate_release_notes: true
 
       # Выпуск, созданный из задачи, сам другие задачи не запускает, поэтому запускаем публикацию сайта вручную:
@@ -96,5 +96,5 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@v4
         with:
-          name: raspisanie-apk
-          path: app/raspisanie.apk
+          name: unigraf-apk
+          path: app/unigraf.apk

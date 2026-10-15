@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/domain/models.dart';
-import 'package:raspisanie/domain/search.dart';
+import 'package:unigraf/domain/models.dart';
+import 'package:unigraf/domain/search.dart';
 
 Map<String, dynamic> _json(String path) => jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
 

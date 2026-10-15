@@ -15,13 +15,13 @@ import '../domain/widget_snapshot.dart';
 /// Ключ снимка в хранилище виджетов (его же читает Kotlin: SnapshotStore).
 const snapshotKey = 'snapshot';
 const _providers = [
-  'ru.raspisanie.raspisanie.widget.NowNextWidget',
-  'ru.raspisanie.raspisanie.widget.TodayWidget',
-  'ru.raspisanie.raspisanie.widget.TomorrowWidget',
-  'ru.raspisanie.raspisanie.widget.StripWidget',
-  'ru.raspisanie.raspisanie.widget.RoomWidget',
-  'ru.raspisanie.raspisanie.widget.WeekWidget',
-  'ru.raspisanie.raspisanie.widget.HomeworkWidget',
+  'ru.unigraf.unigraf.widget.NowNextWidget',
+  'ru.unigraf.unigraf.widget.TodayWidget',
+  'ru.unigraf.unigraf.widget.TomorrowWidget',
+  'ru.unigraf.unigraf.widget.StripWidget',
+  'ru.unigraf.unigraf.widget.RoomWidget',
+  'ru.unigraf.unigraf.widget.WeekWidget',
+  'ru.unigraf.unigraf.widget.HomeworkWidget',
 ];
 
 class WidgetBridge {

@@ -18,7 +18,7 @@ Future<void> main() async {
   if (!kIsWeb) registerBackgroundSync();
   runApp(ProviderScope(
     overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-    child: const RaspisanieApp(),
+    child: const UniGrafApp(),
   ));
 }
 
@@ -34,8 +34,8 @@ class _IosScrollBehavior extends MaterialScrollBehavior {
   ScrollPhysics getScrollPhysics(BuildContext context) => const BouncingScrollPhysics();
 }
 
-class RaspisanieApp extends ConsumerWidget {
-  const RaspisanieApp({super.key});
+class UniGrafApp extends ConsumerWidget {
+  const UniGrafApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

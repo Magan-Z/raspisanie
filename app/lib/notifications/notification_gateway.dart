@@ -130,7 +130,7 @@ class LocalNotificationGateway implements NotificationGateway {
   @override
   Future<bool> openSystemSettings() async {
     try {
-      return await const MethodChannel('raspisanie/system').invokeMethod<bool>('openNotificationSettings') ?? false;
+      return await const MethodChannel('unigraf/system').invokeMethod<bool>('openNotificationSettings') ?? false;
     } on PlatformException {
       return false;
     }

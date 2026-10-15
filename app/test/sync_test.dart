@@ -5,9 +5,9 @@ import 'dart:io';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/data/local/database.dart';
-import 'package:raspisanie/data/remote/schedule_api.dart';
-import 'package:raspisanie/data/repositories/schedule_repository.dart';
+import 'package:unigraf/data/local/database.dart';
+import 'package:unigraf/data/remote/schedule_api.dart';
+import 'package:unigraf/data/repositories/schedule_repository.dart';
 
 import 'support/fakes.dart';
 

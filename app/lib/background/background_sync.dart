@@ -10,7 +10,7 @@ import '../app_outputs.dart';
 import '../app_state.dart';
 import '../config.dart';
 
-const _uniqueName = 'raspisanie-background-sync';
+const _uniqueName = 'unigraf-background-sync';
 const _taskName = 'syncSchedule';
 
 /// Сама работа — отдельной функцией, чтобы её можно было проверить тестом.

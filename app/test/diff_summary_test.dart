@@ -3,8 +3,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/domain/diff_summary.dart';
-import 'package:raspisanie/domain/models.dart';
+import 'package:unigraf/domain/diff_summary.dart';
+import 'package:unigraf/domain/models.dart';
 
 Map<String, dynamic> lesson(int weekday, int pair, int week, List<int> subgroups, String subject, String? room, {List<String> tags = const []}) => {
       'weekday': weekday, 'pair': pair, 'week': week, 'subgroups': subgroups, 'kind': 'practice',

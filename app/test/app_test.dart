@@ -9,19 +9,19 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:raspisanie/data/remote/shared_api.dart';
+import 'package:unigraf/data/remote/shared_api.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/domain/notification_plan.dart';
-import 'package:raspisanie/app_state.dart';
-import 'package:raspisanie/core/clock.dart';
-import 'package:raspisanie/data/attachments/attachment_store.dart';
-import 'package:raspisanie/data/local/database.dart';
-import 'package:raspisanie/data/repositories/schedule_repository.dart';
-import 'package:raspisanie/main.dart';
-import 'package:raspisanie/theme/brand_colors.dart';
-import 'package:raspisanie/theme/next_design.dart';
+import 'package:unigraf/domain/notification_plan.dart';
+import 'package:unigraf/app_state.dart';
+import 'package:unigraf/core/clock.dart';
+import 'package:unigraf/data/attachments/attachment_store.dart';
+import 'package:unigraf/data/local/database.dart';
+import 'package:unigraf/data/repositories/schedule_repository.dart';
+import 'package:unigraf/main.dart';
+import 'package:unigraf/theme/brand_colors.dart';
+import 'package:unigraf/theme/next_design.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fakes.dart';
@@ -49,7 +49,7 @@ Future<void> _start(WidgetTester tester, {Map<String, Object> prefs = const {}, 
       sharedApiProvider.overrideWithValue(sharedApi), // по умолчанию общий сервер выключен; тесты старосты подставляют свой
       ...extraOverrides,
     ],
-    child: const RaspisanieApp(),
+    child: const UniGrafApp(),
   ));
   await _settle(tester);
 }
@@ -276,15 +276,15 @@ void main() {
     await _start(tester, prefs: profile, extraOverrides: [linkChannelProvider.overrideWithValue(links)]); // среда 7 октября
     expect(find.textContaining('среда, 7 октября'), findsWidgets);
 
-    links.send('raspisanie://day/tomorrow');
+    links.send('unigraf://day/tomorrow');
     await _settle(tester);
     expect(find.textContaining('четверг, 8 октября'), findsWidgets);
 
-    links.send('raspisanie://week');
+    links.send('unigraf://week');
     await _settle(tester);
     expect(find.text('1 неделя'), findsWidgets); // вкладка «Неделя»
 
-    links.send('raspisanie://search');
+    links.send('unigraf://search');
     await _settle(tester);
     expect(find.text('Свободные'), findsOneWidget); // вкладка «Поиск»
   });

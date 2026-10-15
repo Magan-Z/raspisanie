@@ -32,7 +32,7 @@ abstract class WidgetPinner {
 }
 
 class HomeWidgetPinner implements WidgetPinner {
-  static const _package = 'ru.raspisanie.raspisanie.widget';
+  static const _package = 'ru.unigraf.unigraf.widget';
 
   @override
   Future<bool> isSupported() async {

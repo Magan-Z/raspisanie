@@ -4,11 +4,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/domain/homework.dart';
-import 'package:raspisanie/domain/models.dart';
-import 'package:raspisanie/domain/notification_plan.dart';
-import 'package:raspisanie/domain/widget_snapshot.dart';
-import 'package:raspisanie/core/formatting.dart';
+import 'package:unigraf/domain/homework.dart';
+import 'package:unigraf/domain/models.dart';
+import 'package:unigraf/domain/notification_plan.dart';
+import 'package:unigraf/domain/widget_snapshot.dart';
+import 'package:unigraf/core/formatting.dart';
 
 Map<String, dynamic> _fixture(String name) =>
     jsonDecode(File('test/fixtures/$name').readAsStringSync()) as Map<String, dynamic>;

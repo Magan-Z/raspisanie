@@ -1,4 +1,4 @@
-package ru.raspisanie.raspisanie.widget
+package ru.unigraf.unigraf.widget
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -12,7 +12,7 @@ import android.content.Intent
  * чтобы виджет переключался ровно по звонку, даже если приложение не запущено.
  */
 object WidgetUpdater {
-    const val ACTION_UPDATE = "ru.raspisanie.raspisanie.WIDGET_UPDATE"
+    const val ACTION_UPDATE = "ru.unigraf.unigraf.WIDGET_UPDATE"
 
     // Окно будильника: система может сдвинуть срабатывание не больше чем на минуту
     private const val ALARM_WINDOW_MS = 60_000L

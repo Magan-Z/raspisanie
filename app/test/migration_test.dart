@@ -3,9 +3,9 @@
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/data/local/database.dart';
-import 'package:raspisanie/data/repositories/overrides_repository.dart';
-import 'package:raspisanie/domain/models.dart';
+import 'package:unigraf/data/local/database.dart';
+import 'package:unigraf/data/repositories/overrides_repository.dart';
+import 'package:unigraf/domain/models.dart';
 
 void main() {
   test('база версии 1 с правкой открывается, правка сохраняется, новые поля имеют значения по умолчанию', () async {

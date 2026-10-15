@@ -5,8 +5,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/theme/brand_colors.dart';
-import 'package:raspisanie/theme/subject_palette.dart';
+import 'package:unigraf/theme/brand_colors.dart';
+import 'package:unigraf/theme/subject_palette.dart';
 
 double _luminance(Color c) {
   double channel(double v) => v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();

@@ -76,7 +76,7 @@ def test_uid_stable_between_runs(groups: dict[str, Group], config: dict) -> None
     uids = re.findall(r"UID:(\S+)", first)
     assert uids == re.findall(r"UID:(\S+)", second)
     assert len(uids) == len(set(uids))
-    assert "ofo-1-bi-25-1-20261007-4@raspisanie" in uids
+    assert "ofo-1-bi-25-1-20261007-4@unigraf" in uids
 
 
 def test_uids_unique_in_every_calendar(groups: dict[str, Group], config: dict) -> None:

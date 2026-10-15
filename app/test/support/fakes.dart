@@ -9,13 +9,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:raspisanie/data/attachments/attachment_store.dart';
-import 'package:raspisanie/data/remote/shared_api.dart';
-import 'package:raspisanie/domain/attachment.dart';
-import 'package:raspisanie/domain/notification_plan.dart';
-import 'package:raspisanie/notifications/notification_gateway.dart';
-import 'package:raspisanie/widget_bridge/widget_pinner.dart';
-import 'package:raspisanie/widget_bridge/deep_links.dart';
+import 'package:unigraf/data/attachments/attachment_store.dart';
+import 'package:unigraf/data/remote/shared_api.dart';
+import 'package:unigraf/domain/attachment.dart';
+import 'package:unigraf/domain/notification_plan.dart';
+import 'package:unigraf/notifications/notification_gateway.dart';
+import 'package:unigraf/widget_bridge/widget_pinner.dart';
+import 'package:unigraf/widget_bridge/deep_links.dart';
 
 /// Ассеты читаются прямо с диска и без ожидания — в тестах так надёжнее, чем настоящий rootBundle.
 class DiskAssets extends AssetBundle {
@@ -155,7 +155,7 @@ class FakeAttachmentPicker implements AttachmentPicker {
 
 /// Поддельный канал ссылок: тест сам «присылает» ссылку, как будто нажали быстрое действие на значке.
 class FakeLinks extends LinkChannel {
-  FakeLinks() : super(channel: const MethodChannel('raspisanie/links_test'));
+  FakeLinks() : super(channel: const MethodChannel('unigraf/links_test'));
   void Function(String link)? _listener;
 
   @override

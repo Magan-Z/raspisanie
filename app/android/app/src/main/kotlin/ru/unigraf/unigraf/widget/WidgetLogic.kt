@@ -1,4 +1,4 @@
-package ru.raspisanie.raspisanie.widget
+package ru.unigraf.unigraf.widget
 
 import org.json.JSONObject
 import java.text.SimpleDateFormat

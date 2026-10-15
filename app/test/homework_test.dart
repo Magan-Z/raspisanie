@@ -2,10 +2,10 @@
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/data/local/database.dart';
-import 'package:raspisanie/data/repositories/homework_repository.dart';
-import 'package:raspisanie/domain/homework.dart';
-import 'package:raspisanie/domain/models.dart';
+import 'package:unigraf/data/local/database.dart';
+import 'package:unigraf/data/repositories/homework_repository.dart';
+import 'package:unigraf/domain/homework.dart';
+import 'package:unigraf/domain/models.dart';
 
 HomeworkItem hw(String subject, DateTime due, {bool done = false, String text = 'задание', LessonKind? kind}) =>
     HomeworkItem(subject: subject, text: text, dueDate: due, done: done, kind: kind, createdAt: DateTime.utc(2026, 10, 1));
@@ -72,7 +72,7 @@ void main() {
     test('посторонний текст → понятная ошибка', () {
       expect(() => importHomework('привет'), throwsA(isA<FormatException>()));
       expect(() => importHomework('{"a": 1}'), throwsA(isA<FormatException>()));
-      expect(() => importHomework('{"app":"raspisanie","homework":[{"subject":1}]}'), throwsA(isA<FormatException>()));
+      expect(() => importHomework('{"app":"unigraf","homework":[{"subject":1}]}'), throwsA(isA<FormatException>()));
     });
   });
 

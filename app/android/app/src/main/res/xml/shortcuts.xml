@@ -9,9 +9,9 @@
         android:shortcutLongLabel="@string/shortcut_add_homework_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:data="raspisanie://homework/new"
-            android:targetClass="ru.raspisanie.raspisanie.MainActivity"
-            android:targetPackage="ru.raspisanie.raspisanie" />
+            android:data="unigraf://homework/new"
+            android:targetClass="ru.unigraf.unigraf.MainActivity"
+            android:targetPackage="ru.unigraf.unigraf" />
     </shortcut>
     <shortcut
         android:shortcutId="tomorrow"
@@ -21,9 +21,9 @@
         android:shortcutLongLabel="@string/shortcut_tomorrow_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:data="raspisanie://day/tomorrow"
-            android:targetClass="ru.raspisanie.raspisanie.MainActivity"
-            android:targetPackage="ru.raspisanie.raspisanie" />
+            android:data="unigraf://day/tomorrow"
+            android:targetClass="ru.unigraf.unigraf.MainActivity"
+            android:targetPackage="ru.unigraf.unigraf" />
     </shortcut>
     <shortcut
         android:shortcutId="week"
@@ -33,9 +33,9 @@
         android:shortcutLongLabel="@string/shortcut_week_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:data="raspisanie://week"
-            android:targetClass="ru.raspisanie.raspisanie.MainActivity"
-            android:targetPackage="ru.raspisanie.raspisanie" />
+            android:data="unigraf://week"
+            android:targetClass="ru.unigraf.unigraf.MainActivity"
+            android:targetPackage="ru.unigraf.unigraf" />
     </shortcut>
     <shortcut
         android:shortcutId="search"
@@ -45,8 +45,8 @@
         android:shortcutLongLabel="@string/shortcut_search_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:data="raspisanie://search"
-            android:targetClass="ru.raspisanie.raspisanie.MainActivity"
-            android:targetPackage="ru.raspisanie.raspisanie" />
+            android:data="unigraf://search"
+            android:targetClass="ru.unigraf.unigraf.MainActivity"
+            android:targetPackage="ru.unigraf.unigraf" />
     </shortcut>
 </shortcuts>

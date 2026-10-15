@@ -10,7 +10,7 @@ import os
 import sys
 
 root = sys.argv[1]
-prefix = sys.argv[2] if len(sys.argv) > 2 else "raspisanie-app-"
+prefix = sys.argv[2] if len(sys.argv) > 2 else "unigraf-app-"
 SKIP_DIRS = ("canvaskit/",)  # движок кладётся отдельно (sw.js выбирает нужную версию)
 SKIP_NAMES = {"sw.js", "flutter_service_worker.js", "drift_worker.dart", "NOTICES", "version.json"}
 SKIP_SUFFIXES = (".map", ".deps", ".symbols")

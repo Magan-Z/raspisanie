@@ -13,12 +13,12 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/app_state.dart';
-import 'package:raspisanie/core/clock.dart';
-import 'package:raspisanie/data/local/database.dart';
-import 'package:raspisanie/data/remote/shared_api.dart';
-import 'package:raspisanie/data/repositories/schedule_repository.dart';
-import 'package:raspisanie/main.dart';
+import 'package:unigraf/app_state.dart';
+import 'package:unigraf/core/clock.dart';
+import 'package:unigraf/data/local/database.dart';
+import 'package:unigraf/data/remote/shared_api.dart';
+import 'package:unigraf/data/repositories/schedule_repository.dart';
+import 'package:unigraf/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../test/support/fakes.dart';
@@ -79,7 +79,7 @@ void main() {
           sharedApiProvider.overrideWithValue(sharedApi),
           clockProvider.overrideWithValue(FixedClock(now ?? DateTime.utc(2026, 10, 7, 10, 30))), // ср 13:30 МСК
         ],
-        child: const RaspisanieApp(),
+        child: const UniGrafApp(),
       ),
     ));
 

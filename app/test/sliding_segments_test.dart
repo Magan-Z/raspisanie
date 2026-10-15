@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/features/common/sliding_segments.dart';
+import 'package:unigraf/features/common/sliding_segments.dart';
 
 void main() {
   testWidgets('нажатие выбирает часть; три части в один ряд на экране 320 dp', (

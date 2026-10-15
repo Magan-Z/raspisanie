@@ -67,11 +67,14 @@ jobs:
         run: |
           ok=0
           for attempt in 1 2 3; do
-            if gh release download --repo "${{ github.repository }}" --pattern raspisanie.apk --dir ../public --clobber; then ok=1; break; fi
+            if gh release download --repo "${{ github.repository }}" --pattern "*.apk" --dir ../public --clobber; then ok=1; break; fi
             sleep 5
           done
           if [ "$ok" = 1 ]; then
-            size=$(stat -c %s ../public/raspisanie.apk)
+            # файл в выпуске мог называться по-старому (raspisanie.apk): на сайте он всегда unigraf.apk
+            apk=$(ls ../public/*.apk | head -1)
+            [ "$apk" = ../public/unigraf.apk ] || mv "$apk" ../public/unigraf.apk
+            size=$(stat -c %s ../public/unigraf.apk)
             tag=$(gh release view --repo "${{ github.repository }}" --json tagName --jq .tagName)
             printf '{"version":"%s","size":%s}\n' "${tag#v}" "$size" > ../public/apk.json
             echo "APK $tag, $size байт"

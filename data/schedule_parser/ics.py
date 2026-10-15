@@ -39,7 +39,7 @@ def build_calendar(group: Group, subgroup: int, gender: str | None, config: dict
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//raspisanie//schedule_parser//RU",
+        "PRODID:-//unigraf//schedule_parser//RU",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
         f"X-WR-CALNAME:{escape(name)}",
@@ -65,7 +65,7 @@ def build_calendar(group: Group, subgroup: int, gender: str | None, config: dict
 
             lines += [
                 "BEGIN:VEVENT",
-                f"UID:{uid}@raspisanie",
+                f"UID:{uid}@unigraf",
                 f"DTSTAMP:{stamp}",
                 f"DTSTART:{_utc(start)}",
                 f"DTEND:{_utc(end)}",

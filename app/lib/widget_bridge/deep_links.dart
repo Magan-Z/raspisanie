@@ -1,4 +1,4 @@
-// Ссылки вида raspisanie://homework/new?subject=Философия — приходят с кнопки «+ ДЗ» на виджете.
+// Ссылки вида unigraf://homework/new?subject=Философия — приходят с кнопки «+ ДЗ» на виджете.
 
 import 'package:flutter/services.dart';
 
@@ -29,7 +29,7 @@ Object? parseAnyLink(String? link) {
   final add = parseLink(link);
   if (add != null) return add;
   final uri = link == null ? null : Uri.tryParse(link);
-  if (uri == null || uri.scheme != 'raspisanie') return null;
+  if (uri == null || uri.scheme != 'unigraf') return null;
   final bare = uri.path.isEmpty || uri.path == '/';
   return switch (uri.host) {
     'homework' when bare => const OpenHomeworkLink(),
@@ -44,8 +44,8 @@ Object? parseAnyLink(String? link) {
 AddHomeworkLink? parseLink(String? link) {
   if (link == null) return null;
   final uri = Uri.tryParse(link);
-  if (uri == null || uri.scheme != 'raspisanie') return null;
-  // raspisanie://homework/new  → host = homework, path = /new
+  if (uri == null || uri.scheme != 'unigraf') return null;
+  // unigraf://homework/new  → host = homework, path = /new
   if (uri.host == 'homework' && uri.path == '/new') {
     final subject = uri.queryParameters['subject'];
     return AddHomeworkLink(subject: (subject == null || subject.isEmpty) ? null : subject);
@@ -54,7 +54,7 @@ AddHomeworkLink? parseLink(String? link) {
 }
 
 class LinkChannel {
-  LinkChannel({this.channel = const MethodChannel('raspisanie/links')});
+  LinkChannel({this.channel = const MethodChannel('unigraf/links')});
   final MethodChannel channel;
 
   /// Ссылка, которой приложение было запущено (null — запущено обычным значком).

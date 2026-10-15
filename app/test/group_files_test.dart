@@ -4,11 +4,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/data/attachments/attachment_store.dart';
-import 'package:raspisanie/data/attachments/group_files.dart';
-import 'package:raspisanie/data/remote/shared_api.dart';
-import 'package:raspisanie/domain/attachment.dart';
-import 'package:raspisanie/domain/group_shared.dart';
+import 'package:unigraf/data/attachments/attachment_store.dart';
+import 'package:unigraf/data/attachments/group_files.dart';
+import 'package:unigraf/data/remote/shared_api.dart';
+import 'package:unigraf/domain/attachment.dart';
+import 'package:unigraf/domain/group_shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fakes.dart';

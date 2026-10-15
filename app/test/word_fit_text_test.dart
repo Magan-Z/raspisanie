@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:raspisanie/features/common/word_fit_text.dart';
+import 'package:unigraf/features/common/word_fit_text.dart';
 
 Widget _wrap(Widget child, double width) => MaterialApp(
       home: Scaffold(body: Align(alignment: Alignment.topLeft, child: SizedBox(width: width, child: child))),

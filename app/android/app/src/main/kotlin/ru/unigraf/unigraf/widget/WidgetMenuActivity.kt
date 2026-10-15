@@ -1,4 +1,4 @@
-package ru.raspisanie.raspisanie.widget
+package ru.unigraf.unigraf.widget
 
 import android.app.Activity
 import android.content.Context
@@ -17,8 +17,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import ru.raspisanie.raspisanie.MainActivity
-import ru.raspisanie.raspisanie.R
+import ru.unigraf.unigraf.MainActivity
+import ru.unigraf.unigraf.R
 
 /**
  * Меню действий, которое открывается одиночным нажатием на любой виджет:
@@ -34,10 +34,10 @@ class WidgetMenuActivity : Activity() {
 
     private val items = listOf(
         Item(R.drawable.ic_menu_open_app, "Открыть приложение", null),
-        Item(R.drawable.ic_shortcut_add, "Добавить ДЗ", "raspisanie://homework/new"),
-        Item(R.drawable.ic_shortcut_tomorrow, "Завтра", "raspisanie://day/tomorrow"),
-        Item(R.drawable.ic_shortcut_week, "Неделя", "raspisanie://week"),
-        Item(R.drawable.ic_shortcut_search, "Поиск", "raspisanie://search"),
+        Item(R.drawable.ic_shortcut_add, "Добавить ДЗ", "unigraf://homework/new"),
+        Item(R.drawable.ic_shortcut_tomorrow, "Завтра", "unigraf://day/tomorrow"),
+        Item(R.drawable.ic_shortcut_week, "Неделя", "unigraf://week"),
+        Item(R.drawable.ic_shortcut_search, "Поиск", "unigraf://search"),
     )
 
     private fun dp(value: Int): Int =
