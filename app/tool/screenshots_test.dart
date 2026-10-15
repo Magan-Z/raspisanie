@@ -25,6 +25,10 @@ import '../test/support/fakes.dart';
 
 const outDir = '/tmp/claude-shots/design';
 
+// Для документов нужны снимки крупнее и в другой папке: SHOT_RATIO=3 SHOT_ROOT=/путь flutter test tool/screenshots_test.dart
+final shotRatio = double.tryParse(Platform.environment['SHOT_RATIO'] ?? '') ?? 1;
+final shotRoot = Platform.environment['SHOT_ROOT'] ?? '/tmp/claude-shots';
+
 Future<void> loadFonts() async {
   final flutterRoot = Platform.environment['FLUTTER_ROOT'] ?? '/opt/homebrew/share/flutter';
   Future<ByteData> read(String path) async => ByteData.sublistView(File(path).readAsBytesSync());
@@ -100,10 +104,10 @@ void main() {
       await settle();
     }
     await tester.runAsync(() async {
-      final target = dir ?? outDir;
+      final target = (dir ?? outDir).replaceFirst('/tmp/claude-shots', shotRoot);
       Directory(target).createSync(recursive: true);
       final boundary = key.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: pixelRatio);
+      final image = await boundary.toImage(pixelRatio: pixelRatio == 1 ? shotRatio : pixelRatio);
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
       File('$target/$name.png').writeAsBytesSync(bytes!.buffer.asUint8List());
     });
