@@ -83,7 +83,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 const Illustration(IllustrationKind.welcome, width: 128),
               ]),
               const SizedBox(height: Gap.lg),
-              Text('Расписание', style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.onPrimaryContainer)),
+              Text('UniGraf', style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.onPrimaryContainer)),
               const SizedBox(height: Gap.sm),
               Text(
                 'Расписание всего института в телефоне: пары, аудитории, домашка и напоминания. Без регистрации.',

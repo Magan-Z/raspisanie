@@ -59,7 +59,7 @@ class RaspisanieApp extends ConsumerWidget {
               ),
             );
         return MaterialApp(
-          title: 'Расписание',
+          title: 'UniGraf',
           debugShowCheckedModeBanner: false,
           scrollBehavior: _iosScroll ? const _IosScrollBehavior() : null,
           themeMode: settings.themeMode,

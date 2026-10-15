@@ -83,7 +83,7 @@ class WidgetMenuActivity : Activity() {
         root.addView(card, LinearLayout.LayoutParams(dp(300).coerceAtMost(resources.displayMetrics.widthPixels - dp(48)), ViewGroup.LayoutParams.WRAP_CONTENT))
 
         card.addView(TextView(this).apply {
-            text = "Расписание"
+            text = "UniGraf"
             setTextColor(c.textSecondary)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             letterSpacing = 0.05f

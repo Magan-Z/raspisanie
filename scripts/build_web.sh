@@ -34,7 +34,7 @@ flutter build web --release --base-href "$BASE_HREF" --no-web-resources-cdn \
 # 3. Кэш приложения (sw.js): список файлов и отпечаток сборки
 if [ "${NEXT:-}" = "1" ]; then
   # Название вкладки и значка на экране «Домой» у тестовой версии другое, чтобы их не путать
-  sed -i.bak 's#<title>Расписание</title>#<title>Расписание (тест)</title>#; s#apple-mobile-web-app-title" content="Расписание"#apple-mobile-web-app-title" content="Расписание тест"#; s#<meta charset="UTF-8">#<meta charset="UTF-8"><meta name="robots" content="noindex">#' build/web/index.html && rm -f build/web/index.html.bak
+  sed -i.bak 's#<title>UniGraf</title>#<title>UniGraf (тест)</title>#; s#apple-mobile-web-app-title" content="UniGraf"#apple-mobile-web-app-title" content="UniGraf тест"#; s#<meta charset="UTF-8">#<meta charset="UTF-8"><meta name="robots" content="noindex">#' build/web/index.html && rm -f build/web/index.html.bak
 fi
 python3 ../scripts/make_sw.py build/web "$CACHE_PREFIX"
 echo "Готово: app/build/web (адрес на сайте: $BASE_HREF)"

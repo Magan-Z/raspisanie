@@ -8,10 +8,10 @@
 <meta name="theme-color" content="#0E1416" media="(prefers-color-scheme: dark)">
 <!-- Корень сайта: на основной странице пусто, на тестовой (/site-next/) публикация ставит «../», чтобы приложение, APK и расписание брались с основного сайта -->
 <meta name="site-root" content="">
-<title>Расписание — приложение для студентов ИМФИТ</title>
-<meta name="description" content="Пары, аудитории и домашка в одном месте. Студенческое приложение: без регистрации, работает без интернета, староста группы вносит замены.">
+<title>UniGraf — приложение для студентов ИМФИТ</title>
+<meta name="description" content="UniGraf: пары, аудитории и домашка в одном месте. Студенческое приложение: без регистрации, работает без интернета, староста группы вносит замены.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Расписание — приложение для студентов ИМФИТ">
+<meta property="og:title" content="UniGraf — приложение для студентов ИМФИТ">
 <meta property="og:description" content="Пары, аудитории и домашка в одном месте. Без регистрации, работает без интернета.">
 <meta property="og:image" content="https://magan-z.github.io/raspisanie/img/og.png">
 <meta property="og:locale" content="ru_RU">
@@ -386,9 +386,9 @@
 
 <header class="hdr" id="hdr">
   <div class="wrap top">
-    <a class="brand" href="./" aria-label="Расписание, на главную">
+    <a class="brand" href="./" aria-label="UniGraf, на главную">
       <img src="img/Icon-192.png" alt="" width="38" height="38">
-      <span>Расписание</span>
+      <span>UniGraf</span>
     </a>
     <nav class="nav" aria-label="Разделы страницы">
       <a href="#screens">Экраны</a>
@@ -799,7 +799,7 @@ $("btn-copy").addEventListener("click", async () => {
 if (navigator.share) {
   $("btn-share").hidden = false;
   $("btn-share").addEventListener("click", () => {
-    navigator.share({ title: "Расписание для студентов ИМФИТ", text: "Пары, аудитории и домашка в одном приложении:", url: PAGE_URL }).catch(() => {});
+    navigator.share({ title: "UniGraf — приложение для студентов ИМФИТ", text: "Пары, аудитории и домашка в одном приложении:", url: PAGE_URL }).catch(() => {});
   });
 }
 

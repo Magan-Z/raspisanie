@@ -53,7 +53,7 @@ def preview_image() -> None:
     mask = Image.new("L", (112, 112), 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, 111, 111), radius=30, fill=255)
     im.paste(icon, (70, 56), mask)
-    d.text((206, 78), "Расписание", font=font(52, 800), fill=PETROL)
+    d.text((206, 78), "UniGraf", font=font(52, 800), fill=PETROL)
     big = font(70, 800)
     d.text((70, 200), "Пары, аудитории", font=big, fill=INK)
     d.text((70, 276), "и домашка", font=big, fill=INK)

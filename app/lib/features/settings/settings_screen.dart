@@ -269,7 +269,7 @@ class SettingsScreen extends ConsumerWidget {
                         ? 'Уведомления разрешены'
                         : opened
                             ? 'Включите «Показывать уведомления» на открывшейся странице'
-                            : 'Уведомления запрещены. Включите их в настройках телефона: Приложения → Расписание → Уведомления'),
+                            : 'Уведомления запрещены. Включите их в настройках телефона: Приложения → UniGraf → Уведомления'),
                   ));
                 },
               );
@@ -316,7 +316,7 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(width: Gap.lg),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Расписание', style: theme.textTheme.titleMedium),
+                  Text('UniGraf', style: theme.textTheme.titleMedium),
                   const SizedBox(height: Gap.xs),
                   Text(
                     'Версия расписания: ${index?.version.substring(0, 10) ?? '—'}\nБез аккаунтов, рекламы и слежки: домашка и правки хранятся только на вашем телефоне.',
