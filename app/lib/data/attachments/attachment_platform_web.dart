@@ -106,10 +106,14 @@ class DatabaseAttachmentStore implements AttachmentStore {
     if (bytes == null) return 'Файл не найден: возможно, данные браузера были очищены';
     final blob = web.Blob([bytes.toJS].toJS, web.BlobPropertyBag(type: _mime[attachment.extension] ?? 'application/octet-stream'));
     final url = web.URL.createObjectURL(blob);
+    // На iPhone файл открывается просмотром в новой вкладке (приложение остаётся открытым); в остальных браузерах
+    // файл просто скачивается, и пустая вкладка не нужна
+    final ua = web.window.navigator.userAgent;
+    final ios = ua.contains('iPhone') || ua.contains('iPad') || (ua.contains('Macintosh') && web.window.navigator.maxTouchPoints > 1);
     final link = web.document.createElement('a') as web.HTMLAnchorElement
       ..href = url
-      ..download = attachment.name
-      ..target = '_blank';
+      ..download = attachment.name;
+    if (ios) link.target = '_blank';
     web.document.body?.append(link);
     link.click();
     link.remove();
