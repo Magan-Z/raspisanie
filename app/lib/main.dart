@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_state.dart';
+import 'config.dart';
+import 'data/remote/shared_api.dart';
 import 'domain/teacher.dart';
 import 'background/background_sync.dart';
 import 'features/home_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'theme/app_theme.dart';
+import 'usage_ping.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +23,13 @@ Future<void> main() async {
     overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
     child: const UniGrafApp(),
   ));
+  // Анонимный счётчик пользователей: в фоне, через несколько секунд, чтобы не отнимать время у запуска
+  if (sharedApiUrl.isNotEmpty) {
+    Future<void>.delayed(
+      const Duration(seconds: 4),
+      () => sendUsagePing(prefs: prefs, api: SharedApi(sharedApiUrl, sharedApiKey), now: DateTime.now()),
+    );
+  }
 }
 
 /// Проверочный режим веб-версии: адрес …/app/?scroll=ios включает «айфоновскую» прокрутку (длинный плавный разгон

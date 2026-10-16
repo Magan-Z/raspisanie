@@ -66,7 +66,8 @@ jobs:
       - name: Сборка
         run: |
           flutter build apk --release --target-platform android-arm64 \
-            --dart-define=SCHEDULE_BASE_URL=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+            --dart-define=SCHEDULE_BASE_URL=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ \
+            --dart-define=APP_VERSION=${GITHUB_REF_NAME#v}
 
       - name: Переименовать
         run: cp build/app/outputs/flutter-apk/app-release.apk unigraf.apk

@@ -82,6 +82,10 @@ class SharedApi {
     throw SharedApiException('server', message ?? 'HTTP ${response.statusCode}');
   }
 
+  /// Анонимный счётчик пользователей (раз в сутки): случайный номер установки, платформа, версия.
+  Future<void> pingUsage(String install, String platform, String version) =>
+      _rpc('ping_usage', {'p_install': install, 'p_platform': platform, 'p_version': version}, timeout: const Duration(seconds: 6));
+
   /// Данные группы: с [since] — только изменения после этого момента, без — всё.
   Future<Map<String, dynamic>> getGroupData(String group, {String? since}) async =>
       _asMap(await _rpc('get_group_data', {'p_group': group, if (since != null) 'p_since': since}));

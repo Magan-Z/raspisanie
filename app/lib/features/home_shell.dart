@@ -11,6 +11,7 @@ import '../app_state.dart';
 import '../core/bells.dart' show moscowToday;
 import '../domain/notification_plan.dart';
 import '../theme/next_design.dart';
+import '../usage_ping.dart';
 import '../widget_bridge/deep_links.dart';
 import 'homework/add_homework_sheet.dart';
 import 'homework/homework_screen.dart';
@@ -156,6 +157,8 @@ class _HomeShellState extends ConsumerState<HomeShell>
     if (state == AppLifecycleState.resumed) {
       syncSchedule(ProviderScope.containerOf(context));
       syncGroupShared(ProviderScope.containerOf(context));
+      // приложение могло висеть в памяти несколько дней — отмечаем новый день (раз в сутки, молча)
+      sendUsagePing(prefs: ref.read(sharedPreferencesProvider), api: ref.read(sharedApiProvider), now: ref.read(clockProvider).now());
       _scheduleRefresh(); // наступил новый день — снимок и уведомления «7 дней вперёд» сдвигаются
     }
   }

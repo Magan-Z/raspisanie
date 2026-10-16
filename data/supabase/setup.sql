@@ -627,3 +627,58 @@ begin
   delete from public.download_file_day where day < current_date - 7;
   return jsonb_build_object('name', r.name, 'data', translate(encode(r.data, 'base64'), E'\n\r', ''));
 end $$;
+
+-- ============================================================================
+-- Часть 7 (миграция usage_ping): анонимный счётчик пользователей.
+-- Раз в сутки приложение присылает случайный номер установки, платформу и версию — ни имени, ни группы, ни расписания,
+-- ни адреса устройства. Читает сводку только владелец (запросы к usage_summary / usage_by_day / usage_by_version).
+-- ============================================================================
+create table public.usage_ping (
+  day      date not null,
+  install  text not null check (install ~ '^[0-9a-f]{32}$'),
+  platform text not null check (platform in ('android', 'ios', 'web', 'other')),
+  version  text not null default '' check (length(version) <= 16),
+  primary key (day, install)
+);
+alter table public.usage_ping enable row level security;
+revoke all on public.usage_ping from anon, authenticated;
+
+create function public.ping_usage(p_install text, p_platform text, p_version text default '') returns void
+language plpgsql security definer set search_path = '' as $$
+declare today date := (now() at time zone 'Europe/Moscow')::date;
+begin
+  if p_install is null or p_install !~ '^[0-9a-f]{32}$' or p_platform not in ('android', 'ios', 'web', 'other')
+     or length(coalesce(p_version, '')) > 16 then
+    raise exception 'bad_ping';
+  end if;
+  -- защита от накрутки и раздувания базы: больше 20 000 записей за день не принимаем
+  if (select count(*) from public.usage_ping where day = today) >= 20000 then return; end if;
+  insert into public.usage_ping (day, install, platform, version)
+    values (today, p_install, p_platform, coalesce(p_version, ''))
+    on conflict (day, install) do nothing;
+  -- записи старше 400 дней не нужны; чистим изредка
+  if random() < 0.01 then delete from public.usage_ping where day < today - 400; end if;
+end $$;
+grant execute on function public.ping_usage(text, text, text) to anon, authenticated;
+
+create view public.usage_summary with (security_invoker = true) as
+select
+  (select count(distinct install) from public.usage_ping where day = (now() at time zone 'Europe/Moscow')::date) as today,
+  (select count(distinct install) from public.usage_ping where day >= (now() at time zone 'Europe/Moscow')::date - 6) as last_7_days,
+  (select count(distinct install) from public.usage_ping where day >= (now() at time zone 'Europe/Moscow')::date - 29) as last_30_days,
+  (select count(distinct install) from public.usage_ping) as all_time;
+
+create view public.usage_by_day with (security_invoker = true) as
+select day,
+       count(*) as users,
+       count(*) filter (where platform = 'android') as android,
+       count(*) filter (where platform = 'web') as web,
+       count(*) filter (where platform = 'ios') as ios
+  from public.usage_ping group by day order by day desc;
+
+create view public.usage_by_version with (security_invoker = true) as
+select version, platform, count(distinct install) as users
+  from public.usage_ping where day >= (now() at time zone 'Europe/Moscow')::date - 6
+ group by version, platform order by users desc;
+
+revoke all on public.usage_summary, public.usage_by_day, public.usage_by_version from anon, authenticated;
