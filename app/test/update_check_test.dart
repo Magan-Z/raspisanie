@@ -11,7 +11,6 @@ import 'package:unigraf/core/clock.dart';
 import 'package:unigraf/features/update_banner.dart';
 import 'package:unigraf/update_check.dart';
 
-import 'support/fakes.dart';
 
 void main() {
   group('версии', () {
