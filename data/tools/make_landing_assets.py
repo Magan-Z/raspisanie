@@ -21,7 +21,7 @@ SHOTS = Path("/tmp/claude-shots/landing")
 SITE_URL = "https://magan-z.github.io/unigraf/"
 FONT = ROOT / "app" / "assets" / "fonts" / "Onest.ttf"
 
-PAPER, PETROL, INK, MUTED, AMBER = (241, 247, 254), (0, 26, 99), (6, 20, 48), (74, 88, 120), (242, 169, 59)
+PAPER, PETROL, INK, MUTED, AMBER = (251, 248, 243), (0, 26, 99), (26, 32, 34), (85, 98, 106), (242, 169, 59)
 
 
 def screenshots() -> None:

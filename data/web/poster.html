@@ -7,14 +7,14 @@
 <title>Листовка — UniGraf для студентов ИМФИТ</title>
 <style>
   @font-face { font-family: "Onest"; src: url("fonts/onest.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
-  :root { --petrol: #001A63; --ink: #061430; --muted: #4A5878; --amber: #F2A93B; --soft: #D9E9FD; }
+  :root { --petrol: #001A63; --ink: #1A2022; --muted: #55626A; --amber: #F2A93B; --soft: #D9E9FD; }
   * { box-sizing: border-box; }
   body { margin: 0; background: #e9e6df; font: 400 18px/1.5 "Onest", system-ui, sans-serif; color: var(--ink); }
   .bar { max-width: 210mm; margin: 16px auto 0; padding: 0 12px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
   .bar a { color: var(--petrol); }
   .bar button { font: inherit; font-weight: 700; background: var(--petrol); color: #fff; border: 0; border-radius: 12px; padding: 12px 20px; cursor: pointer; }
   /* Лист A4: на экране показан в уменьшенном виде, при печати занимает всю страницу */
-  .sheet { width: 210mm; min-height: 297mm; margin: 16px auto; background: #F1F7FE; padding: 18mm 16mm; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,.18); }
+  .sheet { width: 210mm; min-height: 297mm; margin: 16px auto; background: #FBF8F3; padding: 18mm 16mm; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,.18); }
   .logo { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 26px; color: var(--petrol); }
   .logo img { width: 56px; height: 56px; border-radius: 16px; }
   h1 { font-size: 46px; line-height: 1.05; letter-spacing: -.03em; font-weight: 800; margin: 14mm 0 6mm; }
@@ -29,7 +29,7 @@
   .foot { margin-top: auto; padding-top: 10mm; font-size: 14px; color: var(--muted); }
   @page { size: A4; margin: 0; }
   @media print {
-    body { background: #F1F7FE; }
+    body { background: #FBF8F3; }
     .bar { display: none; }
     .sheet { margin: 0; box-shadow: none; width: 100%; min-height: 100vh; }
   }
