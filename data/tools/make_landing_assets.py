@@ -17,7 +17,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "data" / "web"
-SHOTS = Path("/tmp/claude-shots/landing")
+SHOTS = Path(os.environ.get("LANDING_SHOTS", "/tmp/claude-shots/landing"))
 SITE_URL = "https://magan-z.github.io/unigraf/"
 FONT = ROOT / "app" / "assets" / "fonts" / "Onest.ttf"
 

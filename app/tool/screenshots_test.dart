@@ -28,6 +28,8 @@ const outDir = '/tmp/claude-shots/design';
 // Для документов нужны снимки крупнее и в другой папке: SHOT_RATIO=3 SHOT_ROOT=/путь flutter test tool/screenshots_test.dart
 final shotRatio = double.tryParse(Platform.environment['SHOT_RATIO'] ?? '') ?? 1;
 final shotRoot = Platform.environment['SHOT_ROOT'] ?? '/tmp/claude-shots';
+// Цветовая тема для снимков (id из brand_colors.dart: petrol, ocean, forest…): SHOT_PALETTE=ocean
+final shotPalette = Platform.environment['SHOT_PALETTE'];
 
 Future<void> loadFonts() async {
   final flutterRoot = Platform.environment['FLUTTER_ROOT'] ?? '/opt/homebrew/share/flutter';
@@ -64,6 +66,7 @@ void main() {
     SharedPreferences.setMockInitialValues({
       if (!noProfile) ...{'form': 'ofo', 'groupId': 'ofo-1-bi-25', 'subgroup': 1, 'pe': 'male'},
       'theme': dark ? 'dark' : 'light',
+      if (shotPalette != null) 'palette': shotPalette!,
       ...prefs,
     });
     final sp = await SharedPreferences.getInstance();
