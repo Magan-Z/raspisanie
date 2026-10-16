@@ -20,8 +20,8 @@ alter table public.group_codes enable row level security;
 create function public.limit_codes_per_group() returns trigger
 language plpgsql set search_path = '' as $$
 begin
-  if (select count(*) from public.group_codes where group_id = new.group_id) >= 2 then
-    raise exception 'У группы % уже два кода старосты', new.group_id;
+  if (select count(*) from public.group_codes where group_id = new.group_id) >= 3 then
+    raise exception 'У группы % уже три кода старосты', new.group_id;
   end if;
   return new;
 end $$;
