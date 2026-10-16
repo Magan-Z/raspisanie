@@ -21,7 +21,7 @@ SHOTS = Path("/tmp/claude-shots/landing")
 SITE_URL = "https://magan-z.github.io/unigraf/"
 FONT = ROOT / "app" / "assets" / "fonts" / "Onest.ttf"
 
-PAPER, PETROL, INK, MUTED, AMBER = (251, 248, 243), (11, 85, 99), (26, 32, 34), (85, 98, 106), (242, 169, 59)
+PAPER, PETROL, INK, MUTED, AMBER = (241, 247, 254), (0, 26, 99), (6, 20, 48), (74, 88, 120), (242, 169, 59)
 
 
 def screenshots() -> None:
@@ -53,7 +53,7 @@ def preview_image() -> None:
     mask = Image.new("L", (112, 112), 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, 111, 111), radius=30, fill=255)
     im.paste(icon, (70, 56), mask)
-    d.text((206, 78), "UniGraf", font=font(52, 800), fill=(6, 20, 48))
+    d.text((206, 78), "UniGraf", font=font(52, 800), fill=PETROL)
     big = font(70, 800)
     d.text((70, 200), "Пары, аудитории", font=big, fill=INK)
     d.text((70, 276), "и домашка", font=big, fill=INK)
