@@ -89,8 +89,11 @@
   }
   img, svg { max-width: 100%; }
   a { color: var(--petrol); text-underline-offset: 3px; }
-  ::selection { background: var(--amber-soft); color: var(--amber-ink); }
-  :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; border-radius: 8px; }
+  ::selection { background: var(--petrol-soft); color: var(--petrol-soft-ink); }
+  /* кольцо фокуса в основном цвете: у янтарного на светлом фоне контраст ниже 3:1 */
+  :focus-visible { outline: 3px solid var(--petrol); outline-offset: 3px; border-radius: 8px; }
+  /* то, что рисует браузер: каретка, галочки, полосы прокрутки тоже в цветах страницы */
+  html { accent-color: var(--petrol); caret-color: var(--petrol); scrollbar-color: var(--line) transparent; }
   .wrap { width: min(1100px, 100% - 32px); margin-inline: auto; }
   .skip { position: absolute; left: -999px; top: 8px; background: var(--petrol); color: var(--petrol-ink); padding: 10px 14px; border-radius: var(--r-sm); z-index: 40; }
   .skip:focus { left: 8px; }
@@ -319,6 +322,8 @@
   ol.plain li { margin-bottom: 6px; }
 
   /* ---------- Подвал ---------- */
+  .foot-brand { margin: 0 0 14px; font-size: 17px; }
+  .foot-brand img { width: 30px; height: 30px; border-radius: 9px; }
   footer { padding: 36px 0 max(40px, env(safe-area-inset-bottom)); color: var(--muted); font-size: .92rem; }
   footer .bells { margin-bottom: 28px; }
   @media (max-width: 719px) { footer { padding-bottom: max(104px, env(safe-area-inset-bottom)); } }
@@ -685,6 +690,7 @@
 
   <footer>
     <div class="bells" id="bells" aria-hidden="true"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i></div>
+    <a class="brand foot-brand" href="./" aria-label="UniGraf, наверх"><img src="img/Icon-192.png" alt="" width="30" height="30" loading="lazy"><span>UniGraf</span></a>
     <p class="uni">Для студентов Института математики, физики и информационных технологий (ИМФИТ) Чеченского государственного университета имени А. А. Кадырова</p>
     <div id="footer-date">Студенческий проект. Расписание берётся из официального файла института.</div>
   </footer>

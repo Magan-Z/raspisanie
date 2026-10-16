@@ -110,8 +110,8 @@ class WidgetGalleryActivity : Activity() {
             .put(JSONObject().put("subject", "Информатика").put("short", "Информатика").put("text", "Лабораторная №3, отчёт").put("due", "2026-10-14").put("files", 1).put("tone", tones.getJSONObject("Информатика")))
             .put(JSONObject().put("subject", "История России").put("short", "История России").put("text", "Конспект §12").put("due", "2026-10-16").put("files", 0).put("tone", tones.getJSONObject("История России")))
         // цвета темы «Океан» (она по умолчанию): так виджеты выглядят у пользователя
-        val light = JSONObject().put("bg", "#F4F6F9").put("text", "#16191D").put("textSecondary", "#49505A").put("accent", "#1A3E70").put("highlight", "#D1DEF0").put("badgeBg", "#FFDDA8").put("badgeText", "#2B1A00")
-        val night = JSONObject().put("bg", "#181D25").put("text", "#E3E5E8").put("textSecondary", "#B2B7BD").put("accent", "#94B6E6").put("highlight", "#1C3354").put("badgeBg", "#5E4100").put("badgeText", "#FFDDA8")
+        val light = JSONObject().put("bg", "#F4F6F9").put("text", "#16191D").put("textSecondary", "#49505A").put("accent", "#0B397E").put("highlight", "#CCDCF5").put("badgeBg", "#FFDDA8").put("badgeText", "#2B1A00")
+        val night = JSONObject().put("bg", "#181D25").put("text", "#E3E5E8").put("textSecondary", "#B2B7BD").put("accent", "#85B2F4").put("highlight", "#12315E").put("badgeBg", "#5E4100").put("badgeText", "#FFDDA8")
         return JSONObject().put("weekLabel", "1 неделя").put("days", days).put("homeworkCount", 3).put("homework", hw)
             .put("colors", JSONObject().put("light", light).put("dark", night)).toString()
     }

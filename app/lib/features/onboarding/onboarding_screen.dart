@@ -78,7 +78,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                BrandMark(size: 56, background: theme.colorScheme.primary, foreground: theme.colorScheme.onPrimary, accent: theme.colorScheme.tertiaryContainer),
+                BrandMark(size: 64, background: theme.colorScheme.primary, foreground: theme.colorScheme.onPrimary, accent: theme.colorScheme.tertiaryContainer),
                 const Spacer(),
                 const Illustration(IllustrationKind.welcome, width: 128),
               ]),
