@@ -79,6 +79,7 @@ flutter:
   assets:
     - assets/schedule/
     - assets/schedule/groups/
+    - assets/logo/
 
   fonts:
     - family: Onest
@@ -121,6 +122,6 @@ flutter_launcher_icons:
   android: true
   ios: false
   image_path: "assets/icon/icon.png"
-  adaptive_icon_background: "#0B5563"
+  adaptive_icon_background: "#F1F7FE"
   adaptive_icon_foreground: "assets/icon/foreground.png"
   adaptive_icon_monochrome: "assets/icon/monochrome.png"
