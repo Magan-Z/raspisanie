@@ -4,10 +4,12 @@
 
 
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'brand_colors.dart';
+import 'max_width.dart';
 import 'tokens.dart';
 
 const _family = 'Onest';
@@ -165,8 +167,14 @@ ThemeData buildTheme(ColorScheme scheme) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.primary, linearTrackColor: scheme.surfaceContainerHighest),
+    // Каждый экран встаёт колонкой по центру, если окно широкое (см. max_width.dart)
     pageTransitionsTheme: const PageTransitionsTheme(builders: {
-      TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+      TargetPlatform.android: CenteredColumnTransitions(PredictiveBackPageTransitionsBuilder()),
+      TargetPlatform.iOS: CenteredColumnTransitions(CupertinoPageTransitionsBuilder()),
+      TargetPlatform.macOS: CenteredColumnTransitions(CupertinoPageTransitionsBuilder()),
+      TargetPlatform.fuchsia: CenteredColumnTransitions(ZoomPageTransitionsBuilder()),
+      TargetPlatform.linux: CenteredColumnTransitions(ZoomPageTransitionsBuilder()),
+      TargetPlatform.windows: CenteredColumnTransitions(ZoomPageTransitionsBuilder()),
     }),
   );
 }

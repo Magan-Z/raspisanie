@@ -1101,4 +1101,37 @@ void main() {
       expect(find.text('Нужно обновить приложение'), findsNothing);
     });
   });
+
+  group('Удобство на разных экранах', () {
+    testWidgets('первый запуск на небольшом экране: после выбора формы список сам подкручивается к «Курсу»', (tester) async {
+      await _start(tester);
+      tester.view.physicalSize = const Size(390, 700);
+      await tester.pump();
+      await tester.tap(find.text('Очная'));
+      await _settle(tester);
+      // шаг «Курс» целиком в пределах экрана (без прокрутки он был бы ниже края)
+      expect(tester.getRect(find.text('4 курс')).bottom, lessThanOrEqualTo(700));
+      await tester.tap(find.text('2 курс'));
+      await _settle(tester);
+      expect(tester.getRect(find.text('1 БИ-25')).bottom, lessThanOrEqualTo(700));
+    });
+
+    testWidgets('широкий экран (компьютер): приложение встаёт колонкой по центру, а не растягивается на всю ширину', (tester) async {
+      await _start(tester, prefs: profile);
+      tester.view.physicalSize = const Size(1500, 900);
+      await tester.pump();
+      await _settle(tester);
+      final scaffold = tester.getRect(find.byType(Scaffold).first);
+      expect(scaffold.width, 720);
+      expect(scaffold.center.dx, 750); // по центру окна
+    });
+
+    testWidgets('телефон: ширина не ограничивается', (tester) async {
+      await _start(tester, prefs: profile);
+      tester.view.physicalSize = const Size(390, 844);
+      await tester.pump();
+      await _settle(tester);
+      expect(tester.getRect(find.byType(Scaffold).first).width, 390);
+    });
+  });
 }

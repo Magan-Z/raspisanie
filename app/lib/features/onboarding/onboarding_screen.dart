@@ -29,6 +29,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int? _subgroup;
   late UserRole _role = ref.read(settingsProvider).role; // кто вы: студент или преподаватель
 
+  // Ключи шагов: после выбора список сам подкручивается, чтобы следующий шаг был виден целиком
+  final _courseKey = GlobalKey();
+  final _groupKey = GlobalKey();
+  final _subgroupKey = GlobalKey();
+  final _peKey = GlobalKey();
+
+  /// Плавно показывает новый шаг (прокрутка минимальная: только если он ниже края экрана).
+  void _reveal(GlobalKey key) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = key.currentContext;
+      if (!mounted || target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: Motion.of(context, const Duration(milliseconds: 350)),
+        curve: Curves.easeOutCubic,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      );
+    });
+  }
+
   Future<void> _finish(PeChoice pe) async {
     await ref.read(settingsProvider.notifier).setProfile(UserProfile(
           formCode: _form!.code,
@@ -117,27 +137,38 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         else ...[
         _Step(
           title: 'Форма обучения',
-          choices: [for (final f in index.forms) _Choice(f.title, selected: f == form, onTap: () => setState(() {
-                _form = f;
-                _course = null;
-                _group = null;
-                _subgroup = null;
-              }))],
+          choices: [
+            for (final f in index.forms)
+              _Choice(f.title, selected: f == form, onTap: () {
+                setState(() {
+                  _form = f;
+                  _course = null;
+                  _group = null;
+                  _subgroup = null;
+                });
+                _reveal(_courseKey);
+              }),
+          ],
         ),
         if (form != null)
           _Step(
+            key: _courseKey,
             title: 'Курс',
             choices: [
               for (final c in ({for (final g in form.groups) g.course}.toList()..sort()))
-                _Choice('$c курс', selected: c == course, onTap: () => setState(() {
-                      _course = c;
-                      _group = null;
-                      _subgroup = null;
-                    })),
+                _Choice('$c курс', selected: c == course, onTap: () {
+                  setState(() {
+                    _course = c;
+                    _group = null;
+                    _subgroup = null;
+                  });
+                  _reveal(_groupKey);
+                }),
             ],
           ),
         if (form != null && course != null)
           _Step(
+            key: _groupKey,
             title: 'Группа',
             choices: [
               for (final g in form.groups.where((g) => g.course == course))
@@ -147,11 +178,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     _subgroup = g.subgroups.length == 1 ? 1 : null;
                   });
                   if (g.subgroups.length == 1) _afterSubgroup(g);
+                  _reveal(g.subgroups.length == 1 ? _peKey : _subgroupKey);
                 }),
             ],
           ),
         if (group != null && group.subgroups.length > 1)
           _Step(
+            key: _subgroupKey,
             title: 'Подгруппа',
             hint: 'Подгруппа 1 — левый столбец группы в таблице расписания.',
             choices: [
@@ -159,11 +192,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 _Choice(s.label, selected: s.n == _subgroup, onTap: () {
                   setState(() => _subgroup = s.n);
                   _afterSubgroup(group);
+                  _reveal(_peKey);
                 }),
             ],
           ),
         if (group != null && group.hasGenderedPe && _subgroup != null)
           _Step(
+            key: _peKey,
             title: 'Физкультура',
             hint: 'У вашей группы физкультура отдельно у юношей и у девушек.',
             choices: [
@@ -184,7 +219,7 @@ class _Choice {
 }
 
 class _Step extends StatelessWidget {
-  const _Step({required this.title, required this.choices, this.hint});
+  const _Step({super.key, required this.title, required this.choices, this.hint});
   final String title;
   final String? hint;
   final List<_Choice> choices;

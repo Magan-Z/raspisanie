@@ -234,7 +234,7 @@ void main() {
     await shoot(tester, 'B-starosta-homework', dark: false, sharedApi: backend.api(), act: () async {
       await tester.tap(find.text('ДЗ').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.textContaining('От старосты'));
+      await tester.tap(find.textContaining('Староста'));
       await tester.pumpAndSettle();
     });
   });
@@ -260,6 +260,12 @@ void main() {
     backend.homework['h2'] = backend.hw(id: 'h2', subject: 'ЧТК и этика', text: 'Эссе на одну страницу', due: '2026-10-09');
     backend.homework['h3'] = backend.hw(id: 'h3', subject: 'Технологическое предпринимательство', text: 'Подготовить бизнес-идею, 3 слайда', due: '2026-10-15',
         files: [{'id': 'f2', 'name': 'Шаблон слайдов.pptx', 'size': 420000}]);
+    // ДЗ от преподавателя: на снимке «Домашки» видны все три вкладки («Мои», «Староста», «Преподаватели»)
+    backend.teacherRows['b1/ofo-1-bi-25'] = {
+      'id': 'b1/ofo-1-bi-25', 'group_id': 'ofo-1-bi-25', 'batch_id': 'b1', 'author': 'Халиев М.С-У.', 'subject': 'Технологическое предпринимательство',
+      'body': 'Подготовить доклад на 5 минут по бизнес-модели', 'due_date': '2026-10-16', 'kind': null, 'subgroup': null,
+      'files': <Map<String, dynamic>>[], 'deleted': false, 'updated_at': '2026-10-09T12:00:00+00:00',
+    };
     return backend;
   }
 
@@ -282,7 +288,7 @@ void main() {
     await shoot(tester, 'homework-light', dark: false, sharedApi: landingBackend().api(), pixelRatio: 3, dir: landingDir, act: () async {
       await tester.tap(find.text('ДЗ').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.textContaining('От старосты'));
+      await tester.tap(find.textContaining('Староста'));
       await tester.pumpAndSettle();
     });
   });
@@ -408,7 +414,7 @@ void main() {
       await shoot(tester, '9-student-teacher-tab', dark: false, sharedApi: sentBackend().api(), dir: teacherDir, act: () async {
         await tester.tap(find.text('ДЗ').last);
         await tester.pump(const Duration(milliseconds: 500));
-        await tester.tap(find.textContaining('От преподавателей'));
+        await tester.tap(find.textContaining('Преподаватели'));
       });
     });
   });
