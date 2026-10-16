@@ -17,11 +17,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "data" / "web"
-SHOTS = Path("/tmp/claude-shots/landing")
+SHOTS = Path(os.environ.get("LANDING_SHOTS", "/tmp/claude-shots/landing"))
 SITE_URL = "https://magan-z.github.io/unigraf/"
 FONT = ROOT / "app" / "assets" / "fonts" / "Onest.ttf"
 
-PAPER, PETROL, INK, MUTED, AMBER = (251, 248, 243), (11, 85, 99), (26, 32, 34), (85, 98, 106), (242, 169, 59)
+PAPER, PETROL, INK, MUTED, AMBER = (251, 248, 243), (0, 26, 99), (26, 32, 34), (85, 98, 106), (242, 169, 59)
 
 
 def screenshots() -> None:
@@ -77,7 +77,7 @@ def preview_image() -> None:
 
 def qr_code() -> None:
     qr = segno.make(SITE_URL, error="m")
-    qr.save(WEB / "qr.svg", scale=10, border=4, dark="#0B5563", light="#FFFFFF", xmldecl=False, svgns=True, nl=False)
+    qr.save(WEB / "qr.svg", scale=10, border=4, dark="#001A63", light="#FFFFFF", xmldecl=False, svgns=True, nl=False)
 
 
 def web_font() -> None:

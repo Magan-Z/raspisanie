@@ -67,7 +67,7 @@ class Settings {
     this.notifyBeforeMin = 10,
     this.eveningHomeworkReminder = true,
     this.useDynamicColor = false,
-    this.palette = AppPalette.petrol,
+    this.palette = AppPalette.ocean,
     this.amoled = false,
     this.customSubjects = true,
     this.showGroupData = true,
