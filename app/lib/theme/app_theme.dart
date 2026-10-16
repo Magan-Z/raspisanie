@@ -176,7 +176,7 @@ ThemeData buildTheme(ColorScheme scheme) {
 ColorScheme resolveScheme({
   required Brightness brightness,
   ColorScheme? dynamicScheme,
-  AppPalette palette = AppPalette.petrol,
+  AppPalette palette = AppPalette.ocean,
   bool amoled = false,
 }) {
   if (dynamicScheme != null) {

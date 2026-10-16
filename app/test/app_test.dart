@@ -219,12 +219,13 @@ void main() {
     await _settle(tester);
 
     Color primary() => Theme.of(tester.element(find.byType(Scaffold).first)).colorScheme.primary;
-    expect(primary(), BrandColors.scheme(AppPalette.petrol, Brightness.light).primary);
-
-    await tester.tap(find.text('Океан'));
-    await _settle(tester);
+    // по умолчанию — «Океан» (цвета логотипа)
     expect(primary(), BrandColors.scheme(AppPalette.ocean, Brightness.light).primary);
-    expect((await SharedPreferences.getInstance()).getString('palette'), 'ocean');
+
+    await tester.tap(find.text('Петроль'));
+    await _settle(tester);
+    expect(primary(), BrandColors.scheme(AppPalette.petrol, Brightness.light).primary);
+    expect((await SharedPreferences.getInstance()).getString('palette'), 'petrol');
 
     // Тёмная тема + чёрный фон
     await tester.tap(find.text('Тема').first);
