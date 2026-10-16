@@ -10,20 +10,22 @@ import 'package:flutter/material.dart';
 /// остальные строятся от оттенка по одним правилам, а проверка контраста в тестах гарантирует читаемость
 /// каждой из них в светлом и тёмном виде.
 enum AppPalette {
-  ocean('ocean', 'Океан', 'Фирменная: цвета логотипа', 215, 1.0),
+  ocean('ocean', 'Океан', 'Фирменная: цвета логотипа', 216, 1.0, accent: 1.35),
   petrol('petrol', 'Петроль', 'Прежняя: сине-зелёный', 190, 1.0),
   forest('forest', 'Лес', 'Глубокий зелёный', 150, 0.9),
   plum('plum', 'Слива', 'Тёплый фиолетовый', 285, 0.9),
+  berry('berry', 'Малина', 'Ягодный, розово-красный', 338, 0.9),
   sunset('sunset', 'Закат', 'Терракота и коралл', 14, 1.0),
   graphite('graphite', 'Графит', 'Строгий серый, без цвета', 220, 0.12);
 
-  const AppPalette(this.id, this.title, this.subtitle, this.hue, this.saturation);
+  const AppPalette(this.id, this.title, this.subtitle, this.hue, this.saturation, {this.accent = 1.0});
 
   final String id;
   final String title;
   final String subtitle;
   final double hue; // оттенок 0–360
   final double saturation; // множитель насыщенности (графит почти без цвета)
+  final double accent; // дополнительная насыщенность только у основного цвета и его контейнера (у «Океана» ярче, как синий логотип)
 
   static AppPalette parse(String? id) => values.firstWhere((p) => p.id == id, orElse: () => AppPalette.ocean);
 }
@@ -52,16 +54,16 @@ abstract final class BrandColors {
       HSLColor.fromAHSL(1, hue % 360, sat.clamp(0.0, 1.0), light.clamp(0.0, 1.0)).toColor();
 
   static ColorScheme _generated(AppPalette p, Brightness brightness) {
-    final h = p.hue, k = p.saturation;
+    final h = p.hue, k = p.saturation, ka = p.saturation * p.accent;
     final isDark = brightness == Brightness.dark;
     final seed = _hsl(h, 0.6 * k, 0.3);
     final base = ColorScheme.fromSeed(seedColor: seed, brightness: brightness);
     if (!isDark) {
       return base.copyWith(
-        primary: _hsl(h, 0.62 * k, 0.27),
+        primary: _hsl(h, 0.62 * ka, 0.27),
         onPrimary: Colors.white,
-        primaryContainer: _hsl(h, 0.5 * k, 0.88),
-        onPrimaryContainer: _hsl(h, 0.8 * k, 0.1),
+        primaryContainer: _hsl(h, 0.5 * ka, 0.88),
+        onPrimaryContainer: _hsl(h, 0.8 * ka, 0.1),
         secondary: _hsl(h, 0.22 * k, 0.33),
         onSecondary: Colors.white,
         secondaryContainer: _hsl(h, 0.24 * k, 0.89),
@@ -86,9 +88,9 @@ abstract final class BrandColors {
       );
     }
     return base.copyWith(
-      primary: _hsl(h, 0.62 * k, 0.74),
+      primary: _hsl(h, 0.62 * ka, 0.74),
       onPrimary: _hsl(h, 0.9 * k, 0.12),
-      primaryContainer: _hsl(h, 0.5 * k, 0.22),
+      primaryContainer: _hsl(h, 0.5 * ka, 0.22),
       onPrimaryContainer: _hsl(h, 0.7 * k, 0.9),
       secondary: _hsl(h, 0.28 * k, 0.78),
       onSecondary: _hsl(h, 0.35 * k, 0.14),
