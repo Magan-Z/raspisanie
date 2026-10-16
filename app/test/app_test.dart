@@ -22,6 +22,7 @@ import 'package:unigraf/data/repositories/schedule_repository.dart';
 import 'package:unigraf/main.dart';
 import 'package:unigraf/theme/brand_colors.dart';
 import 'package:unigraf/theme/next_design.dart';
+import 'package:unigraf/update_check.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fakes.dart';
@@ -1069,6 +1070,35 @@ void main() {
       await tester.tap(find.text('Сегодня').last);
       await _settle(tester);
       expect(find.text('ЧТК и этика'), findsWidgets); // группа студента на месте
+    });
+  });
+
+  group('Обновление приложения', () {
+    List overridesFor(String current, UpdateInfo info) => [
+          appVersionProvider.overrideWithValue(current),
+          updateEnabledProvider.overrideWithValue(true),
+          updateFetcherProvider.overrideWithValue(() async => info),
+        ];
+
+    testWidgets('на сайте версия новее: над содержимым появляется плашка, «Позже» её убирает', (tester) async {
+      await _start(tester, prefs: profile, extraOverrides: overridesFor('0.3.4', const UpdateInfo(latest: '0.3.5')));
+      expect(find.text('Вышла версия 0.3.5'), findsOneWidget);
+      expect(find.text('2 неделя'), findsOneWidget); // расписание на месте
+      await tester.tap(find.byTooltip('Позже'));
+      await tester.pump();
+      expect(find.text('Вышла версия 0.3.5'), findsNothing);
+    });
+
+    testWidgets('версия ниже минимальной: вместо приложения — экран «Нужно обновить»', (tester) async {
+      await _start(tester, prefs: profile, extraOverrides: overridesFor('0.3.0', const UpdateInfo(latest: '0.3.5', min: '0.3.3')));
+      expect(find.text('Нужно обновить приложение'), findsOneWidget);
+      expect(find.text('Сегодня'), findsNothing);
+    });
+
+    testWidgets('нет данных о новой версии: плашки и блокировки нет', (tester) async {
+      await _start(tester, prefs: profile);
+      expect(find.textContaining('Вышла версия'), findsNothing);
+      expect(find.text('Нужно обновить приложение'), findsNothing);
     });
   });
 }

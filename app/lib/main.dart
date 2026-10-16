@@ -10,8 +10,10 @@ import 'data/remote/shared_api.dart';
 import 'domain/teacher.dart';
 import 'background/background_sync.dart';
 import 'features/home_shell.dart';
+import 'features/update_banner.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'theme/app_theme.dart';
+import 'update_check.dart';
 import 'usage_ping.dart';
 
 Future<void> main() async {
@@ -50,6 +52,8 @@ class UniGrafApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
+    // Версия приложения устарела настолько, что пользоваться ею нельзя — только экран «Нужно обновить»
+    final updateRequired = ref.watch(updateStatusProvider) == UpdateStatus.required;
     // Если выбранной группы больше нет в расписании (например, новый семестр) — снова предлагаем выбрать группу
     final index = ref.watch(indexProvider).value;
     final profile = settings.profile;
@@ -75,7 +79,8 @@ class UniGrafApp extends ConsumerWidget {
           themeMode: settings.themeMode,
           theme: theme(Brightness.light, lightDynamic),
           darkTheme: theme(Brightness.dark, darkDynamic),
-          home: needsOnboarding ? const OnboardingScreen() : const HomeShell(),
+          builder: (context, child) => UpdateWatcher(child: child ?? const SizedBox.shrink()),
+          home: updateRequired ? const UpdateRequiredScreen() : (needsOnboarding ? const OnboardingScreen() : const HomeShell()),
         );
       },
     );

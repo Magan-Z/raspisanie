@@ -12,6 +12,7 @@ import '../core/bells.dart' show moscowToday;
 import '../domain/notification_plan.dart';
 import '../theme/next_design.dart';
 import '../usage_ping.dart';
+import 'update_banner.dart';
 import '../widget_bridge/deep_links.dart';
 import 'homework/add_homework_sheet.dart';
 import 'homework/homework_screen.dart';
@@ -176,15 +177,20 @@ class _HomeShellState extends ConsumerState<HomeShell>
     ];
     return Scaffold(
       body: SafeArea(
-        child: kNextDesign
-            ? FadeTransition(
-                opacity: CurvedAnimation(parent: _swap, curve: Curves.easeOut),
-                child: SlideTransition(
-                  position: Tween<Offset>(begin: const Offset(0, 0.012), end: Offset.zero).animate(CurvedAnimation(parent: _swap, curve: kEaseOutExpo)),
-                  child: IndexedStack(index: _tab, children: pages),
-                ),
-              )
-            : IndexedStack(index: _tab, children: pages),
+        child: Column(children: [
+          const UpdateBanner(), // «Вышла новая версия» (только если на сайте есть новее)
+          Expanded(
+            child: kNextDesign
+                ? FadeTransition(
+                    opacity: CurvedAnimation(parent: _swap, curve: Curves.easeOut),
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: const Offset(0, 0.012), end: Offset.zero).animate(CurvedAnimation(parent: _swap, curve: kEaseOutExpo)),
+                      child: IndexedStack(index: _tab, children: pages),
+                    ),
+                  )
+                : IndexedStack(index: _tab, children: pages),
+          ),
+        ]),
       ),
       // Подписи нижней панели не растут выше 1.15× — иначе слова переносятся и панель разваливается
       bottomNavigationBar: Builder(

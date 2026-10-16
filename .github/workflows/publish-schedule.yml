@@ -76,7 +76,10 @@ jobs:
             [ "$apk" = ../public/unigraf.apk ] || mv "$apk" ../public/unigraf.apk
             size=$(stat -c %s ../public/unigraf.apk)
             tag=$(gh release view --repo "${{ github.repository }}" --json tagName --jq .tagName)
-            printf '{"version":"%s","size":%s}\n' "${tag#v}" "$size" > ../public/apk.json
+            # min — самая старая версия, которой ещё можно пользоваться (файл data/min-app-version.txt, обычно 0.0.0)
+            min=$(tr -cd '0-9.' < min-app-version.txt 2>/dev/null || true)
+            [ -n "$min" ] || min=0.0.0
+            printf '{"version":"%s","size":%s,"min":"%s"}\n' "${tag#v}" "$size" "$min" > ../public/apk.json
             echo "APK $tag, $size байт"
           else
             echo "::warning::Не удалось скачать APK из последнего выпуска: на сайте не будет файла для скачивания"

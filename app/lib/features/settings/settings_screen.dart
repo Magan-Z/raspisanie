@@ -23,6 +23,8 @@ import '../common/brand_mark.dart';
 import '../common/widget_picker.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../../domain/teacher.dart';
+import '../../update_check.dart';
+import '../update_banner.dart';
 import '../teacher/teacher_code_dialog.dart';
 import '../teacher/teacher_picker.dart';
 
@@ -40,6 +42,10 @@ class SettingsScreen extends ConsumerWidget {
     final fetched = ref.watch(lastFetchedProvider).value;
     final now = ref.watch(nowProvider).value ?? ref.read(clockProvider).now();
     final theme = Theme.of(context);
+    final appVer = ref.watch(appVersionProvider);
+    final updateInfo = ref.watch(updateInfoProvider);
+    // новая версия есть, даже если плашку на главном экране уже закрыли
+    final newVersion = updateInfo != null && computeUpdateStatus(current: appVer, info: updateInfo) != UpdateStatus.none ? updateInfo.latest : null;
 
     final autoWeek = index == null ? null : (today.difference(index.weekAnchor).inDays / 7).floor() % 2 + 1;
 
@@ -309,6 +315,13 @@ class SettingsScreen extends ConsumerWidget {
         ]),
 
         _Section(title: 'О приложении', children: [
+          if (newVersion != null)
+            ListTile(
+              leading: const Icon(Icons.system_update_outlined),
+              title: Text('Доступна версия $newVersion'),
+              subtitle: const Text('Настройки и ДЗ сохранятся'),
+              trailing: TextButton(onPressed: () => openUpdateDownload(context, ref), child: const Text('Скачать')),
+            ),
           Padding(
             padding: const EdgeInsets.all(Gap.lg),
             child: Row(children: [
@@ -319,7 +332,7 @@ class SettingsScreen extends ConsumerWidget {
                   Text('UniGraf', style: theme.textTheme.titleMedium),
                   const SizedBox(height: Gap.xs),
                   Text(
-                    'Версия расписания: ${index?.version.substring(0, 10) ?? '—'}\nБез аккаунтов, рекламы и слежки: домашка и правки хранятся только на вашем телефоне.',
+                    '${appVer.isEmpty ? '' : 'Версия приложения: $appVer\n'}Версия расписания: ${index?.version.substring(0, 10) ?? '—'}\nБез аккаунтов и рекламы: домашка и правки хранятся только на вашем телефоне.',
                     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ]),
