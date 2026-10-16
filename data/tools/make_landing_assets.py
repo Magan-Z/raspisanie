@@ -77,7 +77,7 @@ def preview_image() -> None:
 
 def qr_code() -> None:
     qr = segno.make(SITE_URL, error="m")
-    qr.save(WEB / "qr.svg", scale=10, border=4, dark="#0B5563", light="#FFFFFF", xmldecl=False, svgns=True, nl=False)
+    qr.save(WEB / "qr.svg", scale=10, border=4, dark="#001A63", light="#FFFFFF", xmldecl=False, svgns=True, nl=False)
 
 
 def web_font() -> None:
