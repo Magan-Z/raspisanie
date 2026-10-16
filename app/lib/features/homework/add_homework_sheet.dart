@@ -148,7 +148,7 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
   }
 
   Future<void> _save(DateTime due) async {
-    // Староста: ДЗ уходит на сервер и появляется у всей группы во вкладке «От старосты»
+    // Староста: ДЗ уходит на сервер и появляется у всей группы во вкладке «Староста»
     if (_forGroup) {
       setState(() => _busy = true);
       try {
@@ -248,7 +248,7 @@ class _AddHomeworkSheetState extends ConsumerState<_AddHomeworkSheet> {
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Для всей группы'),
                 subtitle: Text(_forGroup
-                    ? 'Увидят все студенты группы во вкладке «От старосты». Файлы: до $maxGroupFilesPerHomework шт., каждый до ${maxGroupFileBytes ~/ (1024 * 1024)} МБ'
+                    ? 'Увидят все студенты группы во вкладке «Староста». Файлы: до $maxGroupFilesPerHomework шт., каждый до ${maxGroupFileBytes ~/ (1024 * 1024)} МБ'
                     : 'Вы староста: можно задать ДЗ всем сразу'),
                 value: _forGroup,
                 onChanged: (v) => setState(() {

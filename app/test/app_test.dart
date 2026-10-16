@@ -406,7 +406,7 @@ void main() {
       expect(find.text('2-15'), findsWidgets);
     });
 
-    testWidgets('вкладка «От старосты» в ДЗ: задание видно, отметить «сделано» можно у себя', (tester) async {
+    testWidgets('вкладка «Староста» в ДЗ: задание видно, отметить «сделано» можно у себя', (tester) async {
       final backend = FakeBackend(hash: groupHash());
       backend.homework['h1'] = backend.hw();
       await _start(tester, prefs: profile, sharedApi: backend.api());
@@ -414,8 +414,8 @@ void main() {
 
       await tester.tap(find.text('ДЗ').last);
       await _settle(tester);
-      expect(find.textContaining('От старосты (1)'), findsOneWidget);
-      await tester.tap(find.textContaining('От старосты'));
+      expect(find.textContaining('Староста (1)'), findsOneWidget);
+      await tester.tap(find.textContaining('Староста'));
       await _settle(tester);
       expect(find.text('Читать главу 3'), findsOneWidget);
       expect(find.text('от старосты'), findsOneWidget);
@@ -423,7 +423,7 @@ void main() {
 
       await tester.tap(find.byType(Checkbox));
       await _settle(tester);
-      expect(find.textContaining('От старосты (0)'), findsOneWidget); // отметил выполненным
+      expect(find.textContaining('Староста (0)'), findsOneWidget); // отметил выполненным
     });
 
     testWidgets('староста: неверный код — ошибка; верный код (регистр не важен) — режим старосты', (tester) async {
@@ -466,7 +466,7 @@ void main() {
       expect(find.text('ЧТК и этика'), findsNothing); // у всех (и у самого старосты) пары нет
     });
 
-    testWidgets('староста задаёт ДЗ для всей группы: уходит на сервер и появляется во вкладке «От старосты»', (tester) async {
+    testWidgets('староста задаёт ДЗ для всей группы: уходит на сервер и появляется во вкладке «Староста»', (tester) async {
       final backend = FakeBackend(hash: groupHash());
       await _start(tester, prefs: {...profile, 'editorToken': 'tok-GOODCODE', 'editorGroup': 'ofo-1-bi-25'}, sharedApi: backend.api());
       await _settle(tester);
@@ -486,7 +486,7 @@ void main() {
 
       await tester.tap(find.text('ДЗ').last);
       await _settle(tester);
-      await tester.tap(find.textContaining('От старосты'));
+      await tester.tap(find.textContaining('Староста'));
       await _settle(tester);
       expect(find.text('Подготовить доклад'), findsOneWidget);
       expect(find.byTooltip('Удалить для всей группы'), findsOneWidget); // староста может удалить
@@ -531,7 +531,7 @@ void main() {
 
       await tester.tap(find.text('ДЗ').last);
       await _settle(tester);
-      await tester.tap(find.textContaining('От старосты'));
+      await tester.tap(find.textContaining('Староста'));
       await _settle(tester);
       await tester.tap(find.text('Задачи.pdf'));
       await _settle(tester);
@@ -551,7 +551,7 @@ void main() {
 
       await tester.tap(find.text('ДЗ').last);
       await _settle(tester);
-      await tester.tap(find.textContaining('От старосты'));
+      await tester.tap(find.textContaining('Староста'));
       await _settle(tester);
       expect(find.text('Лекция.pdf'), findsOneWidget);
       expect(find.byIcon(Icons.download_rounded), findsOneWidget); // ещё не скачан
@@ -579,7 +579,7 @@ void main() {
 
       await tester.tap(find.text('ДЗ').last);
       await _settle(tester);
-      await tester.tap(find.textContaining('От старосты'));
+      await tester.tap(find.textContaining('Староста'));
       await _settle(tester);
       await tester.tap(find.text('Лекция.pdf'));
       await _settle(tester);
@@ -597,8 +597,8 @@ void main() {
       await tester.tap(find.text('ДЗ').last);
       await _settle(tester);
 
-      expect(find.textContaining('От старосты (2)'), findsOneWidget);
-      await tester.tap(find.textContaining('От старосты'));
+      expect(find.textContaining('Староста (2)'), findsOneWidget);
+      await tester.tap(find.textContaining('Староста'));
       await _settle(tester);
       expect(find.text('Для всех'), findsOneWidget);
       expect(find.text('Для моей подгруппы'), findsOneWidget);
@@ -612,7 +612,7 @@ void main() {
       await _start(tester, prefs: {...profile, 'editorToken': 'tok-GOODCODE', 'editorGroup': 'ofo-1-bi-25'}, sharedApi: backend.api());
       await tester.tap(find.text('ДЗ').last);
       await _settle(tester);
-      await tester.tap(find.textContaining('От старосты'));
+      await tester.tap(find.textContaining('Староста'));
       await _settle(tester);
       expect(find.text('Для второй подгруппы'), findsOneWidget);
       expect(find.text('для БИ-25-2'), findsOneWidget);
@@ -1025,7 +1025,7 @@ void main() {
       expect(backend.teacherRows.values.map((r) => r['group_id']).toSet(), {'ofo-1-bi-25'});
     });
 
-    testWidgets('студент видит ДЗ преподавателя во вкладке «От преподавателей» с именем автора', (tester) async {
+    testWidgets('студент видит ДЗ преподавателя во вкладке «Преподаватели» с именем автора', (tester) async {
       final backend = FakeBackend();
       backend.teacherRows['b/ofo-1-bi-25'] = {
         'id': 'b/ofo-1-bi-25', 'group_id': 'ofo-1-bi-25', 'batch_id': 'b', 'author': 'Халиев М.С-У.', 'subject': 'Философия',
@@ -1036,7 +1036,7 @@ void main() {
       await _settle(tester);
       await tester.tap(find.text('ДЗ').last);
       await _settle(tester);
-      await tester.tap(find.textContaining('От преподавателей'));
+      await tester.tap(find.textContaining('Преподаватели'));
       await _settle(tester);
       expect(find.text('Прочитать главу 5'), findsOneWidget);
       expect(find.textContaining('от преподавателя: Халиев Магомед Сайд-Усманович'), findsOneWidget);

@@ -91,7 +91,7 @@ class TeacherHomeworkScreen extends ConsumerWidget {
                         child: const EmptyState(
                           illustration: IllustrationKind.noHomework,
                           title: 'Вы пока ничего не отправляли',
-                          subtitle: 'Нажмите «Отправить ДЗ»: выберите предмет и группы, и студенты увидят задание у себя во вкладке «От преподавателей».',
+                          subtitle: 'Нажмите «Отправить ДЗ»: выберите предмет и группы, и студенты увидят задание у себя во вкладке «Преподаватели».',
                         ),
                       ),
                     ]

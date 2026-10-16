@@ -63,8 +63,8 @@ void main() {
                 proportional: true,
                 segments: const [
                   Segment('a', 'Мои (0)'),
-                  Segment('b', 'От старосты (1)', icon: Icons.groups_rounded),
-                  Segment('c', 'От преподавателей (1)', icon: Icons.school_rounded),
+                  Segment('b', 'Староста (1)', icon: Icons.groups_rounded),
+                  Segment('c', 'Преподаватели (1)', icon: Icons.school_rounded),
                 ],
                 selected: selected,
                 onChanged: (v) => setState(() => selected = v),
@@ -76,9 +76,9 @@ void main() {
     );
     // высота подписей одинакова (шрифт не ужат): у ужатого текста высота меньше
     double h(String t) => tester.getSize(find.text(t)).height;
-    expect(tester.getSize(find.text('От преподавателей (1)')).width, greaterThan(tester.getSize(find.text('Мои (0)')).width * 2));
-    expect(h('От преподавателей (1)'), closeTo(h('Мои (0)'), 0.5));
-    await tester.tap(find.text('От преподавателей (1)'));
+    expect(tester.getSize(find.text('Преподаватели (1)')).width, greaterThan(tester.getSize(find.text('Мои (0)')).width * 2));
+    expect(h('Преподаватели (1)'), closeTo(h('Мои (0)'), 0.5));
+    await tester.tap(find.text('Преподаватели (1)'));
     await tester.pumpAndSettle();
     expect(selected, 'c');
   });

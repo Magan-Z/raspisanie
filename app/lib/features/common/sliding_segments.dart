@@ -30,7 +30,7 @@ class SlidingSegments<T> extends StatelessWidget {
   final T selected;
   final ValueChanged<T> onChanged;
 
-  /// Ширина частей пропорциональна длине подписи (для разной длины подписей: «Мои (0)» и «От преподавателей (1)»);
+  /// Ширина частей пропорциональна длине подписи (для разной длины подписей: «Мои (0)» и «Преподаватели (1)»);
   /// по умолчанию части равны.
   final bool proportional;
 

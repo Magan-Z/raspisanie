@@ -42,12 +42,12 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
     final today = ref.watch(todayProvider);
     final theme = Theme.of(context);
 
-    // Вкладка «От старосты» есть, если староста что-то задал или это сам староста
+    // Вкладка «Староста» есть, если староста что-то задал или это сам староста
     final isEditor = ref.watch(isGroupEditorProvider);
     // Студент видит ДЗ для всей группы и для своей подгруппы; староста — все, чтобы мог управлять любым
     final groupRows = ref.watch(isEditor ? groupHomeworkAllProvider : groupHomeworkProvider);
     final hasGroupTab = ref.watch(sharedApiProvider) != null && ref.watch(settingsProvider.select((s) => s.showGroupData)) && (groupRows.isNotEmpty || isEditor);
-    // Вкладка «От преподавателей» есть, если преподаватели что-то задали (видно ДЗ для всей группы и для своей подгруппы)
+    // Вкладка «Преподаватели» есть, если преподаватели что-то задали (видно ДЗ для всей группы и для своей подгруппы)
     final teacherRows = ref.watch(teacherHomeworkProvider);
     final hasTeacherTab = ref.watch(sharedApiProvider) != null && ref.watch(settingsProvider.select((s) => s.showGroupData)) && teacherRows.isNotEmpty;
     final anyTab = hasGroupTab || hasTeacherTab;
@@ -104,15 +104,15 @@ class _HomeworkScreenState extends ConsumerState<HomeworkScreen> {
                   proportional: true,
                   segments: [
                     Segment(_Tab.mine, 'Мои (${items.where((i) => !i.done).length})'),
-                    if (hasGroupTab) Segment(_Tab.group, 'От старосты (${groupRows.where((g) => !done.contains(g.id)).length})', icon: Icons.groups_rounded),
-                    if (hasTeacherTab) Segment(_Tab.teacher, 'От преподавателей (${teacherRows.where((g) => !done.contains(g.id)).length})', icon: Icons.school_rounded),
+                    if (hasGroupTab) Segment(_Tab.group, 'Староста (${groupRows.where((g) => !done.contains(g.id)).length})', icon: Icons.groups_rounded),
+                    if (hasTeacherTab) Segment(_Tab.teacher, 'Преподаватели (${teacherRows.where((g) => !done.contains(g.id)).length})', icon: Icons.school_rounded),
                   ],
                   selected: tab,
                   onChanged: (v) => setState(() => _tab = v),
                 ),
               ],
               const SizedBox(height: Gap.sm),
-              // Ключ по вкладке: при переключении «Мои / От старосты» карточки появляются заново волной
+              // Ключ по вкладке: при переключении «Мои / Староста» карточки появляются заново волной
               KeyedSubtree(
                 key: ValueKey(tab),
                 child: Column(
